@@ -30,7 +30,7 @@ export default function LibraryPage() {
 
   return (
     <div
-      className="max-w-lg mx-auto px-4 py-6 space-y-5"
+      className="max-w-lg mx-auto px-4 py-6 space-y-5 lg:max-w-5xl"
       style={{ background: "#f0f4ff", colorScheme: "light", minHeight: "100%" }}
     >
       {/* Header */}

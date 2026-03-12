@@ -56,9 +56,11 @@ export default function ProfilePage() {
 
   return (
     <div
-      className="max-w-lg mx-auto px-4 py-6 space-y-5"
+      className="max-w-lg mx-auto px-4 py-6 space-y-5 lg:max-w-5xl"
       style={{ background: "#f0f4ff", colorScheme: "light", minHeight: "100%" }}
     >
+      {/* Desktop: 2-column layout */}
+      <div className="lg:grid lg:grid-cols-[2fr_3fr] lg:gap-6 lg:items-start space-y-5 lg:space-y-0">
       {/* Profile Header Card */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -218,7 +220,8 @@ export default function ProfilePage() {
         </div>
       </motion.div>
 
-      {/* Menu Sections */}
+        {/* Right column on lg: menus + sign out */}
+        <div className="space-y-5">
       {MENU_SECTIONS.map((section, si) => (
         <motion.div
           key={section.title}
@@ -287,6 +290,8 @@ export default function ProfilePage() {
       <p className="text-center text-xs pb-2" style={{ color: "#9aa5b1" }}>
         kalyma.ma · v1.0.0
       </p>
+        </div>
+      </div>
     </div>
   );
 }

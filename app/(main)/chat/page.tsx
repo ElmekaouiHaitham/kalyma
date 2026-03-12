@@ -62,7 +62,7 @@ export default function ChatPage() {
   return (
     <div
       className="flex flex-col h-full"
-      style={{ background: "#f0f4ff", maxHeight: "100vh", colorScheme: "light" }}
+      style={{ background: "#f0f4ff", colorScheme: "light" }}
     >
       {/* Atlas AI Header */}
       <div
@@ -111,6 +111,7 @@ export default function ChatPage() {
       {/* Mode Tabs + Topics */}
       {!started && (
         <div className="shrink-0 px-4 py-4 space-y-4" style={{ background: "#f0f4ff" }}>
+          <div className="max-w-2xl mx-auto space-y-4">
           <p className="text-xs font-bold text-center uppercase tracking-wider" style={{ color: "#9aa5b1" }}>
             Start a conversation
           </p>
@@ -162,12 +163,13 @@ export default function ChatPage() {
               </button>
             ))}
           </div>
+          </div>
         </div>
       )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
-        <div className="max-w-lg mx-auto space-y-4">
+        <div className="max-w-2xl mx-auto space-y-4">
           {messages.map((msg) => (
             <motion.div
               key={msg.id}
@@ -193,7 +195,7 @@ export default function ChatPage() {
               )}
 
               <div
-                className={`flex flex-col gap-1 max-w-xs sm:max-w-sm ${msg.role === "user" ? "items-end" : "items-start"}`}
+                className={`flex flex-col gap-1 max-w-sm sm:max-w-md ${msg.role === "user" ? "items-end" : "items-start"}`}
               >
                 <div
                   className="px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap"
@@ -273,7 +275,7 @@ export default function ChatPage() {
           borderTop: "1px solid rgba(26,43,94,0.08)",
         }}
       >
-        <div className="max-w-lg mx-auto flex gap-2 items-end">
+        <div className="max-w-2xl mx-auto flex gap-2 items-end">
           <textarea
             className="flex-1 px-4 py-3 text-sm resize-none"
             style={{

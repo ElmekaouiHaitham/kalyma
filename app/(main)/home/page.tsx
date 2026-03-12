@@ -1,69 +1,117 @@
 "use client";
 import { motion } from "framer-motion";
-import { ChevronRight, BookOpen, Newspaper, Sparkles, Radio } from "lucide-react";
+import { ChevronRight, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
-const WEEKLY_PERCENT = 78;
+const RECENT_BOOKS = [
+  { id: "sherlock", image: "/book_sherlock.png", title: "Sherlock Holmes" },
+  { id: "british", image: "/book_british.png", title: "Great British Facts" },
+  { id: "stories", image: "/book_stories.png", title: "English Stories" },
+];
 
-function ProgressBar({ percent }: { percent: number }) {
+const RECENT_ARTICLES = [
+  {
+    id: "a1",
+    emoji: "🔬",
+    title: "Recently reads and Scientific Topics",
+    preview:
+      "Discover real exciting articles and science chronology with andlor in scientific…",
+    tag: "Science",
+  },
+  {
+    id: "a2",
+    emoji: "🌍",
+    title: "Recommend a new one",
+    preview:
+      "The new tale many illusions that determines just drive use a mosiah and endlor homolog…",
+    tag: "Culture",
+  },
+];
+
+const CHAT_PREVIEW = [
+  { role: "ai", text: "Hey ! There was your past conversation!" },
+  { role: "user", text: "Hey, How do you wins?" },
+];
+
+const UPCOMING_SESSIONS = [
+  { title: "Business English", time: "3 PM", isLive: false },
+  { title: "Business English", time: "3 PM", isLive: true },
+];
+
+function CardShell({
+  children,
+  className = "",
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+}) {
   return (
-    <div className="w-full rounded-full overflow-hidden" style={{ height: 8, background: "rgba(26,43,94,0.1)" }}>
-      <motion.div
-        initial={{ width: 0 }}
-        animate={{ width: `${percent}%` }}
-        transition={{ duration: 1, ease: "easeOut", delay: 0.5 }}
-        className="h-full rounded-full"
-        style={{ background: "linear-gradient(90deg, #1a2b5e, #2d4080)" }}
-      />
-    </div>
+    <motion.div
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.35, ease: "easeOut" }}
+      className={`rounded-2xl flex flex-col overflow-hidden ${className}`}
+      style={{
+        background: "white",
+        border: "1px solid rgba(26,43,94,0.08)",
+        boxShadow: "0 4px 16px rgba(26,43,94,0.07)",
+      }}
+    >
+      {children}
+    </motion.div>
   );
 }
 
-const FEATURES = [
-  {
-    icon: BookOpen,
-    color: "#c9a84c",
-    colorBg: "rgba(201,168,76,0.12)",
-    title: "Reading",
-    subtitle: "Expand your vocabulary with English books",
-    href: "/library",
-  },
-  {
-    icon: Newspaper,
-    color: "#1a2b5e",
-    colorBg: "rgba(26,43,94,0.08)",
-    title: "Articles",
-    subtitle: "Discover interesting scientific articles",
-    href: "/library",
-  },
-  {
-    icon: Sparkles,
-    color: "#c9a84c",
-    colorBg: "rgba(201,168,76,0.12)",
-    title: "Atlas AI",
-    subtitle: "Practice English conversation with chat AI",
-    href: "/chat",
-  },
-  {
-    icon: Radio,
-    color: "#ef4444",
-    colorBg: "rgba(239,68,68,0.08)",
-    title: "Live Session",
-    subtitle: "Join interactive live English classes",
-    href: "/live",
-  },
-];
+function CardHeader({
+  emoji,
+  title,
+  subtitle,
+}: {
+  emoji?: string;
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <div className="flex items-start gap-3 mb-4">
+      {emoji && (
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
+          style={{ background: "rgba(26,43,94,0.06)" }}
+        >
+          {emoji}
+        </div>
+      )}
+      <div>
+        <div
+          className="font-bold text-sm leading-snug"
+          style={{ color: "#1a2b5e" }}
+        >
+          {title}
+        </div>
+        <div className="text-[11px] mt-0.5" style={{ color: "#9aa5b1" }}>
+          {subtitle}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function HomePage() {
   const router = useRouter();
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6 space-y-5" style={{ colorScheme: "light", background: "#f0f4ff" }}>
+    <div
+      className="w-full max-w-6xl mx-auto px-4 md:px-8 py-6"
+      style={{ colorScheme: "light", background: "#f0f4ff", minHeight: "100%" }}
+    >
       {/* Greeting */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center pt-2"
+        className="text-center mb-6"
       >
         <h1
           className="text-3xl font-bold mb-1"
@@ -76,120 +124,233 @@ export default function HomePage() {
         </p>
       </motion.div>
 
-      {/* Weekly Engagement Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="rounded-2xl p-4 card-hover cursor-pointer"
-        style={{
-          background: "white",
-          border: "1px solid var(--border-subtle)",
-          boxShadow: "0 2px 12px rgba(26,43,94,0.07)",
-        }}
-        onClick={() => {}}
-      >
-        <div className="flex items-center gap-4 mb-3">
-          {/* Circular indicator */}
-          <div className="relative shrink-0" style={{ width: 60, height: 60 }}>
-            <svg width="60" height="60" style={{ transform: "rotate(-90deg)" }}>
-              <circle cx="30" cy="30" r="24" fill="none" stroke="rgba(26,43,94,0.1)" strokeWidth="5" />
-              <motion.circle
-                cx="30"
-                cy="30"
-                r="24"
-                fill="none"
-                stroke="#1a2b5e"
-                strokeWidth="5"
-                strokeLinecap="round"
-                strokeDasharray={2 * Math.PI * 24}
-                initial={{ strokeDashoffset: 2 * Math.PI * 24 }}
-                animate={{ strokeDashoffset: 2 * Math.PI * 24 * (1 - WEEKLY_PERCENT / 100) }}
-                transition={{ duration: 1, ease: "easeOut", delay: 0.4 }}
-              />
-            </svg>
-            <div
-              className="absolute inset-0 flex items-center justify-center text-sm font-bold"
-              style={{ color: "#1a2b5e" }}
+      {/* 2x2 Feature Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+
+        {/* ── READING CARD ──────────────────────────── */}
+        <CardShell delay={0.08}>
+          <div className="p-5 flex flex-col h-full">
+            <CardHeader
+              emoji="📚"
+              title="Reading"
+              subtitle="Expand your vocabulary with English books"
+            />
+
+            {/* Book covers row */}
+            <div className="flex gap-2 mb-4">
+              {RECENT_BOOKS.map((book) => (
+                <div
+                  key={book.id}
+                  className="relative rounded-lg overflow-hidden flex-1"
+                  style={{ height: 100 }}
+                >
+                  <Image
+                    src={book.image}
+                    alt={book.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => router.push("/library/books")}
+              className="w-full py-2.5 rounded-xl text-sm font-bold text-white mt-auto transition-all hover:opacity-90"
+              style={{
+                background: "linear-gradient(135deg, #1a2b5e, #0f1d4e)",
+                boxShadow: "0 4px 12px rgba(26,43,94,0.25)",
+              }}
             >
-              {WEEKLY_PERCENT}%
+              Explore more books &nbsp;›
+            </button>
+          </div>
+        </CardShell>
+
+        {/* ── ARTICLES CARD ─────────────────────────── */}
+        <CardShell delay={0.14}>
+          <div className="p-5 flex flex-col h-full">
+            <CardHeader
+              emoji="📰"
+              title="Articles"
+              subtitle="Recently read scientific topics"
+            />
+
+            <div className="space-y-3 flex-1">
+              {RECENT_ARTICLES.map((article) => (
+                <button
+                  key={article.id}
+                  onClick={() => router.push("/library")}
+                  className="w-full flex items-start gap-3 p-3 rounded-xl text-left transition-all hover:bg-gray-50"
+                  style={{
+                    border: "1px solid rgba(26,43,94,0.07)",
+                  }}
+                >
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0"
+                    style={{ background: "rgba(26,43,94,0.05)" }}
+                  >
+                    {article.emoji}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div
+                      className="text-xs font-bold mb-0.5 leading-snug"
+                      style={{ color: "#1a2b5e" }}
+                    >
+                      {article.title}
+                    </div>
+                    <div
+                      className="text-[10px] leading-relaxed line-clamp-2"
+                      style={{ color: "#9aa5b1" }}
+                    >
+                      {article.preview}
+                    </div>
+                  </div>
+                  <ChevronRight size={14} className="shrink-0 mt-1" style={{ color: "#9aa5b1" }} />
+                </button>
+              ))}
             </div>
           </div>
-          <div className="flex-1">
-            <div className="text-sm font-bold mb-0.5" style={{ color: "var(--navy)" }}>
-              Weekly Engagement
-            </div>
-            <ProgressBar percent={WEEKLY_PERCENT} />
-            <div className="text-xs mt-1.5" style={{ color: "var(--text-muted)" }}>
-              You're doing great this week!
-            </div>
-          </div>
-          <ChevronRight size={16} style={{ color: "var(--text-muted)" }} />
-        </div>
-      </motion.div>
+        </CardShell>
 
-      {/* Continue Learning Button */}
-      <motion.button
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.18 }}
-        onClick={() => router.push("/library")}
-        className="w-full py-4 rounded-2xl font-bold text-white text-base transition-all"
-        style={{
-          background: "linear-gradient(135deg, #1a2b5e, #0f1d4e)",
-          boxShadow: "0 6px 20px rgba(26,43,94,0.3)",
-          letterSpacing: "0.01em",
-        }}
-      >
-        Continue Learning &nbsp;›
-      </motion.button>
+        {/* ── ATLAS AI CARD ─────────────────────────── */}
+        <CardShell delay={0.2}>
+          <div className="p-5 flex flex-col h-full">
+            <CardHeader
+              emoji="⭐"
+              title="Atlas AI"
+              subtitle="Practice English conversation with chat AI"
+            />
 
-      {/* Feature Cards */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25 }}
-        className="space-y-3"
-      >
-        {FEATURES.map(({ icon: Icon, color, colorBg, title, subtitle, href }, i) => (
-          <motion.button
-            key={title}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.28 + i * 0.06 }}
-            onClick={() => router.push(href)}
-            className="w-full flex items-center gap-4 p-4 rounded-2xl text-left transition-all card-hover"
-            style={{
-              background: "white",
-              border: "1px solid var(--border-subtle)",
-              boxShadow: "0 2px 8px rgba(26,43,94,0.05)",
-            }}
-          >
-            <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: colorBg }}
+            {/* Chat preview */}
+            <div className="flex-1 space-y-2 mb-4">
+              {CHAT_PREVIEW.map((msg, i) => (
+                <div
+                  key={i}
+                  className={`flex gap-2 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+                >
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0"
+                    style={{
+                      background:
+                        msg.role === "ai"
+                          ? "linear-gradient(135deg, #1a2b5e, #2d4080)"
+                          : "linear-gradient(135deg, #c9a84c, #e6c86a)",
+                    }}
+                  >
+                    {msg.role === "ai" ? "⭐" : "S"}
+                  </div>
+                  <div
+                    className="px-3 py-2 text-xs leading-relaxed max-w-[75%]"
+                    style={
+                      msg.role === "user"
+                        ? {
+                            background: "linear-gradient(135deg, #1a2b5e, #0f1d4e)",
+                            color: "white",
+                            borderRadius: "16px 16px 4px 16px",
+                          }
+                        : {
+                            background: "#f5f8ff",
+                            border: "1px solid rgba(26,43,94,0.08)",
+                            borderRadius: "16px 16px 16px 4px",
+                            color: "#1a2b5e",
+                          }
+                    }
+                  >
+                    {msg.text}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => router.push("/chat")}
+              className="w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
+              style={{
+                background: "linear-gradient(135deg, #1a2b5e, #0f1d4e)",
+                boxShadow: "0 4px 12px rgba(26,43,94,0.25)",
+              }}
             >
-              <Icon size={20} style={{ color }} />
+              Practice Now &nbsp;›
+            </button>
+          </div>
+        </CardShell>
+
+        {/* ── LIVE SESSION CARD ─────────────────────── */}
+        <CardShell delay={0.26}>
+          <div className="p-5 flex flex-col h-full">
+            <CardHeader
+              emoji="🔴"
+              title="Live Session"
+              subtitle="Join interactive live English classes"
+            />
+
+            <div className="space-y-2 flex-1 mb-4">
+              {UPCOMING_SESSIONS.map((session, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between px-3 py-2.5 rounded-xl"
+                  style={{
+                    background: "rgba(26,43,94,0.04)",
+                    border: "1px solid rgba(26,43,94,0.07)",
+                  }}
+                >
+                  <div>
+                    <div
+                      className="text-xs font-bold"
+                      style={{ color: "#1a2b5e" }}
+                    >
+                      {session.title}
+                    </div>
+                    <div className="text-[10px] mt-0.5" style={{ color: "#9aa5b1" }}>
+                      {session.time}
+                      {session.isLive && (
+                        <span
+                          className="ml-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white"
+                          style={{ background: "#ef4444" }}
+                        >
+                          LIVE
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => router.push("/live")}
+                    className="px-4 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80"
+                    style={{
+                      background: "linear-gradient(135deg, #1a2b5e, #0f1d4e)",
+                      color: "white",
+                      boxShadow: "0 2px 8px rgba(26,43,94,0.2)",
+                    }}
+                  >
+                    Join
+                  </button>
+                </div>
+              ))}
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-bold text-sm mb-0.5" style={{ color: "var(--navy)" }}>
-                {title}
-              </div>
-              <div className="text-xs" style={{ color: "var(--text-muted)" }}>
-                {subtitle}
-              </div>
-            </div>
-            <ChevronRight size={16} style={{ color: "var(--text-muted)" }} />
-          </motion.button>
-        ))}
-      </motion.div>
+
+            <button
+              onClick={() => router.push("/live")}
+              className="w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 flex items-center justify-center gap-2"
+              style={{
+                background: "linear-gradient(135deg, #ef4444, #dc2626)",
+                boxShadow: "0 4px 12px rgba(239,68,68,0.3)",
+              }}
+            >
+              <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+              Join
+            </button>
+          </div>
+        </CardShell>
+
+      </div>
 
       {/* Tagline */}
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-        className="text-center text-sm pb-2"
+        transition={{ delay: 0.5 }}
+        className="text-center text-sm pt-5 pb-2"
         style={{ color: "#9aa5b1" }}
       >
         <em>Speak. Make mistakes. </em>

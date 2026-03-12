@@ -72,7 +72,7 @@ export default function ReadingBooksPage() {
 
   return (
     <div
-      className="max-w-lg mx-auto px-4 py-6 space-y-5"
+      className="w-full max-w-6xl mx-auto px-4 md:px-8 py-6 space-y-5"
       style={{ background: "#f0f4ff", colorScheme: "light", minHeight: "100%" }}
     >
       {/* Header */}
@@ -96,7 +96,7 @@ export default function ReadingBooksPage() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="space-y-2"
+        className="space-y-2 max-w-xl"
       >
         {/* Search */}
         <div
@@ -158,7 +158,7 @@ export default function ReadingBooksPage() {
           Recommended Books
         </h2>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
           {filtered.map((book, i) => (
             <motion.button
               key={book.id}
