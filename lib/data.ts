@@ -231,6 +231,15 @@ export const NEWS_ITEMS = [
     date: new Date(),
     read: false,
     image: "📈",
+    content: `Global financial markets surged to new highs on Monday as investors poured capital into technology stocks, particularly those focused on artificial intelligence and semiconductor manufacturing. The S&P 500 climbed 2.3% while the NASDAQ composite jumped 3.1%, marking the strongest single-day performance in over six months.
+
+The rally was led by chip manufacturers and AI software companies, whose valuations have been climbing steadily throughout the year. Analysts attribute the surge to a combination of strong earnings reports and growing institutional confidence in the long-term potential of generative AI technologies.
+
+"We're witnessing a fundamental shift in how investors value technology companies," said Morgan Stanley analyst Rebecca Chen. "The question is no longer whether AI will transform industries, but how quickly and which companies will lead that transformation."
+
+Not everyone is optimistic. Some economists warn that valuations have become detached from underlying fundamentals, drawing comparisons to the dot-com bubble of the late 1990s. The price-to-earnings ratios for many AI-focused companies now exceed historical averages by a significant margin.
+
+Despite these concerns, retail investor participation has remained robust. Trading volumes on major platforms hit record levels, with younger investors in particular showing strong appetite for technology exposure. Central banks are closely monitoring these developments as they continue to navigate the delicate balance between controlling inflation and sustaining economic growth.`,
   },
   {
     id: "n2",
@@ -240,6 +249,15 @@ export const NEWS_ITEMS = [
     date: new Date(),
     read: false,
     image: "🚀",
+    content: `NASA's latest Mars rover mission achieved a flawless landing in the Jezero Crater region early Tuesday morning, sending back the first high-resolution images of its new Martian home just hours after touchdown. Mission control at the Jet Propulsion Laboratory erupted in celebration as telemetry confirmed successful landing.
+
+The rover, equipped with an advanced suite of scientific instruments, will spend the next two years searching for biosignatures — chemical or physical evidence of past microbial life. Scientists believe Jezero Crater, once an ancient lake, is one of the most promising locations for such a search.
+
+"Every time we land on Mars, we learn something new about the limits of what's possible," said NASA Administrator Bill Nelson during a press conference. "This mission represents our most ambitious scientific endeavor on another world."
+
+One of the rover's most significant capabilities is its sample caching system, which will seal rock and soil samples in titanium tubes for retrieval by a future joint NASA-ESA mission. This sample return campaign, planned for the early 2030s, is considered the highest priority in planetary science.
+
+The rover also carries a small helicopter drone, the third of its kind to fly on Mars, which will scout terrain and assist in selecting optimal drilling sites. Scientists expect the mission to provide transformative insights into Mars's geological and possibly biological history.`,
   },
   {
     id: "n3",
@@ -249,33 +267,69 @@ export const NEWS_ITEMS = [
     date: new Date(),
     read: false,
     image: "🔬",
+    content: `A team of researchers at Johns Hopkins University has unveiled a machine learning system capable of diagnosing over 200 rare diseases from a standard blood panel with 99.8% accuracy — a breakthrough that could revolutionize early detection and dramatically reduce the years-long diagnostic odyssey many patients endure.
+
+Rare diseases, by definition, affect fewer than 200,000 people in the United States, but collectively they impact nearly 300 million people worldwide. Many patients wait an average of five to seven years before receiving an accurate diagnosis, during which time their condition may worsen significantly.
+
+The system, trained on anonymized medical records from over 2 million patients, uses a novel combination of transformer-based natural language processing and multimodal biological data analysis. It performs comparably to specialists and dramatically outperforms general practitioners in identifying subtle patterns associated with rare genetic disorders.
+
+"We're not replacing doctors," emphasized Dr. Sarah Kim, the study's lead author. "We're giving them a powerful tool to do what they already do — care for patients — but faster and with greater precision."
+
+The model has already been submitted for FDA review. If approved, hospitals could begin deploying it within 18 months. Several health systems have already expressed interest in pilot programs, and the research team is exploring partnerships with insurers to ensure the technology reaches underserved communities.`,
   },
   {
     id: "n4",
     title: "Major Cultural Festival Returns to Kyoto",
     summary: "The streets were filled with traditional costumes and music for the first time in three years.",
     category: "Culture",
-    date: new Date(Date.now() - 86400000), // Yesterday
+    date: new Date(Date.now() - 86400000),
     read: true,
     image: "🏮",
+    content: `Kyoto's legendary Gion Matsuri festival returned in its full splendor this weekend, drawing hundreds of thousands of visitors from around the world to witness one of Japan's most iconic cultural celebrations. The festival, which dates back over 1,100 years, had been scaled back for three consecutive years due to public health concerns.
+
+The highlight of the festivities was the Yamaboko Junko procession, in which enormous wooden floats — some dating to the 17th century — were pulled through the ancient streets of central Kyoto by teams of hundreds. Each float, crafted by local artisan guilds, is a masterpiece of traditional Japanese craftsmanship adorned with tapestries and lacquerwork.
+
+"Gion Matsuri is not just a festival — it's our living history," said Takeshi Yamamoto, a third-generation member of one of the float-building guilds. "When we pull these floats, we feel connected to every generation before us."
+
+The economic impact on the city was significant. Hotels reported 98% occupancy rates, and local businesses along the festival route experienced record sales. City officials estimate the event generated over 50 billion yen in economic activity.
+
+The festival also served as a showcase for traditional arts including tea ceremony demonstrations, ikebana flower arranging exhibitions, and performances of Noh theater — a dramatic art form designated by UNESCO as an Intangible Cultural Heritage of Humanity.`,
   },
   {
     id: "n5",
     title: "Understanding the New Health Guidelines for 2026",
     summary: "Simplified nutrition and exercise recommendations released by global health authorities.",
     category: "Health",
-    date: new Date(Date.now() - 86400000 * 2), // 2 days ago
+    date: new Date(Date.now() - 86400000 * 2),
     read: true,
     image: "🍎",
+    content: `The World Health Organization and the American Heart Association jointly released updated health guidelines this week that represent the most significant revision to nutrition and exercise recommendations in over a decade. The new guidelines reflect years of accumulated research and aim to be more accessible and actionable for the general public.
+
+Perhaps the most notable change is the shift away from specific calorie-counting in favor of a quality-first approach to nutrition. Rather than prescribing exact quantities, the guidelines emphasize the importance of dietary patterns — specifically the Mediterranean and MIND diets — which have consistently shown benefits for cardiovascular health and cognitive function.
+
+"We've moved beyond the idea that a single nutrient is either good or bad," explained Dr. Maria Santos, one of the lead scientists behind the revision. "What matters is the overall quality and diversity of what you eat."
+
+On the exercise front, the guidelines introduce the concept of "movement snacks" — short bursts of physical activity of three to five minutes that, accumulated throughout the day, confer benefits comparable to a single extended workout session. This approach recognizes the reality that many people struggle to find 30 consecutive minutes for exercise.
+
+The guidelines also place greater emphasis on sleep quality and stress management, acknowledging that physical health cannot be separated from mental health. Recommendations now include guidance on digital device use before bedtime and mindfulness practices as legitimate health interventions.`,
   },
   {
     id: "n6",
     title: "Renewable Energy Capacity Set to Double by 2030",
     summary: "Solar and wind projects lead the charge in the latest global energy outlook report.",
     category: "Science",
-    date: new Date(Date.now() - 86400000 * 3), // 3 days ago
+    date: new Date(Date.now() - 86400000 * 3),
     read: true,
     image: "☀️",
+    content: `The International Energy Agency's latest World Energy Outlook reports that global renewable energy capacity is on track to more than double by 2030, driven by an unprecedented surge in solar and wind installations across Asia, Europe, and North America. The projection marks a significant acceleration from previous forecasts and suggests the energy transition is proceeding faster than most models predicted.
+
+Solar power additions are leading the charge, with the cost of utility-scale solar installations having fallen by 89% over the past decade. China remains the dominant force in manufacturing and deployment, but the United States, India, and the European Union are investing at record levels following major policy initiatives including the U.S. Inflation Reduction Act.
+
+"We are witnessing a historic inflection point," said IEA Executive Director Fatih Birol. "Clean energy is winning not because of mandates, but because it has become the most economically rational choice in most of the world."
+
+However, the report also highlights significant challenges that could derail progress. Grid infrastructure in many regions is not prepared to accommodate the variability of renewable generation. Investments in transmission networks, battery storage, and grid modernization must accelerate substantially to avoid bottlenecks.
+
+The mining of critical minerals including lithium, cobalt, and rare earth elements — essential for batteries and electric motors — presents another challenge. The geographic concentration of these resources raises geopolitical concerns and underscores the need for recycling programs and alternative technologies.`,
   },
 ];
 
@@ -354,6 +408,34 @@ export const BOOKS = [
     readingTime: 120,
     level: "A2",
     language: "Spanish",
+    description: "A poetic tale about a young prince who travels the universe, learning about life, love, and human nature.",
+    content: `Once upon a time there was a little prince who lived on a planet scarcely bigger than himself, and who had need of a sheep.
+
+When a mystery is too overpowering, one dare not disobey. Absurd as it might seem to me, a thousand miles from any human habitation and in danger of death, I took out of my pocket a sheet of paper and my fountain pen. But then I remembered how my studies had been concentrated on geography, history, arithmetic and grammar, and I told the little chap (a little crossly, too) that I did not know how to draw.
+
+He answered me: "That doesn't matter. Draw me a sheep."
+
+But I had never drawn a sheep. So I drew for him one of the two pictures I had drawn so often. It was that of the boa constrictor from the outside. And I was astounded to hear the little fellow greet it with: "No, no, no! I do not want an elephant inside a boa constrictor. A boa constrictor is a very dangerous creature, and an elephant is very cumbersome. Where I live, everything is very small. What I need is a sheep. Draw me a sheep."
+
+So then I made a drawing. He looked at it carefully, then he said: "No. This sheep is already very sickly. Make me another."
+
+So I made another drawing. My friend smiled gently and indulgently. "You see yourself," he said, "that this is not a sheep. This is a ram. It has horns."
+
+So then I did my drawing over once more. But it was rejected too, just like the others. "This one is too old. I want a sheep that will live a long time."
+
+By this time my patience was exhausted, because I was in a hurry to start taking my engine apart. So I tossed off this drawing and explained to him: "This is only his box. The sheep you asked for is inside."
+
+I was very surprised to see a light break over the face of my young judge: "That is exactly the way I wanted it! Do you think that this sheep will have to have a great deal of grass?"
+
+"Why?"
+
+"Because where I live everything is very small..."
+
+"There will surely be enough grass for him," I said. "It is a very small sheep that I have given you."
+
+He bent his head over the drawing: "Not so small that— Look! He has gone to sleep..."
+
+And that is how I made the acquaintance of the little prince.`,
   },
   {
     id: "b2",
@@ -366,6 +448,16 @@ export const BOOKS = [
     readingTime: 240,
     level: "B1",
     language: "French",
+    description: "A Victorian gentleman bets he can travel around the entire world in just 80 days.",
+    content: `In the year 1872, the house at No. 7, Saville Row, Burlington Gardens, the house in which Sheridan died in 1814, was occupied by Phileas Fogg. He was one of the most singular and conspicuous members of the Reform Club, though he seemed always to avoid attracting attention.
+
+To one of the most impressive orators who dignified England, he succeeded one of the most reserved and taciturn men in existence. Nothing was known of the origin of Phileas Fogg. He was a British subject with an exceedingly neat appearance. He was not known to have any wife or children, which may happen to the most honest people.
+
+His residence in Saville Row notwithstanding, he never appeared there except at certain invariable hours. His life was regulated with such mathematical precision that a dissatisfied witness might have said, "Nobody could live more exactly."
+
+Phileas Fogg had neither wife nor children. He was a member of the Reform Club, where he had all his meals, and where he passed his evenings in a corner at whist, always finding the same partners — Andrew Stuart, the engineer; John Sullivan and Samuel Fallentin, the bankers; William Ostwald, the brewer; and Thomas Flanagan, the distiller. They formed a regular party at whist.
+
+On this particular evening — it was the second of October, 1872 — a discussion arose among the members of the Reform Club which eventually led Phileas Fogg to make the most remarkable bet of his career. It had started innocuously enough, over a matter of thieves and mathematics.`,
   },
   {
     id: "b3",
@@ -378,6 +470,18 @@ export const BOOKS = [
     readingTime: 180,
     level: "B2",
     language: "German",
+    description: "The spiritual journey of self-discovery of a man named Siddhartha during the time of the Gautama Buddha.",
+    content: `In the shade of the house, in the sunshine of the riverbank near the boats, in the shade of the Sal-wood forest, in the shade of the fig tree is where Siddhartha grew up, the handsome son of the Brahman, the young falcon, together with his friend Govinda, son of a Brahman.
+
+Love stirred in the hearts of the young Brahmans' daughters whenever Siddhartha walked through the lanes of the town with luminous forehead, with his king's eyes, with his narrow hips.
+
+But more than all the others he was loved by Govinda, his friend, the Brahman's son. He loved Siddhartha's eye and his sweet voice, his walk and the perfect decency of his movements, and everything Siddhartha did and said and all the while admired him.
+
+Thus Siddhartha was loved by everyone. He was a source of joy for everybody and he was a delight to them all. But he, Siddhartha, was not a source of joy for himself, he found no delight in himself. Walking the rosy paths of the fig tree garden, sitting in the bluish shade of the grove of contemplation, washing his limbs daily in the bath of repentance, sacrificing in the dim shade of the mango forest, his gestures of perfect decency, everyone's love and joy, he still lacked all joy in his heart.
+
+Dreams and restless thoughts came into his mind, flowing from the water of the river, sparkling from the stars at night, melting from the beams of the sun, dreams came to him and a restlessness of the soul, rising out of the smoke of the sacrifices, wafting from the verses of the Rig-Veda, trickling through from the teachings of the old Brahmans.
+
+Siddhartha had started to nurse discontent in himself, he had started to feel that the love of his father and the love of his mother, and also the love of his friend, Govinda, would not bring him joy forever and ever, would not nurse him, feed him, satisfy him.`,
   },
 ];
 
