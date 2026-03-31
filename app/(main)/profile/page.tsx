@@ -37,9 +37,9 @@ const MENU_SECTIONS = [
   {
     title: "Preferences",
     items: [
-      { icon: Globe, label: "Language & Level", href: null, color: "#1a2b5e" },
-      { icon: Bell, label: "Notifications", href: null, color: "#1a2b5e" },
-      { icon: Settings, label: "Settings", href: null, color: "#1a2b5e" },
+      { icon: Globe, label: "Language & Level", href: "/onboarding", color: "#1a2b5e" },
+      { icon: Bell, label: "Notifications", href: "/profile/notifications", color: "#1a2b5e" },
+      { icon: Settings, label: "Settings", href: "/profile/settings", color: "#1a2b5e" },
     ],
   },
 ];

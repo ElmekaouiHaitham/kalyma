@@ -1,361 +1,363 @@
 "use client";
 import { motion } from "framer-motion";
-import { ChevronRight, ArrowRight } from "lucide-react";
+import { 
+  ChevronRight, 
+  CheckCircle2, 
+  Search, 
+  Mic, 
+  Award, 
+  BookOpen, 
+  Newspaper,
+  MessageSquare,
+  Sparkles,
+  Users
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
-const RECENT_BOOKS = [
-  { id: "sherlock", image: "/book_sherlock.png", title: "Sherlock Holmes" },
-  { id: "british", image: "/book_british.png", title: "Great British Facts" },
-  { id: "stories", image: "/book_stories.png", title: "English Stories" },
-];
+// ── Components ──────────────────────────────────────────────────────────────
 
-const RECENT_ARTICLES = [
-  {
-    id: "a1",
-    emoji: "🔬",
-    title: "Recently reads and Scientific Topics",
-    preview:
-      "Discover real exciting articles and science chronology with andlor in scientific…",
-    tag: "Science",
-  },
-  {
-    id: "a2",
-    emoji: "🌍",
-    title: "Recommend a new one",
-    preview:
-      "The new tale many illusions that determines just drive use a mosiah and endlor homolog…",
-    tag: "Culture",
-  },
-];
-
-const CHAT_PREVIEW = [
-  { role: "ai", text: "Hey ! There was your past conversation!" },
-  { role: "user", text: "Hey, How do you wins?" },
-];
-
-const UPCOMING_SESSIONS = [
-  { title: "Business English", time: "3 PM", isLive: false },
-  { title: "Business English", time: "3 PM", isLive: true },
-];
-
-function CardShell({
-  children,
-  className = "",
-  delay = 0,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  delay?: number;
-}) {
+function SectionHeader({ title, href }: { title: string; href: string }) {
+  const router = useRouter();
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.35, ease: "easeOut" }}
-      className={`rounded-2xl flex flex-col overflow-hidden ${className}`}
-      style={{
-        background: "white",
-        border: "1px solid rgba(26,43,94,0.08)",
-        boxShadow: "0 4px 16px rgba(26,43,94,0.07)",
-      }}
-    >
-      {children}
-    </motion.div>
+    <div className="flex items-center justify-between mb-4 px-1">
+      <h2 className="text-lg font-bold text-[#1a2b5e]">{title}</h2>
+      <button 
+        onClick={() => router.push(href)}
+        className="text-xs font-semibold text-[#9aa5b1] flex items-center gap-0.5 hover:text-[#1a2b5e] transition-colors"
+      >
+        View All <ChevronRight size={14} />
+      </button>
+    </div>
   );
 }
 
-function CardHeader({
-  emoji,
-  title,
-  subtitle,
-}: {
-  emoji?: string;
-  title: string;
-  subtitle: string;
-}) {
+function ProgressCircle({ percent }: { percent: number }) {
+  const radius = 36;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (percent / 100) * circumference;
+
   return (
-    <div className="flex items-start gap-3 mb-4">
-      {emoji && (
-        <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
-          style={{ background: "rgba(26,43,94,0.06)" }}
-        >
-          {emoji}
-        </div>
-      )}
-      <div>
-        <div
-          className="font-bold text-sm leading-snug"
-          style={{ color: "#1a2b5e" }}
-        >
-          {title}
-        </div>
-        <div className="text-[11px] mt-0.5" style={{ color: "#9aa5b1" }}>
-          {subtitle}
-        </div>
+    <div className="relative w-24 h-24 flex items-center justify-center">
+      {/* Background circle */}
+      <svg className="w-full h-full -rotate-90">
+        <circle
+          cx="48"
+          cy="48"
+          r={radius}
+          fill="transparent"
+          stroke="rgba(26,43,94,0.06)"
+          strokeWidth="8"
+        />
+        {/* Progress circle */}
+        <motion.circle
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset: offset }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          cx="48"
+          cy="48"
+          r={radius}
+          fill="transparent"
+          stroke="url(#progressGradient)"
+          strokeWidth="8"
+          strokeDasharray={circumference}
+          strokeLinecap="round"
+        />
+        <defs>
+          <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1a2b5e" />
+            <stop offset="100%" stopColor="#c9a84c" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-xl font-bold text-[#1a2b5e]">{percent}%</span>
       </div>
     </div>
   );
 }
 
+function DashboardCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div 
+      className={`bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[rgba(26,43,94,0.05)] ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+function PracticeCard({ 
+  title, 
+  subtitle, 
+  xp, 
+  badge, 
+  gradient, 
+  imageUrl,
+  href 
+}: { 
+  title: string; 
+  subtitle: string; 
+  xp: number; 
+  badge: string; 
+  gradient: string;
+  imageUrl?: string;
+  href: string;
+}) {
+  const router = useRouter();
+  return (
+    <motion.button
+      whileHover={{ y: -4 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => router.push(href)}
+      className="relative w-full aspect-[1.6/1] rounded-3xl overflow-hidden text-left p-4 flex flex-col justify-between"
+      style={{ background: gradient }}
+    >
+      <div className="flex justify-between items-start">
+        <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-wider">
+          {badge}
+        </div>
+      </div>
+      
+      <div className="z-10">
+        <h3 className="text-white font-bold text-lg leading-tight mb-1">{title}</h3>
+        <p className="text-white/80 text-[11px] leading-tight max-w-[140px]">{subtitle}</p>
+      </div>
+
+      <div className="flex items-center justify-between mt-2 z-10">
+        <span className="text-white/90 text-xs font-bold">+{xp} XP</span>
+        <div className="flex gap-1">
+          {[1,2,3,4,5].map((i) => (
+            <div key={i} className={`w-1.5 h-1.5 rounded-full ${i === 1 ? "bg-white" : "bg-white/30"}`} />
+          ))}
+        </div>
+      </div>
+
+      {imageUrl && (
+        <div className="absolute right-0 bottom-0 w-1/2 h-full pointer-events-none">
+           <Image src={imageUrl} alt="" fill className="object-contain object-right-bottom opacity-90" />
+        </div>
+      )}
+    </motion.button>
+  );
+}
+
+function LearnCard({ 
+  icon: Icon, 
+  title, 
+  subtitle, 
+  xp, 
+  href 
+}: { 
+  icon: any; 
+  title: string; 
+  subtitle: string; 
+  xp: number; 
+  href: string;
+}) {
+  const router = useRouter();
+  return (
+    <motion.button
+      whileHover={{ y: -4 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => router.push(href)}
+      className="w-full bg-white rounded-3xl p-4 border border-[rgba(26,43,94,0.05)] shadow-sm text-left flex flex-col justify-between"
+    >
+      <div className="flex gap-3 items-start mb-2">
+        <div className="w-10 h-10 rounded-2xl bg-[#f0f4ff] flex items-center justify-center text-[#1a2b5e] shrink-0">
+          <Icon size={20} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-[#1a2b5e] font-bold text-[13px] leading-tight mb-0.5">{title}</h3>
+          <p className="text-[#9aa5b1] text-[10px] leading-relaxed line-clamp-2">{subtitle}</p>
+        </div>
+        <ChevronRight size={16} className="text-[#9aa5b1] shrink-0 mt-1" />
+      </div>
+
+      <div className="flex items-center justify-between mt-1">
+        <span className="text-[#c9a84c] text-[11px] font-bold">+{xp} XP</span>
+        <div className="flex gap-1">
+          {[1,2,3,4].map((i) => (
+            <div key={i} className={`w-1.5 h-1.5 rounded-full ${i === 1 ? "bg-[#1a2b5e]" : "bg-[rgba(26,43,94,0.1)]"}`} />
+          ))}
+        </div>
+      </div>
+    </motion.button>
+  );
+}
+
+// ── Main Content ────────────────────────────────────────────────────────────
+
 export default function HomePage() {
   const router = useRouter();
 
   return (
-    <div
-      className="w-full max-w-6xl mx-auto px-4 md:px-8 py-6"
-      style={{ colorScheme: "light", background: "#f0f4ff", minHeight: "100%" }}
-    >
-      {/* Greeting */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-6"
-      >
-        <h1
-          className="text-3xl font-bold mb-1"
-          style={{ fontFamily: "'Outfit', sans-serif", color: "#1a2b5e" }}
-        >
-          Hello Samir 🔥
-        </h1>
-        <p className="text-sm" style={{ color: "#4a5568" }}>
-          Ready to speak English with confidence?
-        </p>
-      </motion.div>
-
-      {/* 2x2 Feature Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
-
-        {/* ── READING CARD ──────────────────────────── */}
-        <CardShell delay={0.08}>
-          <div className="p-5 flex flex-col h-full">
-            <CardHeader
-              emoji="📚"
-              title="Reading"
-              subtitle="Expand your vocabulary with English books"
-            />
-
-            {/* Book covers row */}
-            <div className="flex gap-2 mb-4">
-              {RECENT_BOOKS.map((book) => (
-                <div
-                  key={book.id}
-                  className="relative rounded-lg overflow-hidden flex-1"
-                  style={{ height: 100 }}
-                >
-                  <Image
-                    src={book.image}
-                    alt={book.title}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={() => router.push("/library/books")}
-              className="w-full py-2.5 rounded-xl text-sm font-bold text-white mt-auto transition-all hover:opacity-90"
-              style={{
-                background: "linear-gradient(135deg, #1a2b5e, #0f1d4e)",
-                boxShadow: "0 4px 12px rgba(26,43,94,0.25)",
-              }}
-            >
-              Explore more books &nbsp;›
-            </button>
-          </div>
-        </CardShell>
-
-        {/* ── ARTICLES CARD ─────────────────────────── */}
-        <CardShell delay={0.14}>
-          <div className="p-5 flex flex-col h-full">
-            <CardHeader
-              emoji="📰"
-              title="Articles"
-              subtitle="Recently read scientific topics"
-            />
-
-            <div className="space-y-3 flex-1">
-              {RECENT_ARTICLES.map((article) => (
-                <button
-                  key={article.id}
-                  onClick={() => router.push("/library")}
-                  className="w-full flex items-start gap-3 p-3 rounded-xl text-left transition-all hover:bg-gray-50"
-                  style={{
-                    border: "1px solid rgba(26,43,94,0.07)",
-                  }}
-                >
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0"
-                    style={{ background: "rgba(26,43,94,0.05)" }}
-                  >
-                    {article.emoji}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div
-                      className="text-xs font-bold mb-0.5 leading-snug"
-                      style={{ color: "#1a2b5e" }}
-                    >
-                      {article.title}
-                    </div>
-                    <div
-                      className="text-[10px] leading-relaxed line-clamp-2"
-                      style={{ color: "#9aa5b1" }}
-                    >
-                      {article.preview}
-                    </div>
-                  </div>
-                  <ChevronRight size={14} className="shrink-0 mt-1" style={{ color: "#9aa5b1" }} />
-                </button>
-              ))}
+    <div className="min-h-full w-full bg-[#f8faff] pb-12 overflow-x-hidden">
+      <div className="max-w-xl mx-auto px-5 pt-8">
+        
+        {/* ── HEADER ────────────────────────────────────────── */}
+        <div className="flex flex-col items-center text-center mb-8">
+          <div className="flex items-center gap-2 mb-2">
+            <Image src="/logo.png" alt="kalyma.ma" width={42} height={42} className="object-contain" />
+            <div className="text-left">
+              <div className="text-2xl font-black text-[#1a2b5e] leading-none" style={{ fontFamily: "'Outfit', sans-serif" }}>
+                kalyma<span className="text-[#c9a84c]">.ma</span>
+              </div>
+              <div className="text-[10px] text-[#9aa5b1] font-medium tracking-wide">Speak with confidence</div>
             </div>
           </div>
-        </CardShell>
+          
+          <h1 className="text-2xl font-bold text-[#1a2b5e] mt-4 mb-1">
+            Hello <span className="font-black">Samir!</span> 👋🏼
+          </h1>
+          <p className="text-[#4a5568] text-sm">
+            Ready to speak English with confidence?
+          </p>
+        </div>
 
-        {/* ── ATLAS AI CARD ─────────────────────────── */}
-        <CardShell delay={0.2}>
-          <div className="p-5 flex flex-col h-full">
-            <CardHeader
-              emoji="⭐"
-              title="Atlas AI"
-              subtitle="Practice English conversation with chat AI"
-            />
-
-            {/* Chat preview */}
-            <div className="flex-1 space-y-2 mb-4">
-              {CHAT_PREVIEW.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`flex gap-2 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
-                >
-                  <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0"
-                    style={{
-                      background:
-                        msg.role === "ai"
-                          ? "linear-gradient(135deg, #1a2b5e, #2d4080)"
-                          : "linear-gradient(135deg, #c9a84c, #e6c86a)",
-                    }}
-                  >
-                    {msg.role === "ai" ? "⭐" : "S"}
+        {/* ── DASHBOARD ─────────────────────────────────────── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+          
+          {/* Progress Card */}
+          <DashboardCard className="flex flex-col">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex-1">
+                <h3 className="text-[#1a2b5e] font-bold text-sm mb-4">Progress</h3>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[#c9a84c] text-sm italic">★</span>
+                    <span className="text-[#1a2b5e] text-sm font-bold">+12</span>
+                    <div className="w-8 h-[1px] bg-[rgba(26,43,94,0.1)] mx-1" />
                   </div>
-                  <div
-                    className="px-3 py-2 text-xs leading-relaxed max-w-[75%]"
-                    style={
-                      msg.role === "user"
-                        ? {
-                            background: "linear-gradient(135deg, #1a2b5e, #0f1d4e)",
-                            color: "white",
-                            borderRadius: "16px 16px 4px 16px",
-                          }
-                        : {
-                            background: "#f5f8ff",
-                            border: "1px solid rgba(26,43,94,0.08)",
-                            borderRadius: "16px 16px 16px 4px",
-                            color: "#1a2b5e",
-                          }
-                    }
-                  >
-                    {msg.text}
-                  </div>
+                  <div className="text-[11px] text-[#9aa5b1] font-bold">+ 480 XP</div>
                 </div>
-              ))}
+              </div>
+              <ProgressCircle percent={78} />
             </div>
-
-            <button
+            
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => router.push("/chat")}
-              className="w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
-              style={{
-                background: "linear-gradient(135deg, #1a2b5e, #0f1d4e)",
-                boxShadow: "0 4px 12px rgba(26,43,94,0.25)",
-              }}
+              className="w-full bg-[#1a2b5e] py-3.5 rounded-2xl text-white text-sm font-bold shadow-[0_8px_20px_rgba(26,43,94,0.25)] mt-auto"
+              style={{ background: "linear-gradient(135deg, #1a2b5e, #2d4080)" }}
             >
-              Practice Now &nbsp;›
-            </button>
-          </div>
-        </CardShell>
+              Continue Learning
+            </motion.button>
+          </DashboardCard>
 
-        {/* ── LIVE SESSION CARD ─────────────────────── */}
-        <CardShell delay={0.26}>
-          <div className="p-5 flex flex-col h-full">
-            <CardHeader
-              emoji="🔴"
-              title="Live Session"
-              subtitle="Join interactive live English classes"
-            />
-
-            <div className="space-y-2 flex-1 mb-4">
-              {UPCOMING_SESSIONS.map((session, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between px-3 py-2.5 rounded-xl"
-                  style={{
-                    background: "rgba(26,43,94,0.04)",
-                    border: "1px solid rgba(26,43,94,0.07)",
-                  }}
-                >
-                  <div>
-                    <div
-                      className="text-xs font-bold"
-                      style={{ color: "#1a2b5e" }}
-                    >
-                      {session.title}
-                    </div>
-                    <div className="text-[10px] mt-0.5" style={{ color: "#9aa5b1" }}>
-                      {session.time}
-                      {session.isLive && (
-                        <span
-                          className="ml-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white"
-                          style={{ background: "#ef4444" }}
-                        >
-                          LIVE
-                        </span>
-                      )}
-                    </div>
+          {/* Today's Feed Card */}
+          <DashboardCard>
+            <div className="flex items-center gap-2 mb-5">
+              <Award size={18} className="text-[#c9a84c]" />
+              <h3 className="text-[#1a2b5e] font-bold text-sm">Today&apos;s Feed</h3>
+            </div>
+            
+            <div className="space-y-3">
+              {[
+                { icon: CheckCircle2, text: "Learn 5 words", xp: 10, done: true, color: "#10b981" },
+                { icon: Search, text: "Read 1 article", xp: 20, done: false, color: "#3b82f6" },
+                { icon: Mic, text: "Speak 2 min", xp: 10, done: false, color: "#8b5cf6" },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${item.done ? "bg-[#f0fdf4]" : "bg-[#f0fafb]"}`}>
+                    <item.icon size={18} className={item.done ? "text-[#10b981]" : "text-[#1a2b5e]"} />
                   </div>
-                  <button
-                    onClick={() => router.push("/live")}
-                    className="px-4 py-1.5 rounded-lg text-xs font-bold transition-all hover:opacity-80"
-                    style={{
-                      background: "linear-gradient(135deg, #1a2b5e, #0f1d4e)",
-                      color: "white",
-                      boxShadow: "0 2px 8px rgba(26,43,94,0.2)",
-                    }}
-                  >
-                    Join
-                  </button>
+                  <span className={`text-[13px] flex-1 ${item.done ? "text-[#9aa5b1]" : "text-[#1a2b5e] font-medium"}`}>
+                    {item.text}
+                  </span>
+                  <div className="bg-[rgba(26,43,94,0.04)] px-3 py-1.5 rounded-full text-[10px] font-bold text-[#9aa5b1]">
+                     + {item.xp} XP
+                  </div>
                 </div>
               ))}
             </div>
+          </DashboardCard>
 
-            <button
-              onClick={() => router.push("/live")}
-              className="w-full py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 flex items-center justify-center gap-2"
-              style={{
-                background: "linear-gradient(135deg, #ef4444, #dc2626)",
-                boxShadow: "0 4px 12px rgba(239,68,68,0.3)",
-              }}
-            >
-              <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-              Join
-            </button>
+        </div>
+
+        {/* ── NEWS NOTIFICATION BANNER ─────────────────────── */}
+        <motion.button
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          whileHover={{ scale: 1.01 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => router.push("/news")}
+          className="w-full flex items-center gap-4 mb-10 rounded-2xl p-4 text-left"
+          style={{
+            background: "linear-gradient(135deg, #fff7e0, #fff3cd)",
+            border: "1.5px solid rgba(201,168,76,0.35)",
+            boxShadow: "0 4px 16px rgba(201,168,76,0.12)",
+          }}
+        >
+          <div
+            className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-xl"
+            style={{ background: "rgba(201,168,76,0.2)" }}
+          >
+            📰
           </div>
-        </CardShell>
+          <div className="flex-1">
+            <div className="font-bold text-sm mb-0.5" style={{ color: "#92611a" }}>
+              3 new articles matching your interests
+            </div>
+            <div className="text-xs" style={{ color: "#b07d2a" }}>
+              Technology · Culture · Science — tailored for you
+            </div>
+          </div>
+          <ChevronRight size={16} style={{ color: "#c9a84c", flexShrink: 0 }} />
+        </motion.button>
+        <div className="mb-10">
+          <SectionHeader title="Practice" href="/chat" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <PracticeCard 
+               title="Atlas AI"
+               subtitle="Practice English conversation with AI Coach"
+               xp={20}
+               badge="AI"
+               gradient="linear-gradient(135deg, #1a2b5e, #33599e)"
+               imageUrl="/ai_badge.png" // We'll assume these assets exist or use generic ones
+               href="/chat"
+             />
+             <PracticeCard 
+               title="Live Session"
+               subtitle="Join interactive live English classes"
+               xp={30}
+               badge="LIVE"
+               gradient="linear-gradient(135deg, #a78bfa, #c4b5fd)"
+               imageUrl="/live_teacher.png"
+               href="/live"
+             />
+          </div>
+        </div>
+
+        {/* ── LEARN SECTION ─────────────────────────────────── */}
+        <div className="mb-10">
+          <SectionHeader title="Learn" href="/library/books" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <LearnCard 
+                icon={BookOpen}
+                title="Book of the Month"
+                subtitle="Expand your vocabulary with English books"
+                xp={10}
+                href="/library/books"
+             />
+             <LearnCard 
+                icon={Newspaper}
+                title="Daily Article"
+                subtitle="Discover interesting scientific articles"
+                xp={15}
+                href="/library"
+             />
+          </div>
+        </div>
+
+        {/* ── FOOTER TAGLINE ────────────────────────────────── */}
+        <p className="text-center text-sm font-medium text-[#9aa5b1] pt-4 pb-8">
+           Speak. Make mistakes. <span className="text-[#c9a84c] italic underline decoration-[#c9a84c]/30 underline-offset-4">Grow.</span>
+        </p>
 
       </div>
-
-      {/* Tagline */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="text-center text-sm pt-5 pb-2"
-        style={{ color: "#9aa5b1" }}
-      >
-        <em>Speak. Make mistakes. </em>
-        <em style={{ color: "#c9a84c", fontStyle: "italic", fontWeight: 700 }}>Grow.</em>
-      </motion.p>
     </div>
   );
 }

@@ -27,18 +27,96 @@ export const PROFICIENCY_LEVELS = [
 ];
 
 export const TOPICS = [
-  { id: "tech", label: "Technology", icon: "💻" },
-  { id: "culture", label: "Culture & Arts", icon: "🎨" },
-  { id: "business", label: "Business", icon: "💼" },
-  { id: "travel", label: "Travel", icon: "✈️" },
-  { id: "food", label: "Food & Cuisine", icon: "🍳" },
-  { id: "sports", label: "Sports", icon: "⚽" },
-  { id: "science", label: "Science", icon: "🔬" },
-  { id: "politics", label: "Politics", icon: "🏛️" },
-  { id: "music", label: "Music", icon: "🎵" },
-  { id: "film", label: "Film & TV", icon: "🎬" },
-  { id: "nature", label: "Nature", icon: "🌿" },
-  { id: "fashion", label: "Fashion", icon: "👗" },
+  {
+    id: "tech",
+    label: "Technology",
+    icon: "💻",
+    subTopics: [
+      "AI & Machine Learning",
+      "Software Development",
+      "Digital Gadgets",
+      "Web Development",
+      "Network Security",
+    ],
+  },
+  {
+    id: "culture",
+    label: "Culture & Arts",
+    icon: "🎨",
+    subTopics: [
+      "History",
+      "Museums & Galleries",
+      "Festivals",
+      "Architecture",
+      "Local Traditions",
+    ],
+  },
+  {
+    id: "business",
+    label: "Business",
+    icon: "💼",
+    subTopics: [
+      "Entrepreneurship",
+      "Marketing",
+      "Finance",
+      "Leadership",
+      "Economy",
+    ],
+  },
+  {
+    id: "travel",
+    label: "Travel",
+    icon: "✈️",
+    subTopics: ["Destinations", "Cruises", "Solo Travel", "Ecotourism", "Hiking"],
+  },
+  {
+    id: "food",
+    label: "Food & Cuisine",
+    icon: "🍳",
+    subTopics: ["Cooking", "Street Food", "Healthy Diet", "Fine Dining", "Wine"],
+  },
+  {
+    id: "sports",
+    label: "Sports",
+    icon: "⚽",
+    subTopics: ["Football", "Tennis", "Fitness", "Extreme Sports", "E-Sports"],
+  },
+  {
+    id: "science",
+    label: "Science",
+    icon: "🔬",
+    subTopics: ["Physics", "Biology", "Environment", "Technology", "Research"],
+  },
+  {
+    id: "politics",
+    label: "Politics",
+    icon: "🏛️",
+    subTopics: ["Government", "International Relations", "Human Rights", "Policy"],
+  },
+  {
+    id: "music",
+    label: "Music",
+    icon: "🎵",
+    subTopics: ["Genres", "Instruments", "Concerts", "Theory", "Production"],
+  },
+  {
+    id: "film",
+    label: "Film & TV",
+    icon: "🎬",
+    subTopics: ["Movies", "Documentaries", "Animations", "Production", "Cinema"],
+  },
+  {
+    id: "nature",
+    label: "Nature",
+    icon: "🌿",
+    subTopics: ["Wildlife", "Environment", "Plants", "Gardening", "Ecology"],
+  },
+  {
+    id: "fashion",
+    label: "Fashion",
+    icon: "👗",
+    subTopics: ["Apparel", "Trends", "Sustainability", "Design", "Shows"],
+  },
 ];
 
 export const DAILY_GOALS = [
@@ -60,6 +138,7 @@ export const ARTICLES = [
     level: "B1",
     language: "Spanish",
     completed: true,
+    read: true,
     content: `La inteligencia artificial está cambiando el panorama tecnológico en España de maneras que nunca antes habíamos visto. Las grandes empresas tecnológicas están invirtiendo miles de millones de euros en proyectos de IA que prometen revolucionar desde la sanidad hasta el transporte.
 
 En Madrid, el hub tecnológico más importante del país, startups como Clarity AI y Wallbox están liderando esta transformación. Clarity AI, por ejemplo, utiliza algoritmos de aprendizaje automático para evaluar el impacto social y medioambiental de las inversiones, mientras que Wallbox está revolucionando la carga de vehículos eléctricos con software inteligente.
@@ -81,6 +160,7 @@ La clave, según los expertos, estará en la capacidad de reconversión laboral.
     level: "B2",
     language: "French",
     completed: true,
+    read: true,
     content: `Le marché du travail français a connu des transformations profondes depuis la fin de la pandémie de COVID-19. La généralisation du télétravail, l'essor de l'économie des plateformes et les nouvelles attentes des salariés ont redessiné le paysage professionnel du pays.
 
 Selon les dernières données de l'INSEE, le taux de chômage en France s'établit à 7,1% au troisième trimestre 2024, son niveau le plus bas depuis les années 1990. Cette embellie du marché du travail s'explique en partie par la forte création d'emplois dans les secteurs de la technologie, de la santé et des énergies renouvelables.
@@ -100,6 +180,7 @@ Cette évolution soulève de nouvelles questions juridiques et sociales. Le droi
     level: "B1",
     language: "Spanish",
     completed: false,
+    read: false,
     isFeatured: true,
     content: `Tokio es una ciudad de contradicciones fascinantes. Con más de 13 millones de habitantes en su área metropolitana, es la metrópolis más grande del mundo, pero sus calles se mantienen limpias, sus trenes llegan con una precisión milimétrica y sus ciudadanos mantienen un nivel de cortesía que muchos occidentales encuentran sorprendente.
 
@@ -136,6 +217,128 @@ El contraste entre lo antiguo y lo moderno es quizás la característica más de
     completed: false,
     locked: true,
     content: "",
+  },
+];
+
+export const NEWS_CATEGORIES = ["General", "Tech", "Science", "Economy", "Culture", "Health"];
+
+export const NEWS_ITEMS = [
+  {
+    id: "n1",
+    title: "Global Markets Rally as Tech Stocks Hit Record Highs",
+    summary: "Investors show renewed confidence in semiconductor and AI companies across major indices.",
+    category: "Economy",
+    date: new Date(),
+    read: false,
+    image: "📈",
+  },
+  {
+    id: "n2",
+    title: "NASA's Newest Mars Rover Successfully Lands",
+    summary: "The rover will search for signs of ancient life and collect samples for future return to Earth.",
+    category: "Science",
+    date: new Date(),
+    read: false,
+    image: "🚀",
+  },
+  {
+    id: "n3",
+    title: "AI Breakthrough in Medical Diagnostics",
+    summary: "New machine learning model identifies rare diseases with 99.8% accuracy.",
+    category: "Tech",
+    date: new Date(),
+    read: false,
+    image: "🔬",
+  },
+  {
+    id: "n4",
+    title: "Major Cultural Festival Returns to Kyoto",
+    summary: "The streets were filled with traditional costumes and music for the first time in three years.",
+    category: "Culture",
+    date: new Date(Date.now() - 86400000), // Yesterday
+    read: true,
+    image: "🏮",
+  },
+  {
+    id: "n5",
+    title: "Understanding the New Health Guidelines for 2026",
+    summary: "Simplified nutrition and exercise recommendations released by global health authorities.",
+    category: "Health",
+    date: new Date(Date.now() - 86400000 * 2), // 2 days ago
+    read: true,
+    image: "🍎",
+  },
+  {
+    id: "n6",
+    title: "Renewable Energy Capacity Set to Double by 2030",
+    summary: "Solar and wind projects lead the charge in the latest global energy outlook report.",
+    category: "Science",
+    date: new Date(Date.now() - 86400000 * 3), // 3 days ago
+    read: true,
+    image: "☀️",
+  },
+];
+
+export const PRACTICE_DECK = [
+  {
+    id: "v1",
+    front: "Ephemeral",
+    back: "Lasting for a very short time.",
+    example: "The beauty of a sunset is ephemeral.",
+    type: "Vocabulary",
+    level: "C1",
+    category: "Nature",
+    nextReview: new Date(),
+    ease: 2.5,
+    interval: 0,
+  },
+  {
+    id: "g1",
+    front: "If I were you...",
+    back: "Used for giving advice (Second Conditional).",
+    example: "If I were you, I would take that offer.",
+    type: "Grammar",
+    level: "B1",
+    category: "Advice",
+    nextReview: new Date(),
+    ease: 2.3,
+    interval: 0,
+  },
+  {
+    id: "v2",
+    front: "Pernicious",
+    back: "Having a harmful effect, especially in a gradual or subtle way.",
+    example: "The pernicious effects of social media.",
+    type: "Vocabulary",
+    level: "C2",
+    category: "Social",
+    nextReview: new Date(),
+    ease: 2.5,
+    interval: 0,
+  },
+  {
+    id: "v3",
+    front: "Surreal",
+    back: "Happening in a way that is bizarre or like a dream.",
+    example: "It was a surreal experience to win the lottery.",
+    type: "Vocabulary",
+    level: "B2",
+    category: "Experience",
+    nextReview: new Date(),
+    ease: 2.5,
+    interval: 0,
+  },
+  {
+    id: "g2",
+    front: "Passive Voice",
+    back: "The subject receives the action: [Be + Past Participle].",
+    example: "The book was written by Jane.",
+    type: "Grammar",
+    level: "A2",
+    category: "Structure",
+    nextReview: new Date(),
+    ease: 2.4,
+    interval: 0,
   },
 ];
 

@@ -1,8 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, ChevronRight, Play, ChevronDown, ChevronUp } from "lucide-react";
+import { Users, ChevronRight, Play, ChevronDown, ChevronUp, BookMarked } from "lucide-react";
 import { PAST_SESSIONS } from "@/lib/data";
+import { useRouter } from "next/navigation";
+import SaveWordModal from "@/components/SaveWordModal";
 
 function LiveDot() {
   return (
@@ -63,6 +65,14 @@ const SESSIONS = [
 
 export default function LivePage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [saveWord, setSaveWord] = useState("");
+  const router = useRouter();
+
+  const openSave = (word: string) => {
+    setSaveWord(word);
+    setSaveModalOpen(true);
+  };
 
   return (
     <div
@@ -178,6 +188,7 @@ export default function LivePage() {
               </div>
 
               <button
+                onClick={() => router.push("/live/s1")}
                 className="w-full py-3.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all"
                 style={{ background: "white", color: "#1a2b5e", boxShadow: "0 4px 16px rgba(0,0,0,0.2)" }}
               >
@@ -297,13 +308,19 @@ export default function LivePage() {
                                 </p>
                                 <div className="flex flex-wrap gap-1.5">
                                   {session.vocabulary.map((word) => (
-                                    <span
+                                    <button
                                       key={word}
-                                      className="text-xs px-2.5 py-1 rounded-full font-medium"
+                                      onClick={() => openSave(word)}
+                                      className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium transition-all group"
                                       style={{ background: "rgba(26,43,94,0.08)", color: "#1a2b5e" }}
                                     >
                                       {word}
-                                    </span>
+                                      <BookMarked
+                                        size={10}
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                        style={{ color: "#c9a84c" }}
+                                      />
+                                    </button>
                                   ))}
                                 </div>
                               </>
@@ -319,6 +336,11 @@ export default function LivePage() {
           </div>
         </div>
       </div>
+      <SaveWordModal
+        isOpen={saveModalOpen}
+        onClose={() => setSaveModalOpen(false)}
+        prefillWord={saveWord}
+      />
     </div>
   );
 }

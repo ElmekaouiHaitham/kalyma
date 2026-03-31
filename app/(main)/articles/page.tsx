@@ -24,7 +24,7 @@ const MORE_ARTICLES = [
   },
 ];
 
-export default function LibraryPage() {
+export default function ArticlesPage() {
   const router = useRouter();
   const featured = ARTICLES.find((a) => a.isFeatured) || ARTICLES[0];
 
@@ -203,13 +203,29 @@ export default function LibraryPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 + i * 0.06 }}
             onClick={() => router.push(`/library/${article.id}`)}
-            className="w-full flex items-center gap-4 p-4 rounded-2xl text-left card-hover"
+            className="w-full flex items-center gap-4 p-4 rounded-2xl text-left card-hover relative"
             style={{
               background: "white",
-              border: "1px solid rgba(26,43,94,0.08)",
+              border: `1px solid ${
+                article.read === false
+                  ? "rgba(34,197,94,0.3)"
+                  : "rgba(26,43,94,0.08)"
+              }`,
               boxShadow: "0 2px 8px rgba(26,43,94,0.05)",
             }}
           >
+            {article.read === false && (
+              <span
+                className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                style={{
+                  background: "rgba(34,197,94,0.15)",
+                  color: "#16a34a",
+                  border: "1px solid rgba(34,197,94,0.3)",
+                }}
+              >
+                New
+              </span>
+            )}
             <div
               className="w-16 h-16 rounded-xl flex items-center justify-center text-2xl shrink-0"
               style={{ background: "rgba(26,43,94,0.06)" }}

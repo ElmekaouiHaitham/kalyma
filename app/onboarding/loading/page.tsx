@@ -41,15 +41,14 @@ export default function LoadingPage() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center"
-      style={{ background: "var(--bg-base)" }}
+      className="min-h-screen flex flex-col items-center justify-center bg-[#f0f4ff]"
     >
       {/* Background glow */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
         <div
-          className="w-[400px] h-[400px] rounded-full opacity-20 animate-pulse"
+          className="w-[500px] h-[500px] rounded-full opacity-30 animate-pulse blur-3xl"
           style={{
-            background: "radial-gradient(circle, #22c55e 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(201,168,76,0.15) 0%, transparent 70%)",
           }}
         />
       </div>
@@ -57,15 +56,14 @@ export default function LoadingPage() {
       <div className="relative z-10 text-center px-8 max-w-sm">
         {/* Animated logo */}
         <motion.div
-          animate={{ scale: [1, 1.08, 1], rotate: [0, 5, -5, 0] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          className="inline-flex items-center justify-center w-20 h-20 rounded-2xl glow-green mb-6"
-          style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}
+          animate={{ scale: [1, 1.05, 1], rotate: [0, 2, -2, 0] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className="inline-flex items-center justify-center w-24 h-24 rounded-[32px] mb-8 bg-white shadow-2xl shadow-[#1a2b5e]/10 p-5"
         >
-          <Globe className="w-9 h-9 text-white" />
+          <img src="/logo.png" alt="kalyma.ma" className="w-full h-full object-contain" />
         </motion.div>
 
-        <h1 className="text-2xl font-bold mb-2">Building your experience</h1>
+        <h1 className="text-3xl font-bold mb-3 font-outfit text-[#1a2b5e]">Building Your Experience</h1>
 
         {/* Animated message */}
         <motion.p
@@ -73,39 +71,33 @@ export default function LoadingPage() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
-          className="text-sm mb-8"
-          style={{ color: "var(--text-secondary)" }}
+          className="text-sm mb-10 font-medium text-[#4a5568] h-5"
         >
           {MESSAGES[msgIndex]}
         </motion.p>
 
         {/* Progress bar */}
         <div
-          className="w-full rounded-full h-1.5 mb-3 overflow-hidden"
-          style={{ background: "var(--border-subtle)" }}
+          className="w-full rounded-full h-2 mb-4 overflow-hidden bg-[#1a2b5e]/5"
         >
           <motion.div
-            className="h-full rounded-full"
-            style={{
-              background: "linear-gradient(90deg, #22c55e, #4ade80)",
-              width: `${progress}%`,
-            }}
+            className="h-full rounded-full bg-gradient-to-r from-[#1a2b5e] to-[#c9a84c]"
+            style={{ width: `${progress}%` }}
             transition={{ duration: 0.1 }}
           />
         </div>
-        <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-          {progress}%
+        <p className="text-xs font-black text-[#1a2b5e] tracking-widest uppercase">
+          {progress}% Complete
         </p>
 
         {/* Dots loader */}
-        <div className="flex justify-center gap-1.5 mt-6">
+        <div className="flex justify-center gap-2 mt-8 pb-40">
           {[0, 1, 2].map((i) => (
             <motion.div
               key={i}
               animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
               transition={{ duration: 1, delay: i * 0.2, repeat: Infinity }}
-              className="w-2 h-2 rounded-full"
-              style={{ background: "var(--green-primary)" }}
+              className="w-2.5 h-2.5 rounded-full bg-[#c9a84c]"
             />
           ))}
         </div>

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -10,9 +10,12 @@ import {
   Send,
   ChevronRight,
   Tag,
+  BookMarked,
+  Sparkles,
 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { ARTICLES } from "@/lib/data";
+import SaveWordModal from "@/components/SaveWordModal";
 
 const TRANSLATIONS: Record<string, string> = {
   "inteligencia artificial": "artificial intelligence",
@@ -82,6 +85,45 @@ export default function ReaderPage() {
       text: `I'm ready to help you understand this article about "${article.title}". Tap any highlighted phrase, or ask me anything!`,
     },
   ]);
+
+  // Text-selection bubble state
+  const [selectionBubble, setSelectionBubble] = useState<{
+    text: string;
+    x: number;
+    y: number;
+  } | null>(null);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [saveWord, setSaveWord] = useState("");
+
+  const handleTextSelection = useCallback(() => {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed || !selection.toString().trim()) {
+      setSelectionBubble(null);
+      return;
+    }
+    const text = selection.toString().trim().slice(0, 60);
+    const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+    setSelectionBubble({
+      text,
+      x: rect.left + rect.width / 2,
+      y: rect.top - 8,
+    });
+  }, []);
+
+  const askAIAboutSelection = (text: string) => {
+    setSelectionBubble(null);
+    window.getSelection()?.removeAllRanges();
+    setChatMessages((prev) => [
+      ...prev,
+      { role: "user", text: `What does "${text}" mean?` },
+      {
+        role: "ai",
+        text: `Great question! "${text}" — this is a key phrase in the article. In context, it refers to the broader topic being discussed. Would you like me to break down the grammar or the vocabulary further?`,
+      },
+    ]);
+    setPanelOpen(true);
+  };
 
   const handleWordClick = (word: string, e: React.MouseEvent) => {
     const translation = TRANSLATIONS[word.toLowerCase()];
@@ -201,7 +243,7 @@ export default function ReaderPage() {
         </div>
 
         {/* Article text */}
-        <div className="prose-reader relative">
+        <div className="prose-reader relative" onMouseUp={handleTextSelection} onTouchEnd={handleTextSelection}>
           {paragraphs.map((para, pIdx) => {
             const parts = highlightText(para);
             return (
@@ -244,6 +286,55 @@ export default function ReaderPage() {
             )}
           </AnimatePresence>
         </div>
+
+        {/* Selection bubble */}
+        <AnimatePresence>
+          {selectionBubble && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 6 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="fixed z-50 flex items-center gap-1 rounded-2xl px-2 py-1.5 shadow-xl"
+              style={{
+                left: Math.min(selectionBubble.x, window.innerWidth - 200),
+                top: selectionBubble.y,
+                transform: "translate(-50%, -100%)",
+                background: "#1a2b5e",
+                border: "1px solid rgba(255,255,255,0.15)",
+              }}
+            >
+              <button
+                onClick={() => askAIAboutSelection(selectionBubble.text)}
+                className="flex items-center gap-1 px-2 py-1 rounded-xl text-xs font-semibold text-white"
+                style={{ background: "rgba(255,255,255,0.15)" }}
+              >
+                <Sparkles size={11} />
+                Ask AI
+              </button>
+              <div className="w-px h-4" style={{ background: "rgba(255,255,255,0.2)" }} />
+              <button
+                onClick={() => {
+                  setSaveWord(selectionBubble.text);
+                  setSaveModalOpen(true);
+                  setSelectionBubble(null);
+                  window.getSelection()?.removeAllRanges();
+                }}
+                className="flex items-center gap-1 px-2 py-1 rounded-xl text-xs font-semibold"
+                style={{ color: "#c9a84c" }}
+              >
+                <BookMarked size={11} />
+                Save
+              </button>
+              <button
+                onClick={() => setSelectionBubble(null)}
+                className="px-1"
+                style={{ color: "rgba(255,255,255,0.5)" }}
+              >
+                <X size={12} />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* FAB – AI Assistant */}
@@ -384,6 +475,11 @@ export default function ReaderPage() {
           </>
         )}
       </AnimatePresence>
+      <SaveWordModal
+        isOpen={saveModalOpen}
+        onClose={() => setSaveModalOpen(false)}
+        prefillWord={saveWord}
+      />
     </div>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Mic } from "lucide-react";
+import { Send, Mic, BookMarked } from "lucide-react";
+import SaveWordModal from "@/components/SaveWordModal";
 
 type Msg = { id: string; role: "user" | "ai"; content: string; ts: Date };
 
@@ -29,7 +30,17 @@ export default function ChatPage() {
   const [mode, setMode] = useState<Mode>("text");
   const [isTyping, setIsTyping] = useState(false);
   const [started, setStarted] = useState(false);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [saveWord, setSaveWord] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const openSaveModal = (content: string) => {
+    // Extract last bold word or first word from AI message
+    const boldMatch = content.match(/\*\*([^*]+)\*\*/);
+    const extracted = boldMatch ? boldMatch[1] : content.split(" ").slice(0, 2).join(" ");
+    setSaveWord(extracted);
+    setSaveModalOpen(true);
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -222,6 +233,20 @@ export default function ChatPage() {
                     {msg.ts.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} ✓
                   </span>
                 )}
+                {msg.role === "ai" && (
+                  <button
+                    onClick={() => openSaveModal(msg.content)}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all mt-0.5 self-start"
+                    style={{
+                      background: "rgba(26,43,94,0.07)",
+                      border: "1px solid rgba(26,43,94,0.12)",
+                      color: "#1a2b5e",
+                    }}
+                  >
+                    <BookMarked size={11} />
+                    Save Word
+                  </button>
+                )}
               </div>
             </motion.div>
           ))}
@@ -318,6 +343,11 @@ export default function ChatPage() {
           </button>
         </div>
       </div>
+      <SaveWordModal
+        isOpen={saveModalOpen}
+        onClose={() => setSaveModalOpen(false)}
+        prefillWord={saveWord}
+      />
     </div>
   );
 }

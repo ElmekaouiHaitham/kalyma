@@ -14,6 +14,8 @@ import {
   Users,
   Settings,
   LayoutDashboard,
+  MessageSquare,
+  FileText,
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -85,9 +87,10 @@ function SidebarItem({
 
 const NAV_ITEMS = [
   { label: "Home", icon: Home, href: "/home" },
-  { label: "Library", icon: BookOpen, href: "/library" },
-  { label: "Live", icon: Radio, href: "/live" },
-  { label: "Chat", icon: MessageCircle, href: "/chat" },
+  { label: "Articles", icon: FileText, href: "/articles" },
+  { label: "Books", icon: BookOpen, href: "/library/books" },
+  { label: "Practice", icon: Sparkles, href: "/practice" },
+  { label: "News", icon: Newspaper, href: "/news" },
 ];
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
@@ -194,21 +197,21 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* Library section */}
-        <SidebarSection label="Library" />
+        <SidebarSection label="Study" />
         <nav className="px-3 space-y-0.5">
+          <SidebarItem
+            icon={FileText}
+            label="Articles"
+            href="/articles"
+            active={active("/articles")}
+            onClick={() => nav("/articles")}
+          />
           <SidebarItem
             icon={BookOpen}
             label="Books"
             href="/library/books"
             active={active("/library/books")}
             onClick={() => nav("/library/books")}
-          />
-          <SidebarItem
-            icon={Newspaper}
-            label="Articles"
-            href="/library"
-            active={active("/library") && !active("/library/books")}
-            onClick={() => nav("/library")}
           />
         </nav>
 
@@ -227,15 +230,15 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             label="Live Sessions"
             href="/live"
             active={active("/live")}
-            dot={true}
             onClick={() => nav("/live")}
           />
+
           <SidebarItem
-            icon={Users}
-            label="Community Chat"
-            href="/community"
-            active={active("/community")}
-            onClick={() => nav("/community")}
+            icon={Newspaper}
+            label="News"
+            href="/news"
+            active={active("/news")}
+            onClick={() => nav("/news")}
           />
           <SidebarItem
             icon={Settings}
@@ -286,15 +289,16 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* Top bar (mobile only) */}
-        <header
-          className="md:hidden shrink-0 flex items-center justify-between px-4 z-40"
-          style={{
-            height: 60,
-            background: "white",
-            borderBottom: "1px solid rgba(26,43,94,0.08)",
-            boxShadow: "0 1px 6px rgba(26,43,94,0.06)",
-          }}
-        >
+        {!isHome && (
+          <header
+            className="md:hidden shrink-0 flex items-center justify-between px-4 z-40"
+            style={{
+              height: 60,
+              background: "white",
+              borderBottom: "1px solid rgba(26,43,94,0.08)",
+              boxShadow: "0 1px 6px rgba(26,43,94,0.06)",
+            }}
+          >
           <button
             onClick={() => router.back()}
             className="w-9 h-9 flex items-center justify-center rounded-full"
@@ -330,6 +334,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             </button>
           </div>
         </header>
+        )}
 
         {/* Desktop top utility bar (md+) */}
         <div

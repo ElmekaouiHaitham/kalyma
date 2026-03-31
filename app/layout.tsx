@@ -2,20 +2,17 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Kalyma.ma — Speak English with Confidence",
+  title: "kalyma.ma — Speak English with Confidence",
   description:
-    "Master any language with AI-powered articles, live sessions, and conversational practice. AtlasBridge adapts to your level and interests.",
-  keywords: [
-    "language learning",
-    "AI tutor",
-    "Spanish",
-    "French",
-    "live sessions",
-  ],
+    "Master English with AI-powered articles, live sessions, and conversational practice. kalyma.ma adapts to your level and interests.",
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
   openGraph: {
-    title: "AtlasBridge",
+    title: "kalyma.ma",
     description:
-      "Learn languages through real-world content and AI conversation",
+      "Learn English through real-world content and AI conversation",
     type: "website",
   },
 };
