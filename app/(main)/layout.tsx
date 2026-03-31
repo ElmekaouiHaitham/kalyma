@@ -16,6 +16,7 @@ import {
   LayoutDashboard,
   MessageSquare,
   FileText,
+  GraduationCap,
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -212,6 +213,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             href="/library/books"
             active={active("/library/books")}
             onClick={() => nav("/library/books")}
+          />
+          <SidebarItem
+            icon={GraduationCap}
+            label="Practice"
+            href="/practice"
+            active={active("/practice")}
+            onClick={() => nav("/practice")}
           />
         </nav>
 

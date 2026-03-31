@@ -165,7 +165,7 @@ export default function ReadingBooksPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.22 + i * 0.07 }}
-              onClick={() => {}}
+              onClick={() => router.push(`/library/books/${book.id}`)}
               className="flex flex-col text-left rounded-2xl overflow-hidden transition-all card-hover"
               style={{
                 background: "white",
@@ -222,8 +222,8 @@ export default function ReadingBooksPage() {
                   </span>
                 </div>
 
-                {/* Start Reading button */}
                 <button
+                  onClick={(e) => { e.stopPropagation(); router.push(`/library/books/${book.id}`); }}
                   className="w-full py-2 rounded-lg text-xs font-bold text-white mt-1 transition-all"
                   style={{
                     background: "linear-gradient(135deg, #1a2b5e, #0f1d4e)",

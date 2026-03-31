@@ -4,8 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Newspaper, Search, Filter, ChevronRight, Clock, CheckCircle2, Bookmark } from "lucide-react";
 import { NEWS_ITEMS, NEWS_CATEGORIES } from "@/lib/data";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 export default function NewsPage() {
+  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -86,7 +88,8 @@ export default function NewsPage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ delay: idx * 0.05 }}
-                    className="group bg-white rounded-2xl sm:rounded-[2rem] overflow-hidden border border-[#1a2b5e]/10 hover:border-[#1a2b5e]/30 transition-all hover:shadow-xl hover:shadow-[#1a2b5e]/5 flex flex-col"
+                  className="group bg-white rounded-2xl sm:rounded-[2rem] overflow-hidden border border-[#1a2b5e]/10 hover:border-[#1a2b5e]/30 transition-all hover:shadow-xl hover:shadow-[#1a2b5e]/5 flex flex-col cursor-pointer"
+                    onClick={() => router.push(`/news/${item.id}`)}
                   >
                     <div className="bg-[#f8fafc] flex items-center justify-center text-4xl sm:text-6xl h-32 sm:h-48 w-full group-hover:scale-105 transition-transform duration-700 shrink-0">
                       {item.image}
@@ -107,7 +110,10 @@ export default function NewsPage() {
                         {item.summary}
                       </p>
                       <div className="flex items-center justify-between mt-auto pt-2 sm:pt-4 border-t border-[#1a2b5e]/5">
-                        <button className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm font-bold text-[#1a2b5e] hover:gap-1.5 sm:hover:gap-2.5 transition-all">
+                        <button
+                          onClick={() => router.push(`/news/${item.id}`)}
+                          className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm font-bold text-[#1a2b5e] hover:gap-1.5 sm:hover:gap-2.5 transition-all"
+                        >
                           Read <span className="hidden xs:inline">More</span>
                           <ChevronRight size={14} className="sm:w-[18px] sm:h-[18px]" />
                         </button>
@@ -142,7 +148,11 @@ export default function NewsPage() {
         <div className="bg-white rounded-[2rem] border border-[#1a2b5e]/10 overflow-hidden shadow-sm">
           <div className="divide-y divide-[#1a2b5e]/5">
             {previouslyRead.map((item) => (
-              <div key={item.id} className="p-4 sm:p-6 hover:bg-[#f8fafc] transition-colors flex items-center gap-4 sm:gap-6 group">
+              <div
+                key={item.id}
+                onClick={() => router.push(`/news/${item.id}`)}
+                className="p-4 sm:p-6 hover:bg-[#f8fafc] transition-colors flex items-center gap-4 sm:gap-6 group cursor-pointer"
+              >
                 <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-[#f1f5f9] flex items-center justify-center text-2xl sm:text-3xl shrink-0">
                   {item.image}
                 </div>
