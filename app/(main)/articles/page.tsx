@@ -1,32 +1,66 @@
 "use client";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronRight, Star, Bookmark, BookOpen } from "lucide-react";
+import { ChevronRight, Star, Bookmark, BookOpen, CheckCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ARTICLES } from "@/lib/data";
+import { useAuth } from "@/app/providers";
 
-const MORE_ARTICLES = [
-  {
-    id: "sleep",
-    title: "The Science of Sleep",
-    subtitle: "Understanding the importance of rest",
-    category: "SCIENTIFIC",
-    readingTime: "4 min read",
-    image: "🌙",
-  },
-  {
-    id: "climate",
-    title: "Climate Change and Our Future",
-    subtitle: "",
-    category: "SCIENTIFIC",
-    readingTime: "8 min read",
-    image: "🌍",
-  },
-];
+interface Article {
+  id: string;
+  title: string;
+  summary?: string;
+  topic: string;
+  difficulty: "beginner" | "intermediate" | "advanced";
+  reading_time_mins: number;
+  thumbnail_url?: string;
+}
+
+interface StartedArticle {
+  article_id: string;
+  completion_pct: number;
+  completed_at: string | null;
+  article: Article;
+}
 
 export default function ArticlesPage() {
   const router = useRouter();
-  const featured = ARTICLES.find((a) => a.isFeatured) || ARTICLES[0];
+  const { user, session } = useAuth();
+  
+  const [recommended, setRecommended] = useState<Article[]>([]);
+  const [started, setStarted] = useState<StartedArticle[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!session?.access_token) return;
+
+    const fetchArticles = async () => {
+      try {
+        const headers = { Authorization: `Bearer ${session.access_token}` };
+        const [recRes, startRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/articles/recommended`, { headers }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/articles/me/started`, { headers })
+        ]);
+
+        if (recRes.ok) setRecommended(await recRes.json());
+        if (startRes.ok) setStarted(await startRes.json());
+      } catch (err) {
+        console.error("Failed to fetch articles", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchArticles();
+  }, [session]);
+
+  const featured = recommended[0];
+  const moreRecommended = recommended.slice(1);
+  const firstName = user?.full_name?.split(" ")[0] || "There";
+
+  if (isLoading) {
+    return <div className="p-8 text-center text-gray-500">Loading articles...</div>;
+  }
 
   return (
     <div
@@ -42,121 +76,112 @@ export default function ArticlesPage() {
           Articles
         </h1>
         <p className="text-sm" style={{ color: "#4a5568" }}>
-          Hi Samir! Here&apos;s your article for today:
+          Hi {firstName}! Here&apos;s your article for today:
         </p>
       </motion.div>
-
-      {/* Reading Books Banner */}
-      <motion.button
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.08 }}
-        onClick={() => router.push("/library/books")}
-        className="w-full flex items-center gap-4 p-4 rounded-2xl text-left card-hover"
-        style={{
-          background: "linear-gradient(135deg, #1a2b5e 0%, #2d4080 100%)",
-          boxShadow: "0 4px 16px rgba(26,43,94,0.25)",
-        }}
-      >
-        <div
-          className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-xl"
-          style={{ background: "rgba(255,255,255,0.15)" }}
-        >
-          📚
-        </div>
-        <div className="flex-1">
-          <div className="font-bold text-sm text-white mb-0.5">Reading Books</div>
-          <div className="text-xs" style={{ color: "rgba(255,255,255,0.65)" }}>
-            Improve reading comprehension with curated books
-          </div>
-        </div>
-        <ChevronRight size={16} style={{ color: "rgba(255,255,255,0.7)" }} />
-      </motion.button>
 
       {/* Featured Article Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="rounded-2xl overflow-hidden card-hover cursor-pointer"
-        style={{
-          background: "white",
-          border: "1px solid rgba(26,43,94,0.1)",
-          boxShadow: "0 4px 20px rgba(26,43,94,0.1)",
-        }}
-        onClick={() => router.push(`/library/${featured.id}`)}
-      >
-        {/* Article Meta */}
-        <div className="px-5 pt-5 pb-3">
-          <div className="flex items-center gap-2 mb-2">
-            <span
-              className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full"
-              style={{ background: "rgba(26,43,94,0.08)", color: "#1a2b5e" }}
-            >
-              <Star size={10} />
-              SCIENTIFIC
-            </span>
-            <span className="text-xs" style={{ color: "#9aa5b1" }}>
-              5 min read
-            </span>
-            <Bookmark size={14} className="ml-auto" style={{ color: "#9aa5b1" }} />
+      {featured && (
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="rounded-2xl overflow-hidden card-hover cursor-pointer"
+          style={{
+            background: "white",
+            border: "1px solid rgba(26,43,94,0.1)",
+            boxShadow: "0 4px 20px rgba(26,43,94,0.1)",
+          }}
+          onClick={() => router.push(`/library/${featured.id}`)}
+        >
+          {/* Article Meta */}
+          <div className="px-5 pt-5 pb-3">
+            <div className="flex items-center gap-2 mb-2">
+              <span
+                className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full uppercase"
+                style={{ background: "rgba(26,43,94,0.08)", color: "#1a2b5e" }}
+              >
+                <Star size={10} />
+                {featured.topic}
+              </span>
+              <span className="text-xs" style={{ color: "#9aa5b1" }}>
+                {featured.reading_time_mins} min read
+              </span>
+              <Bookmark size={14} className="ml-auto" style={{ color: "#9aa5b1" }} />
+            </div>
+            <h2 className="text-lg font-bold leading-snug mb-1" style={{ color: "#1a2b5e" }}>
+              {featured.title}
+            </h2>
+            <p className="text-sm line-clamp-2" style={{ color: "#4a5568" }}>
+              {featured.summary || "Read more about this topic..."}
+            </p>
           </div>
-          <h2 className="text-lg font-bold leading-snug mb-1" style={{ color: "#1a2b5e" }}>
-            The Human Brain: An Amazing Processor
-          </h2>
-          <p className="text-sm" style={{ color: "#4a5568" }}>
-            Discover the mysteries of how our brain processes information.
-          </p>
-        </div>
 
-        {/* Hero Image */}
-        <div className="relative w-full" style={{ height: 180 }}>
-          <Image
-            src="/brain_hero.png"
-            alt="The Human Brain"
-            fill
-            className="object-cover"
-            priority
-          />
-        </div>
+          {/* Hero Image */}
+          <div className="relative w-full bg-slate-200" style={{ height: 180 }}>
+            {featured.thumbnail_url ? (
+               <Image
+                 src={featured.thumbnail_url}
+                 alt={featured.title}
+                 fill
+                 className="object-cover"
+                 priority
+               />
+            ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-4xl">📖</div>
+            )}
+          </div>
 
-        {/* CTA */}
-        <div className="px-5 py-4">
-          <button
-            className="w-full py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2"
-            style={{
-              background: "linear-gradient(135deg, #1a2b5e, #0f1d4e)",
-              boxShadow: "0 4px 14px rgba(26,43,94,0.25)",
-            }}
+          {/* CTA */}
+          <div className="px-5 py-4">
+            <button
+              className="w-full py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2"
+              style={{
+                background: "linear-gradient(135deg, #1a2b5e, #0f1d4e)",
+                boxShadow: "0 4px 14px rgba(26,43,94,0.25)",
+              }}
+            >
+              Start Reading &nbsp;›
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Recommended Header */}
+      {moreRecommended.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="flex items-end justify-between"
+        >
+          <div>
+            <h3 className="font-bold text-base mb-0.5" style={{ color: "#1a2b5e" }}>
+              Recommended for you
+            </h3>
+            <p className="text-xs" style={{ color: "#9aa5b1" }}>
+              Articles aligned with your preferences.
+            </p>
+          </div>
+          <button 
+             onClick={() => router.push('/library/all-articles')}
+             className="text-xs font-bold px-3 py-1.5 rounded-lg"
+             style={{ background: "rgba(26,43,94,0.08)", color: "#1a2b5e" }}
           >
-            Start Reading &nbsp;›
+             Discover All
           </button>
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
 
-      {/* More Articles Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <h3 className="font-bold text-base mb-0.5" style={{ color: "#1a2b5e" }}>
-          More Articles
-        </h3>
-        <p className="text-xs" style={{ color: "#9aa5b1" }}>
-          Expand your knowledge with new scientific articles every day.
-        </p>
-      </motion.div>
-
-      {/* Article list */}
+      {/* Recommended Article list */}
       <div className="space-y-3">
-        {MORE_ARTICLES.map((article, i) => (
+        {moreRecommended.map((article, i) => (
           <motion.button
             key={article.id}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 + i * 0.07 }}
-            onClick={() => {}}
+            onClick={() => router.push(`/library/${article.id}`)}
             className="w-full flex items-center gap-4 p-4 rounded-2xl text-left card-hover"
             style={{
               background: "white",
@@ -165,87 +190,34 @@ export default function ArticlesPage() {
             }}
           >
             <div
-              className="w-16 h-16 rounded-xl flex items-center justify-center text-2xl shrink-0"
-              style={{ background: "rgba(26,43,94,0.06)" }}
+              className="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center text-2xl shrink-0 relative"
             >
-              {article.image}
+              {article.thumbnail_url ? (
+                  <Image src={article.thumbnail_url} alt={article.title} fill className="object-cover" />
+              ) : "📚"}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-bold text-sm mb-0.5 leading-snug" style={{ color: "#1a2b5e" }}>
+              <div className="font-bold text-sm mb-0.5 leading-snug truncate" style={{ color: "#1a2b5e" }}>
                 {article.title}
               </div>
-              {article.subtitle && (
-                <div className="text-xs mb-1" style={{ color: "#4a5568" }}>
-                  {article.subtitle}
+              {article.summary && (
+                <div className="text-xs mb-1 truncate" style={{ color: "#4a5568" }}>
+                  {article.summary}
                 </div>
               )}
               <div className="flex items-center gap-2">
                 <span
-                  className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                  className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase"
                   style={{ background: "rgba(26,43,94,0.08)", color: "#1a2b5e" }}
                 >
                   <Star size={8} />
-                  {article.category}
+                  {article.topic}
                 </span>
                 <span className="text-xs" style={{ color: "#9aa5b1" }}>
-                  · {article.readingTime}
+                  · {article.reading_time_mins} min
                 </span>
-              </div>
-            </div>
-            <ChevronRight size={16} style={{ color: "#9aa5b1" }} />
-          </motion.button>
-        ))}
-
-        {ARTICLES.filter((a) => !a.isFeatured && !a.locked).map((article, i) => (
-          <motion.button
-            key={article.id}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 + i * 0.06 }}
-            onClick={() => router.push(`/library/${article.id}`)}
-            className="w-full flex items-center gap-4 p-4 rounded-2xl text-left card-hover relative"
-            style={{
-              background: "white",
-              border: `1px solid ${
-                article.read === false
-                  ? "rgba(34,197,94,0.3)"
-                  : "rgba(26,43,94,0.08)"
-              }`,
-              boxShadow: "0 2px 8px rgba(26,43,94,0.05)",
-            }}
-          >
-            {article.read === false && (
-              <span
-                className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full"
-                style={{
-                  background: "rgba(34,197,94,0.15)",
-                  color: "#16a34a",
-                  border: "1px solid rgba(34,197,94,0.3)",
-                }}
-              >
-                New
-              </span>
-            )}
-            <div
-              className="w-16 h-16 rounded-xl flex items-center justify-center text-2xl shrink-0"
-              style={{ background: "rgba(26,43,94,0.06)" }}
-            >
-              📖
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-bold text-sm mb-0.5 leading-snug line-clamp-2" style={{ color: "#1a2b5e" }}>
-                {article.title}
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                  style={{ background: "rgba(26,43,94,0.08)", color: "#1a2b5e" }}
-                >
-                  <Star size={8} />
-                  {article.category.toUpperCase()}
-                </span>
-                <span className="text-xs" style={{ color: "#9aa5b1" }}>
-                  · {article.readingTime} min
+                <span className="text-xs ml-auto capitalize" style={{ color: "#c9a84c" }}>
+                  {article.difficulty}
                 </span>
               </div>
             </div>
@@ -253,6 +225,94 @@ export default function ArticlesPage() {
           </motion.button>
         ))}
       </div>
+
+      {/* Started Articles */}
+      {started.length > 0 && (
+         <motion.div
+           initial={{ opacity: 0, y: 12 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ delay: 0.4 }}
+           className="mt-8"
+         >
+           <h3 className="font-bold text-base mb-0.5" style={{ color: "#1a2b5e" }}>
+             Continue Reading
+           </h3>
+           <p className="text-xs mb-3" style={{ color: "#9aa5b1" }}>
+             Pick up where you left off.
+           </p>
+           
+           <div className="space-y-3">
+             {started.map((sa, i) => {
+               const isCompleted = sa.completion_pct === 100;
+               return (
+                 <motion.button
+                   key={sa.article_id}
+                   initial={{ opacity: 0, y: 8 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   transition={{ delay: 0.45 + i * 0.05 }}
+                   onClick={() => router.push(`/library/${sa.article_id}`)}
+                   className="w-full flex flex-col gap-2 p-4 rounded-2xl text-left card-hover relative"
+                   style={{
+                     background: "white",
+                     border: `1px solid ${isCompleted ? "rgba(34,197,94,0.4)" : "rgba(26,43,94,0.08)"}`,
+                     boxShadow: "0 2px 8px rgba(26,43,94,0.05)",
+                   }}
+                 >
+                   {isCompleted && (
+                       <span className="absolute top-4 right-4 text-green-500">
+                          <CheckCircle size={18} />
+                       </span>
+                   )}
+                   <div className="flex gap-4 w-full items-center pr-6">
+                     <div
+                       className="w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0 overflow-hidden relative bg-slate-50"
+                     >
+                       {sa.article.thumbnail_url ? (
+                           <Image src={sa.article.thumbnail_url} alt="" fill className="object-cover" />
+                       ) : "📖"}
+                     </div>
+                     <div className="flex-1 min-w-0">
+                       <div className="font-bold text-sm mb-0.5 leading-snug truncate" style={{ color: "#1a2b5e" }}>
+                         {sa.article.title}
+                       </div>
+                       <div className="text-xs" style={{ color: "#9aa5b1" }}>
+                         {sa.article.topic.toUpperCase()} · {sa.article.reading_time_mins} min
+                       </div>
+                     </div>
+                   </div>
+                   
+                   {!isCompleted && (
+                     <div className="w-full bg-slate-100 rounded-full h-1.5 mt-1 overflow-hidden">
+                       <div 
+                          className="bg-blue-600 h-1.5 rounded-full" 
+                          style={{ width: `${sa.completion_pct}%` }} 
+                       />
+                     </div>
+                   )}
+                 </motion.button>
+               )
+             })}
+           </div>
+         </motion.div>
+      )}
+
+      {/* Fallback button if no recommendations */}
+      {recommended.length === 0 && (
+         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-4">
+             <button
+              onClick={() => router.push('/library/all-articles')}
+              className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
+              style={{
+                background: "white",
+                border: "1px solid rgba(26,43,94,0.1)",
+                color: "#1a2b5e"
+              }}
+            >
+              <BookOpen size={16} /> Discover All Articles
+            </button>
+         </motion.div>
+      )}
     </div>
   );
 }
+

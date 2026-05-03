@@ -10,10 +10,14 @@ import {
   Newspaper,
   MessageSquare,
   Sparkles,
-  Users
+  Users,
+  Flame,
+  Zap
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useAuth } from "@/app/providers";
+import { useState, useEffect } from "react";
 
 // ── Components ──────────────────────────────────────────────────────────────
 
@@ -190,6 +194,64 @@ function LearnCard({
 
 export default function HomePage() {
   const router = useRouter();
+  const { user, session } = useAuth();
+  const [xpHistory, setXpHistory] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (session) {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/gamification/me/xp-history`, {
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      })
+      .then(res => res.json())
+      .then(data => {
+         if(Array.isArray(data)) setXpHistory(data);
+      })
+      .catch(err => console.error(err));
+    }
+  }, [session]);
+
+  const difficultyMap: Record<string, string> = {
+    beginner: "A1/A2 — Beginner",
+    intermediate: "B1 — Intermediate",
+    upper_intermediate: "B2 — Upper-Int",
+    advanced: "C1/C2 — Advanced"
+  };
+
+  const levelStr = user?.preferences?.difficulty_pref 
+     ? difficultyMap[user.preferences.difficulty_pref] || "Level not set"
+     : "Level not set";
+
+  const firstName = user?.full_name ? user.full_name.split(' ')[0] : 'Learner';
+
+  const isToday = (dateString: string) => {
+    if (!dateString) return false;
+    const d = new Date(dateString);
+    const today = new Date();
+    return d.getDate() === today.getDate() &&
+      d.getMonth() === today.getMonth() &&
+      d.getFullYear() === today.getFullYear();
+  };
+
+  const isThisWeek = (dateString: string) => {
+    if (!dateString) return false;
+    const d = new Date(dateString);
+    const now = new Date();
+    return (now.getTime() - d.getTime()) <= 7 * 24 * 60 * 60 * 1000;
+  };
+
+  const articleReadsThisWeek = xpHistory.filter(h => h.reason === 'article_completed' && isThisWeek(h.created_at)).length;
+  const targetFreq = user?.preferences?.article_frequency || 2;
+  const progressPercent = Math.min(100, Math.round((articleReadsThisWeek / Math.max(targetFreq, 1)) * 100));
+
+  const hasArticleToday = xpHistory.some(h => h.reason === 'article_completed' && isToday(h.created_at));
+  const hasReviewToday = xpHistory.some(h => h.reason === 'review_session' && isToday(h.created_at));
+  const hasNewsToday = xpHistory.some(h => h.reason === 'news_read' && isToday(h.created_at));
+
+  const todaysFeed = [
+    { icon: BookOpen, text: "Read an Article", xp: 10, done: hasArticleToday, href: "/articles" },
+    { icon: MessageSquare, text: "Review Session", xp: 10, done: hasReviewToday, href: "/chat" },
+    { icon: Newspaper, text: "Read News", xp: 10, done: hasNewsToday, href: "/news" },
+  ];
 
   return (
     <div className="min-h-full w-full bg-[#f8faff] pb-12 overflow-x-hidden">
@@ -208,9 +270,12 @@ export default function HomePage() {
           </div>
           
           <h1 className="text-2xl font-bold text-[#1a2b5e] mt-4 mb-1">
-            Hello <span className="font-black">Samir!</span> 👋🏼
+            Hello <span className="font-black">{firstName}!</span> 👋🏼
           </h1>
-          <p className="text-[#4a5568] text-sm">
+          <p className="text-[#4a5568] text-sm font-semibold mb-2">
+            {levelStr}
+          </p>
+          <p className="text-[#4a5568] text-sm opacity-80">
             Ready to speak English with confidence?
           </p>
         </div>
@@ -225,14 +290,17 @@ export default function HomePage() {
                 <h3 className="text-[#1a2b5e] font-bold text-sm mb-4">Progress</h3>
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[#c9a84c] text-sm italic">★</span>
-                    <span className="text-[#1a2b5e] text-sm font-bold">+12</span>
+                    <Flame size={16} className="text-[#c9a84c]" />
+                    <span className="text-[#1a2b5e] text-sm font-bold">{user?.streak_count || 0}</span>
                     <div className="w-8 h-[1px] bg-[rgba(26,43,94,0.1)] mx-1" />
                   </div>
-                  <div className="text-[11px] text-[#9aa5b1] font-bold">+ 480 XP</div>
+                  <div className="flex items-center gap-1">
+                    <Zap size={14} className="text-[#9aa5b1]" />
+                    <span className="text-[11px] text-[#9aa5b1] font-bold">{user?.xp || 0} XP</span>
+                  </div>
                 </div>
               </div>
-              <ProgressCircle percent={78} />
+              <ProgressCircle percent={progressPercent} />
             </div>
             
             <motion.button
@@ -254,22 +322,26 @@ export default function HomePage() {
             </div>
             
             <div className="space-y-3">
-              {[
-                { icon: CheckCircle2, text: "Learn 5 words", xp: 10, done: true, color: "#10b981" },
-                { icon: Search, text: "Read 1 article", xp: 20, done: false, color: "#3b82f6" },
-                { icon: Mic, text: "Speak 2 min", xp: 10, done: false, color: "#8b5cf6" },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-3">
+              {todaysFeed.map((item, i) => (
+                <button
+                  key={i}
+                  onClick={() => router.push(item.href)}
+                  className="w-full flex items-center gap-3 text-left transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                >
                   <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${item.done ? "bg-[#f0fdf4]" : "bg-[#f0fafb]"}`}>
                     <item.icon size={18} className={item.done ? "text-[#10b981]" : "text-[#1a2b5e]"} />
                   </div>
-                  <span className={`text-[13px] flex-1 ${item.done ? "text-[#9aa5b1]" : "text-[#1a2b5e] font-medium"}`}>
+                  <span className={`text-[13px] flex-1 ${item.done ? "text-[#9aa5b1] line-through decoration-[#9aa5b1]/30" : "text-[#1a2b5e] font-medium"}`}>
                     {item.text}
                   </span>
-                  <div className="bg-[rgba(26,43,94,0.04)] px-3 py-1.5 rounded-full text-[10px] font-bold text-[#9aa5b1]">
-                     + {item.xp} XP
-                  </div>
-                </div>
+                  {item.done ? (
+                     <CheckCircle2 size={16} className="text-[#10b981]" />
+                  ) : (
+                     <div className="bg-[rgba(26,43,94,0.04)] px-3 py-1.5 rounded-full text-[10px] font-bold text-[#9aa5b1]">
+                       + {item.xp} XP
+                     </div>
+                  )}
+                </button>
               ))}
             </div>
           </DashboardCard>

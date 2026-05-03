@@ -1,40 +1,82 @@
 "use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ChevronLeft, Globe, Check, Timer, Zap, Target, Heart, ArrowLeft } from "lucide-react";
+import { ChevronRight, ChevronLeft, Globe, Check, Timer, Zap, Target, Heart, ArrowLeft, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PROFICIENCY_LEVELS, TOPICS, DAILY_GOALS } from "@/lib/data";
+import { useAuth } from "@/app/providers";
 
-const STEPS = ["Proficiency", "Pace", "Time", "Interests"];
+const STEPS = ["Name", "Proficiency", "Pace", "Frequency", "Interests"];
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(0);
+  const [fullName, setFullName] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const [selectedPace, setSelectedPace] = useState<string | null>(null);
-  const [selectedTime, setSelectedTime] = useState<number | null>(null);
+  const [articleFrequency, setArticleFrequency] = useState<number | null>(2);
   const [selectedSubTopics, setSelectedSubTopics] = useState<string[]>([]);
   const [activeTopicId, setActiveTopicId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  const { session } = useAuth();
 
   const canProceed = [
+    fullName.trim().length > 0,
     !!selectedLevel,
     !!selectedPace,
-    !!selectedTime,
+    !!articleFrequency,
     selectedSubTopics.length >= 3,
   ][step];
 
-  const next = () => {
+  const next = async () => {
     if (step < STEPS.length - 1) {
-       if (step === 1 && selectedPace) {
-         const goal = DAILY_GOALS.find(g => g.label === selectedPace);
-         if (goal) setSelectedTime(goal.minutes);
-       }
        setStep(step + 1);
     }
-    else router.push("/onboarding/loading");
+    else {
+      if (!session) {
+        router.push("/auth");
+        return;
+      }
+      setIsSubmitting(true);
+      try {
+        const difficultyMap: Record<string, string> = {
+          "A1": "beginner",
+          "A2": "beginner",
+          "B1": "intermediate",
+          "B2": "upper_intermediate",
+          "C1": "advanced",
+          "C2": "advanced",
+        };
+        const payload = {
+          full_name: fullName.trim(),
+          difficulty_pref: selectedLevel ? difficultyMap[selectedLevel] : "intermediate",
+          reading_pace: selectedPace ? DAILY_GOALS.find(g => g.label === selectedPace)?.minutes || 10 : 10,
+          article_frequency: articleFrequency || 2,
+          topics: selectedSubTopics,
+          news_topics: selectedSubTopics
+        };
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me/preferences`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          router.push("/home");
+        } else {
+          console.error("Failed to save preferences", await res.text());
+          setIsSubmitting(false);
+        }
+      } catch (e) {
+        console.error("Error saving preferences:", e);
+        setIsSubmitting(false);
+      }
+    }
   };
   const back = () => {
-    if (step === 3 && activeTopicId) {
+    if (step === 4 && activeTopicId) {
       setActiveTopicId(null);
     } else {
       setStep(step - 1);
@@ -95,7 +137,40 @@ export default function OnboardingPage() {
           <AnimatePresence mode="wait">
             {step === 0 && (
               <motion.div
-                key="step0"
+                key="step-name"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-6"
+              >
+                <div className="text-center mb-8">
+                  <div className="inline-flex p-3 rounded-2xl bg-[#1a2b5e]/5 text-[#1a2b5e] mb-4">
+                    <Heart size={24} />
+                  </div>
+                  <h1 className="text-3xl font-bold text-[#1a2b5e] mb-2 font-outfit">
+                    What should we call you?
+                  </h1>
+                  <p className="text-[#4a5568]">
+                    We want to make your experience as personal as possible.
+                  </p>
+                </div>
+
+                <div className="bg-white p-6 rounded-3xl border-2 border-[#1a2b5e]/5 shadow-xl shadow-[#1a2b5e]/5">
+                  <input
+                    type="text"
+                    placeholder="Enter your name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="w-full text-2xl font-bold text-center text-[#1a2b5e] placeholder:text-[#9aa5b1] outline-none bg-transparent"
+                    autoFocus
+                  />
+                </div>
+              </motion.div>
+            )}
+
+            {step === 1 && (
+              <motion.div
+                key="step-prof"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -150,9 +225,9 @@ export default function OnboardingPage() {
               </motion.div>
             )}
 
-            {step === 1 && (
+            {step === 2 && (
               <motion.div
-                key="step1"
+                key="step-pace"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -204,9 +279,9 @@ export default function OnboardingPage() {
               </motion.div>
             )}
 
-            {step === 2 && (
+            {step === 3 && (
               <motion.div
-                key="step2"
+                key="step-freq"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -217,51 +292,51 @@ export default function OnboardingPage() {
                     <Timer size={24} />
                   </div>
                   <h1 className="text-3xl font-bold text-[#1a2b5e] mb-2 font-outfit">
-                    Set your daily time goal
+                    Article Frequency
                   </h1>
                   <p className="text-[#4a5568]">
-                    Consistency is key. You can change this anytime later.
+                    How many articles would you like to read per week?
                   </p>
                 </div>
 
                 <div className="bg-white p-10 rounded-[40px] border-2 border-[#1a2b5e]/5 shadow-2xl shadow-[#1a2b5e]/5 flex flex-col items-center text-center">
                    <div className="relative mb-10">
                       <motion.div 
-                        key={selectedTime}
+                        key={articleFrequency}
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         className="text-8xl font-black text-[#1a2b5e] font-outfit tabular-nums"
                       >
-                        {selectedTime}
+                        {articleFrequency}
                       </motion.div>
-                      <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[#9aa5b1] font-bold uppercase tracking-widest text-sm">
-                        Minutes / Day
+                      <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[#9aa5b1] font-bold uppercase tracking-widest text-sm whitespace-nowrap">
+                        Articles / Week
                       </div>
                    </div>
 
                    <div className="w-full space-y-8 px-4">
                       <input 
                         type="range"
-                        min="5"
-                        max="60"
-                        step="5"
-                        value={selectedTime || 10}
-                        onChange={(e) => setSelectedTime(parseInt(e.target.value))}
+                        min="1"
+                        max="5"
+                        step="1"
+                        value={articleFrequency || 2}
+                        onChange={(e) => setArticleFrequency(parseInt(e.target.value))}
                         className="w-full h-3 bg-[#f0f4ff] rounded-full appearance-none cursor-pointer accent-[#1a2b5e]"
                       />
                       <div className="flex justify-between text-xs font-bold text-[#9aa5b1]">
-                        <span>5 MIN</span>
-                        <span>30 MIN</span>
-                        <span>60 MIN</span>
+                        <span>1</span>
+                        <span>3</span>
+                        <span>5</span>
                       </div>
                    </div>
                 </div>
               </motion.div>
             )}
 
-            {step === 3 && (
+            {step === 4 && (
               <motion.div
-                key="step3"
+                key="step-interests"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -381,7 +456,7 @@ export default function OnboardingPage() {
         className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-[#1a2b5e]/10 p-6 flex justify-center"
       >
         <div className="max-w-xl w-full flex gap-4">
-          {(step > 0 || (step === 3 && activeTopicId)) && (
+          {(step > 0 || (step === 4 && activeTopicId)) && (
             <button
               onClick={back}
               className="px-8 py-4 rounded-2xl border-2 border-[#1a2b5e] text-[#1a2b5e] font-bold flex items-center gap-2 hover:bg-[#1a2b5e]/5 transition-colors"
@@ -392,11 +467,17 @@ export default function OnboardingPage() {
           )}
           <button
             onClick={next}
-            disabled={!canProceed}
+            disabled={!canProceed || isSubmitting}
             className="flex-1 py-4 rounded-2xl bg-[#1a2b5e] text-white font-bold flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed shadow-xl shadow-[#1a2b5e]/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
-            {step === STEPS.length - 1 ? "Start Your Journey" : "Continue"}
-            <ChevronRight size={20} />
+            {isSubmitting ? (
+              <Loader2 size={20} className="animate-spin" />
+            ) : (
+              <>
+                {step === STEPS.length - 1 ? "Start Your Journey" : "Continue"}
+                <ChevronRight size={20} />
+              </>
+            )}
           </button>
         </div>
       </div>

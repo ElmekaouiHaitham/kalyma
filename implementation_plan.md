@@ -31,7 +31,7 @@
 - Articles list doesn't mark unread items. We need a `read` field in the data and a visual badge ("New").
 
 ### 5. Articles & Books — In-Content Atlas AI Integration
-- No text-selection + "Ask AI" ability exists in the article reader (`/library/[id]`). This is a key differentiator. Needs a floating "Ask AI" tooltip on text selection.
+- No text-selection + "ask Atlass" ability exists in the article reader (`/library/[id]`). This is a key differentiator. Needs a floating "ask Atlass" tooltip on text selection.
 
 ### 6. Live Sessions — Current Session Video View
 - The live session page has a "Join" button that goes nowhere. No video placeholder page exists.
@@ -60,7 +60,7 @@ A reusable `<SaveWordModal>` component that can be triggered from any page.
 - Add a "💾 Save Word" quick-action button to AI responses.
 
 #### [MODIFY] library/[id]/page.tsx
-- Add text-selection listener → floating "Ask AI" + "Save Word" tooltip bubble.
+- Add text-selection listener → floating "ask Atlass" + "Save Word" tooltip bubble.
 
 #### [MODIFY] live/page.tsx
 - Add "Save to Word Bank" button next to each vocabulary word in the session summary.
@@ -107,4 +107,4 @@ A reusable `<SaveWordModal>` component that can be triggered from any page.
 
 ### Manual Verification
 - Review on mobile viewport that Save Word modal is tappable.
-- Confirm the "Ask AI" floating tooltip appears on text selection in the article reader.
+- Confirm the "ask Atlass" floating tooltip appears on text selection in the article reader.

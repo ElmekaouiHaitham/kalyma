@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "./providers";
 
 export const metadata: Metadata = {
   title: "kalyma.ma — Speak English with Confidence",
@@ -42,7 +43,9 @@ export default function RootLayout({
           colorScheme: "light",
         }}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

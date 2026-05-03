@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -12,25 +12,48 @@ import {
   Tag,
   Bookmark,
   Share2,
+  CheckCircle,
 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
-import { NEWS_ITEMS } from "@/lib/data";
+import Image from "next/image";
+import { useAuth } from "@/app/providers";
 import SaveWordModal from "@/components/SaveWordModal";
+import ReactMarkdown from "react-markdown";
+import { useAtlasChat } from "@/hooks/useAtlasChat";
+
+interface NewsDetail {
+  id: string;
+  title: string;
+  summary: string;
+  body?: string;
+  topic: string;
+  source_name?: string;
+  thumbnail_url?: string;
+  published_at: string;
+}
 
 export default function NewsDetailPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  const article = NEWS_ITEMS.find((n) => n.id === id) ?? NEWS_ITEMS[0];
+  const { session } = useAuth();
 
+  const [news, setNews] = useState<NewsDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isCompleted, setIsCompleted] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
-  const [chatMessages, setChatMessages] = useState([
-    {
-      role: "ai",
-      text: `I'm ready to help you understand this news article: "${article.title}". Select any text to ask me about it, or type your question below!`,
-    },
-  ]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const { messages: chatMessages, isTyping, error, sendMessage, addMessage } = useAtlasChat({
+    context_type: "news",
+    context_id: id,
+    context_content: news?.body || news?.summary || "No content loaded yet.",
+  });
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages, isTyping, panelOpen]);
 
   // Text selection bubble
   const [selectionBubble, setSelectionBubble] = useState<{
@@ -42,13 +65,53 @@ export default function NewsDetailPage() {
   const [saveWord, setSaveWord] = useState("");
   const [bookmarked, setBookmarked] = useState(false);
 
+  useEffect(() => {
+    if (!session?.access_token || !id) return;
+
+    const fetchNewsDetail = async () => {
+      try {
+        const headers = { Authorization: `Bearer ${session.access_token}` };
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news/${id}`, { headers });
+        
+        if (res.ok) {
+          const data = await res.json();
+          setNews(data);
+          if (chatMessages.length === 0) {
+            addMessage("ai", `I'm here to help you dive into this news article: "${data.title}". Highlight any passage to ask me about it!`);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading news detail:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNewsDetail();
+  }, [id, session]);
+
+  const handleMarkCompleted = async () => {
+    if (!session?.access_token || !id) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news/${id}/read`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.ok) {
+        setIsCompleted(true);
+      }
+    } catch (err) {
+      console.error("Error completing news article", err);
+    }
+  };
+
   const handleTextSelection = useCallback(() => {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed || !selection.toString().trim()) {
       setSelectionBubble(null);
       return;
     }
-    const text = selection.toString().trim().slice(0, 80);
+    const text = selection.toString().trim();
     const range = selection.getRangeAt(0);
     const rect = range.getBoundingClientRect();
     setSelectionBubble({
@@ -61,208 +124,170 @@ export default function NewsDetailPage() {
   const askAIAboutSelection = (text: string) => {
     setSelectionBubble(null);
     window.getSelection()?.removeAllRanges();
-    setChatMessages((prev) => [
-      ...prev,
-      { role: "user", text: `What does this mean: "${text}"?` },
-      {
-        role: "ai",
-        text: `Great question! "${text}" — in this news context, this phrase relates to ${article.category.toLowerCase()} developments. Let me break it down: this is a commonly used expression in journalism that signals ${text.split(" ").length > 3 ? "a complex idea worth unpacking" : "a key concept"}. Would you like me to explain the vocabulary or the broader context?`,
-      },
-    ]);
     setPanelOpen(true);
+    sendMessage(`What does this mean: "${text}"?`);
   };
 
   const sendChat = () => {
     if (!chatInput.trim()) return;
-    const userMsg = chatInput;
+    const txt = chatInput;
     setChatInput("");
-    setChatMessages((prev) => [
-      ...prev,
-      { role: "user", text: userMsg },
-      {
-        role: "ai",
-        text: `Great question about this ${article.category} article! "${userMsg}" — this relates to the key themes discussed: ${article.summary} Would you like me to explain any specific terms or provide more context?`,
-      },
-    ]);
+    sendMessage(txt);
   };
 
-  const paragraphs = (article as any).content?.split("\n\n").filter(Boolean) ?? [
-    article.summary,
-  ];
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center text-gray-400 bg-[#f8fafc]">Loading news article...</div>;
+  }
 
+  if (!news) {
+    return <div className="min-h-screen flex items-center justify-center text-red-500 bg-[#f8fafc]">News article not found.</div>;
+  }
+
+  const paragraphs = news.body?.split("\n\n").filter(Boolean) ?? [news.summary];
   const readingTime = Math.ceil(paragraphs.join(" ").split(" ").length / 200);
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg-base, #0d1117)" }}>
-      {/* Header */}
-      <div className="sticky top-0 z-30 px-4 py-3 flex items-center gap-3"
-        style={{
-          background: "rgba(13,17,23,0.8)",
-          backdropFilter: "blur(12px)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-        }}
-      >
-        <button
-          onClick={() => router.back()}
-          className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
-          style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)" }}
-        >
-          <ArrowLeft className="w-4 h-4" style={{ color: "rgba(255,255,255,0.8)" }} />
-        </button>
-        <div className="flex-1 min-w-0" />
-        <button
-          onClick={() => setBookmarked(!bookmarked)}
-          className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
-          style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)" }}
-        >
-          <Bookmark
-            className="w-4 h-4"
-            style={{ color: bookmarked ? "#c9a84c" : "rgba(255,255,255,0.6)" }}
-            fill={bookmarked ? "#c9a84c" : "none"}
-          />
-        </button>
-        <button
-          className="w-9 h-9 rounded-xl flex items-center justify-center"
-          style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)" }}
-        >
-          <Share2 className="w-4 h-4" style={{ color: "rgba(255,255,255,0.6)" }} />
-        </button>
-      </div>
+    <div className="min-h-screen flex flex-col bg-[#f8fafc]" style={{ colorScheme: 'light' }}>
+      {/* Premium Header */}
+      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-[#1a2b5e]/10 px-4 py-3 sm:px-6">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+                <button
+                onClick={() => router.back()}
+                className="w-10 h-10 rounded-xl bg-[#f0f4ff] flex items-center justify-center hover:bg-[#e0e7ff] transition-colors"
+                >
+                <ArrowLeft className="w-5 h-5 text-[#1a2b5e]" />
+                </button>
+                <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-[#c9a84c] uppercase tracking-widest">{news.topic}</span>
+                    <span className="text-xs text-[#64748b] flex items-center gap-1"><Clock size={10} /> {readingTime} min read</span>
+                </div>
+            </div>
+            <div className="flex items-center gap-2">
+                <button
+                onClick={() => setBookmarked(!bookmarked)}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${bookmarked ? 'bg-[#c9a84c]/10 text-[#c9a84c]' : 'bg-white text-[#9aa5b1] hover:text-[#1a2b5e]'}`}
+                style={{ border: "1px solid rgba(26,43,94,0.08)" }}
+                >
+                <Bookmark className="w-5 h-5" fill={bookmarked ? "currentColor" : "none"} />
+                </button>
+                <button
+                className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#9aa5b1] hover:text-[#1a2b5e] transition-colors"
+                style={{ border: "1px solid rgba(26,43,94,0.08)" }}
+                >
+                <Share2 className="w-5 h-5" />
+                </button>
+            </div>
+        </div>
+      </header>
 
-      {/* Hero banner */}
-      <div
-        className="relative flex items-center justify-center overflow-hidden"
-        style={{
-          height: 200,
-          background: "linear-gradient(135deg, #1a2b5e 0%, #0f1d4e 60%, #1a1a2e 100%)",
-        }}
-      >
-        {/* Decorative stars */}
-        {[
-          { top: "15%", left: "10%", s: 2 }, { top: "30%", left: "60%", s: 1.5 },
-          { top: "8%", left: "75%", s: 3 }, { top: "65%", left: "20%", s: 2 },
-          { top: "50%", left: "85%", s: 1.5 }, { top: "80%", left: "45%", s: 1 },
-        ].map((star, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full"
-            style={{ top: star.top, left: star.left, width: star.s, height: star.s, background: "rgba(255,255,255,0.5)" }}
-          />
-        ))}
-        <div className="text-7xl drop-shadow-lg select-none">{article.image}</div>
-        <div
-          className="absolute bottom-0 left-0 right-0 h-16"
-          style={{ background: "linear-gradient(to bottom, transparent, var(--bg-base, #0d1117))" }}
-        />
-      </div>
+      <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-8 sm:px-8">
+        {/* Article Intro */}
+        <div className="space-y-6 mb-10 text-center sm:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-[#1a2b5e]/10 rounded-full">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-[10px] font-bold text-[#1a2b5e] uppercase tracking-widest">Live News</span>
+                <span className="text-[10px] text-[#64748b]">·</span>
+                <span className="text-[10px] text-[#64748b] font-medium">
+                    {new Date(news.published_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                </span>
+            </div>
 
-      {/* Content */}
-      <div className="max-w-2xl mx-auto px-5 pb-32">
-        {/* Meta tags */}
-        <div className="flex flex-wrap items-center gap-2 mb-4 mt-2">
-          <span
-            className="text-xs font-bold px-2.5 py-1 rounded-full"
-            style={{
-              background: "rgba(201,168,76,0.15)",
-              color: "#c9a84c",
-              border: "1px solid rgba(201,168,76,0.3)",
-            }}
-          >
-            {article.category}
-          </span>
-          <span
-            className="flex items-center gap-1 text-xs"
-            style={{ color: "rgba(255,255,255,0.4)" }}
-          >
-            <Clock className="w-3 h-3" />
-            {readingTime} min read
-          </span>
-          <span className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
-            {article.date.toLocaleDateString("en-US", {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            })}
-          </span>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-[#1a2b5e] leading-tight font-outfit">
+                {news.title}
+            </h1>
+
+            <p className="text-lg text-[#64748b] leading-relaxed italic border-l-4 border-[#c9a84c] pl-4">
+                {news.summary}
+            </p>
         </div>
 
-        {/* Title */}
-        <h1
-          className="text-2xl font-bold leading-tight mb-3"
-          style={{ fontFamily: "'Outfit', sans-serif", color: "rgba(255,255,255,0.95)" }}
-        >
-          {article.title}
-        </h1>
-
-        {/* Summary */}
-        <p
-          className="text-sm italic mb-6 leading-relaxed"
-          style={{ color: "rgba(255,255,255,0.5)" }}
-        >
-          {article.summary}
-        </p>
-
-        {/* Tip banner */}
-        <div
-          className="flex items-start gap-2 p-3 rounded-xl mb-6 text-sm"
-          style={{
-            background: "rgba(26,43,94,0.4)",
-            border: "1px solid rgba(26,43,94,0.6)",
-          }}
-        >
-          <span className="text-base">💡</span>
-          <p style={{ color: "rgba(255,255,255,0.55)" }}>
-            <strong className="font-semibold" style={{ color: "#c9a84c" }}>Tip:</strong>{" "}
-            Select any text to ask Atlas AI about it or save it to your Word Bank.
-          </p>
+        {/* Hero Image Section */}
+        <div className="relative aspect-[16/9] w-full mb-10 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-[#1a2b5e]/10 ring-8 ring-white">
+            {news.thumbnail_url ? (
+                <img src={news.thumbnail_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+                <div className="w-full h-full bg-gradient-to-br from-[#1a2b5e] to-[#2d4080] flex items-center justify-center">
+                    <Newspaper className="w-24 h-24 text-white/20" />
+                </div>
+            )}
+            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/20 to-transparent" />
         </div>
 
-        {/* Article body with text-selection */}
-        <div
-          className="space-y-5 text-base leading-relaxed select-text"
-          onMouseUp={handleTextSelection}
+        {/* Article content */}
+        <article 
+          className="prose-news space-y-6 text-[#1a2b5e]/80 text-lg leading-relaxed select-text" 
+          onMouseUp={handleTextSelection} 
           onTouchEnd={handleTextSelection}
-          style={{ color: "rgba(255,255,255,0.82)", fontSize: "1rem", lineHeight: 1.8 }}
         >
           {paragraphs.map((para: string, i: number) => (
             <p key={i}>{para}</p>
           ))}
+        </article>
+
+        {/* Completion Area */}
+        <div className="mt-16 pt-12 border-t border-[#1a2b5e]/5 text-center flex flex-col items-center">
+            {isCompleted ? (
+                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-3">
+                    <div className="w-16 h-16 bg-[#22c55e] rounded-2xl flex items-center justify-center text-white shadow-xl shadow-green-200">
+                        <CheckCircle size={32} />
+                    </div>
+                    <div>
+                        <p className="font-bold text-xl text-[#1a2b5e]">Article Read!</p>
+                        <p className="text-sm font-semibold text-[#22c55e] mt-1">+10 XP Awarded</p>
+                    </div>
+                </motion.div>
+            ) : (
+                <button 
+                  onClick={handleMarkCompleted}
+                  className="group relative flex items-center gap-2 px-10 py-4 rounded-[1.5rem] font-bold text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
+                  style={{ background: "linear-gradient(135deg, #1a2b5e, #2d4080)" }}
+                >
+                    <CheckCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                    Mark as Completed
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-[#f8fafc]" />
+                </button>
+            )}
         </div>
 
-        {/* Bottom tags */}
-        <div className="flex items-center gap-2 mt-8 pt-6" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-          <Tag className="w-3 h-3" style={{ color: "rgba(255,255,255,0.3)" }} />
-          <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.3)" }}>
-            {article.category} · kalyma.ma News
-          </span>
+        {/* Footer Meta */}
+        <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 py-8 border-t border-[#1a2b5e]/5 text-[10px] sm:text-xs font-bold text-[#9aa5b1] uppercase tracking-[0.2em]">
+            <div className="flex items-center gap-2">
+                <Tag className="w-4 h-4" />
+                <span>{news.topic} · World News</span>
+            </div>
+            <span>© 2026 kalyma.ma Press</span>
         </div>
-      </div>
+      </main>
 
-      {/* Text-selection bubble */}
+      {/* Floating UI Elements */}
       <AnimatePresence>
         {selectionBubble && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="fixed z-50 flex items-center gap-1 rounded-2xl px-2 py-1.5 shadow-xl"
+            className="fixed z-50 flex items-center gap-1 rounded-full px-2 py-1.5 shadow-2xl"
             style={{
-              left: Math.min(selectionBubble.x, window.innerWidth - 210),
+              left: Math.min(selectionBubble.x, typeof window !== 'undefined' ? window.innerWidth - 210 : 0),
               top: selectionBubble.y,
               transform: "translate(-50%, -100%)",
-              background: "#1a2b5e",
-              border: "1px solid rgba(255,255,255,0.15)",
+              background: "#ffffff",
+              border: "1px solid rgba(26,43,94,0.1)",
+              boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
             }}
           >
             <button
               onClick={() => askAIAboutSelection(selectionBubble.text)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold text-white"
-              style={{ background: "rgba(255,255,255,0.15)" }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-[#1a2b5e] hover:bg-[#f5f8ff] transition-colors"
             >
-              <Sparkles size={11} />
-              Ask AI
+              <Image src="/atlas-logo.png" alt="Atlas AI" width={16} height={16} className="object-cover rounded-full" />
+              Ask Atlas
             </button>
-            <div className="w-px h-4" style={{ background: "rgba(255,255,255,0.2)" }} />
+            <div
+              className="w-px h-5"
+              style={{ background: "rgba(26,43,94,0.1)" }}
+            />
             <button
               onClick={() => {
                 setSaveWord(selectionBubble.text);
@@ -270,35 +295,38 @@ export default function NewsDetailPage() {
                 setSelectionBubble(null);
                 window.getSelection()?.removeAllRanges();
               }}
-              className="flex items-center gap-1 px-2 py-1 rounded-xl text-xs font-semibold"
-              style={{ color: "#c9a84c" }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-[#c9a84c] hover:bg-[#fff9e6] transition-colors"
             >
-              <BookMarked size={11} />
+              <BookMarked size={14} />
               Save
             </button>
             <button
               onClick={() => setSelectionBubble(null)}
-              className="px-1"
-              style={{ color: "rgba(255,255,255,0.4)" }}
+              className="px-2 text-[#9aa5b1] hover:text-[#1a2b5e] transition-colors"
             >
-              <X size={12} />
+              <X size={14} />
             </button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* FAB – Atlas AI */}
+      {/* Atlas FAB */}
       <motion.button
-        whileHover={{ scale: 1.05 }}
+        whileHover={{ scale: 1.05, y: -2 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setPanelOpen(true)}
-        className="fixed bottom-24 right-5 z-40 w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl"
-        style={{ background: "linear-gradient(135deg, #1a2b5e, #2d4080)", boxShadow: "0 8px 30px rgba(26,43,94,0.5)" }}
+        className="fixed bottom-24 right-6 z-40 w-16 h-16 rounded-[1.5rem] flex items-center justify-center shadow-2xl transition-shadow"
+        style={{
+          background: "#ffffff",
+          border: "1px solid rgba(26,43,94,0.08)",
+          boxShadow: "0 15px 35px rgba(26,43,94,0.12)",
+        }}
       >
-        <Bot className="w-6 h-6 text-white" />
+        <Image src="/atlas-logo.png" alt="Atlas AI" width={32} height={32} className="object-cover rounded-full" />
+        <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-4 border-[#f8fafc]" />
       </motion.button>
 
-      {/* Atlas AI Bottom Sheet */}
+      {/* AI Assistant Sheet */}
       <AnimatePresence>
         {panelOpen && (
           <>
@@ -306,7 +334,7 @@ export default function NewsDetailPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40 bg-black/50"
+              className="fixed inset-0 z-40 bg-[#1a2b5e]/20 backdrop-blur-sm"
               onClick={() => setPanelOpen(false)}
             />
             <motion.div
@@ -314,92 +342,98 @@ export default function NewsDetailPage() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl flex flex-col"
+              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[3rem] flex flex-col shadow-2xl overflow-hidden"
               style={{
-                background: "#111827",
-                border: "1px solid rgba(255,255,255,0.1)",
-                height: "62vh",
-                maxHeight: 500,
+                background: "#ffffff",
+                borderTop: "1px solid rgba(26,43,94,0.08)",
+                height: "65vh",
+                maxHeight: 600,
               }}
             >
-              {/* Handle */}
-              <div className="w-10 h-1 rounded-full mx-auto mt-3 mb-1" style={{ background: "rgba(255,255,255,0.15)" }} />
-
-              {/* Header */}
-              <div
-                className="flex items-center justify-between px-4 py-3 border-b shrink-0"
-                style={{ borderColor: "rgba(255,255,255,0.08)" }}
-              >
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-8 h-8 rounded-xl flex items-center justify-center text-sm"
-                    style={{ background: "linear-gradient(135deg, #1a2b5e, #2d4080)" }}
-                  >
-                    ⭐
+              <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mt-4 mb-2 shrink-0" />
+              
+              <div className="flex items-center justify-between px-6 py-4 border-b shrink-0" style={{ borderColor: "rgba(26,43,94,0.05)" }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-[1rem] bg-[#f0f4ff] flex items-center justify-center shadow-inner">
+                    <Image src="/atlas-logo.png" alt="Atlas AI" width={20} height={20} className="object-cover rounded-full" />
                   </div>
                   <div>
-                    <div className="font-semibold text-sm text-white">Atlas AI</div>
-                    <div className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
-                      News assistant
-                    </div>
+                    <h3 className="font-bold text-[#1a2b5e]">Atlas Assistant</h3>
+                    <p className="text-[10px] font-bold text-[#c9a84c] uppercase tracking-widest">News Specialist</p>
                   </div>
                 </div>
-                <button onClick={() => setPanelOpen(false)} style={{ color: "rgba(255,255,255,0.4)" }}>
-                  <X className="w-5 h-5" />
+                <button onClick={() => setPanelOpen(false)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#f5f8ff] transition-colors">
+                  <X className="w-5 h-5 text-[#9aa5b1]" />
                 </button>
               </div>
 
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {chatMessages.map((msg, i) => (
-                  <div
-                    key={i}
-                    className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {chatMessages.map((msg) => (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    key={msg.id} 
+                    className={`flex items-end gap-2 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
                   >
+                    {msg.role === "ai" && (
+                        <div className="w-6 h-6 rounded-lg bg-[#f0f4ff] flex items-center justify-center shrink-0 mb-1">
+                            <Image src="/atlas-logo.png" alt="Atlas AI" width={14} height={14} className="object-cover rounded-full" />
+                        </div>
+                    )}
                     <div
-                      className="px-4 py-2.5 rounded-2xl max-w-xs text-sm leading-relaxed"
-                      style={
+                      className={`px-4 py-3 rounded-[1.5rem] max-w-[85%] text-sm leading-relaxed overflow-hidden ${
                         msg.role === "user"
-                          ? {
-                              background: "linear-gradient(135deg, #1a2b5e, #2d4080)",
-                              color: "white",
-                              borderRadius: "20px 20px 4px 20px",
-                            }
-                          : {
-                              background: "rgba(255,255,255,0.07)",
-                              border: "1px solid rgba(255,255,255,0.1)",
-                              borderRadius: "20px 20px 20px 4px",
-                              color: "rgba(255,255,255,0.88)",
-                            }
-                      }
+                          ? "bg-[#f5f8ff] text-[#1a2b5e] rounded-br-none"
+                          : "bg-[#ffffff] text-[#1a2b5e] border border-[#1a2b5e]/5 rounded-bl-none shadow-sm"
+                      }`}
                     >
-                      {msg.text}
+                      <ReactMarkdown>
+                        {msg.content}
+                      </ReactMarkdown>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
+                {isTyping && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-end gap-2 flex-row"
+                  >
+                    <div className="w-6 h-6 rounded-lg bg-[#f0f4ff] flex items-center justify-center shrink-0 mb-1">
+                      <Image src="/atlas-logo.png" alt="Atlas AI" width={14} height={14} className="object-cover rounded-full" />
+                    </div>
+                    <div className="px-4 py-3 rounded-[1.5rem] bg-[#ffffff] border border-[#1a2b5e]/5 rounded-bl-none shadow-sm flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 bg-[#9aa5b1] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-1.5 h-1.5 bg-[#9aa5b1] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-1.5 h-1.5 bg-[#9aa5b1] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  </motion.div>
+                )}
+                {error && (
+                  <div className="text-xs text-red-500 text-center my-2 p-2 bg-red-50 rounded-xl">
+                    {error}
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
               </div>
 
-              {/* Input */}
-              <div className="p-4 shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              <div className="p-6 shrink-0 bg-[#ffffff] border-t" style={{ borderColor: "rgba(26,43,94,0.05)" }}>
                 <div className="flex gap-2">
                   <input
-                    className="flex-1 px-3 py-2.5 text-sm rounded-xl outline-none"
+                    className="flex-1 px-5 py-3.5 text-sm rounded-2xl outline-none transition-all shadow-sm"
                     style={{
-                      background: "rgba(255,255,255,0.07)",
-                      border: "1px solid rgba(255,255,255,0.12)",
-                      color: "white",
+                      background: "#f8fafc",
+                      border: "1px solid rgba(26,43,94,0.1)",
+                      color: "#1a2b5e"
                     }}
-                    placeholder="Ask about this article…"
+                    placeholder="Ask Atlas about this article…"
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && sendChat()}
+                    disabled={isTyping}
                   />
-                  <button
-                    onClick={sendChat}
-                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ background: "linear-gradient(135deg, #1a2b5e, #2d4080)" }}
-                  >
-                    <Send className="w-4 h-4 text-white" />
+                  <button onClick={sendChat} disabled={isTyping || !chatInput.trim()} className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0" style={{ background: "linear-gradient(135deg, #1a2b5e, #2d4080)" }}>
+                    <Send className="w-5 h-5 text-white" />
                   </button>
                 </div>
               </div>
@@ -416,3 +450,14 @@ export default function NewsDetailPage() {
     </div>
   );
 }
+
+// Global styles for news prose
+const NewspaperIcon = () => (
+    <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+    </svg>
+);
+
+function Newspaper(props: any) { return <NewspaperIcon /> }
+
+

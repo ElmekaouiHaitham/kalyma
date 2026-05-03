@@ -1,92 +1,60 @@
 "use client";
-import { useState, useRef, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
   Clock,
-  MessageSquare,
   X,
   Bot,
   Send,
-  ChevronRight,
   Tag,
   BookMarked,
   Sparkles,
+  CheckCircle,
 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
-import { ARTICLES } from "@/lib/data";
+import Image from "next/image";
+import { useAuth } from "@/app/providers";
 import SaveWordModal from "@/components/SaveWordModal";
+import { useAtlasChat } from "@/hooks/useAtlasChat";
+import ReactMarkdown from "react-markdown";
 
-const TRANSLATIONS: Record<string, string> = {
-  "inteligencia artificial": "artificial intelligence",
-  "panorama tecnológico": "technological landscape",
-  "aprendizaje automático": "machine learning",
-  "impacto medioambiental": "environmental impact",
-  "mercado laboral": "labour market",
-};
-
-const HIGHLIGHT_WORDS = [
-  "inteligencia artificial",
-  "panorama tecnológico",
-  "aprendizaje automático",
-  "impacto medioambiental",
-  "mercado laboral",
-  "reconversión laboral",
-];
-
-function highlightText(text: string) {
-  const parts: Array<{ text: string; isHighlight: boolean }> = [];
-  let remaining = text;
-  while (remaining.length > 0) {
-    let earliestIdx = remaining.length;
-    let matchedWord = "";
-    for (const word of HIGHLIGHT_WORDS) {
-      const idx = remaining.toLowerCase().indexOf(word.toLowerCase());
-      if (idx !== -1 && idx < earliestIdx) {
-        earliestIdx = idx;
-        matchedWord = word;
-      }
-    }
-    if (matchedWord && earliestIdx < remaining.length) {
-      if (earliestIdx > 0)
-        parts.push({
-          text: remaining.slice(0, earliestIdx),
-          isHighlight: false,
-        });
-      parts.push({
-        text: remaining.slice(earliestIdx, earliestIdx + matchedWord.length),
-        isHighlight: true,
-      });
-      remaining = remaining.slice(earliestIdx + matchedWord.length);
-    } else {
-      parts.push({ text: remaining, isHighlight: false });
-      break;
-    }
-  }
-  return parts;
+interface ArticleDetail {
+  id: string;
+  title: string;
+  body: string;
+  summary?: string;
+  topic: string;
+  difficulty: string;
+  reading_time_mins: number;
 }
 
 export default function ReaderPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  const article = ARTICLES.find((a) => a.id === id) ?? ARTICLES[2];
+  const { session } = useAuth();
 
+  const [article, setArticle] = useState<ArticleDetail | null>(null);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Chat & Selection
   const [panelOpen, setPanelOpen] = useState(false);
-  const [tooltip, setTooltip] = useState<{
-    word: string;
-    x: number;
-    y: number;
-  } | null>(null);
   const [chatInput, setChatInput] = useState("");
-  const [chatMessages, setChatMessages] = useState([
-    {
-      role: "ai",
-      text: `I'm ready to help you understand this article about "${article.title}". Tap any highlighted phrase, or ask me anything!`,
-    },
-  ]);
+  
+  const { messages: chatMessages, isTyping, error, sendMessage, addMessage } = useAtlasChat({
+    context_type: "article",
+    context_id: id,
+    context_content: article?.body || article?.summary || "No content loaded yet.",
+  });
+  
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Text-selection bubble state
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages, isTyping, panelOpen]);
+
   const [selectionBubble, setSelectionBubble] = useState<{
     text: string;
     x: number;
@@ -95,13 +63,68 @@ export default function ReaderPage() {
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [saveWord, setSaveWord] = useState("");
 
+  useEffect(() => {
+    if (!session?.access_token || !id) return;
+
+    const fetchArticleAndStart = async () => {
+      try {
+        const headers = { Authorization: `Bearer ${session.access_token}` };
+
+        // 1. Fetch Article Detail
+        const detailRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/articles/${id}`,
+          { headers },
+        );
+        if (detailRes.ok) {
+          const data = await detailRes.json();
+          setArticle(data);
+          if (chatMessages.length === 0) {
+            addMessage("ai", `I'm ready to help you understand this article about "${data.title}". Tap and select any phrase, or ask me anything!`);
+          }
+        }
+
+        // 2. Mark as Started
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/articles/${id}/start`, {
+          method: "POST",
+          headers,
+        });
+      } catch (err) {
+        console.error("Error loading article:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchArticleAndStart();
+  }, [id, session]);
+
+  const handleMarkCompleted = async () => {
+    if (!session?.access_token || !id) return;
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/articles/${id}/complete`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        },
+      );
+      if (res.ok) {
+        setIsCompleted(true);
+      }
+    } catch (err) {
+      console.error("Error completing article", err);
+    }
+  };
+
   const handleTextSelection = useCallback(() => {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed || !selection.toString().trim()) {
       setSelectionBubble(null);
       return;
     }
-    const text = selection.toString().trim().slice(0, 60);
+    const text = selection.toString().trim();
+    if (!text) return;
+
     const range = selection.getRangeAt(0);
     const rect = range.getBoundingClientRect();
     setSelectionBubble({
@@ -114,44 +137,34 @@ export default function ReaderPage() {
   const askAIAboutSelection = (text: string) => {
     setSelectionBubble(null);
     window.getSelection()?.removeAllRanges();
-    setChatMessages((prev) => [
-      ...prev,
-      { role: "user", text: `What does "${text}" mean?` },
-      {
-        role: "ai",
-        text: `Great question! "${text}" — this is a key phrase in the article. In context, it refers to the broader topic being discussed. Would you like me to break down the grammar or the vocabulary further?`,
-      },
-    ]);
     setPanelOpen(true);
-  };
-
-  const handleWordClick = (word: string, e: React.MouseEvent) => {
-    const translation = TRANSLATIONS[word.toLowerCase()];
-    if (translation) {
-      setTooltip({
-        word,
-        x: (e.target as HTMLElement).offsetLeft,
-        y: (e.target as HTMLElement).offsetTop,
-      });
-      setTimeout(() => setTooltip(null), 3000);
-    }
+    sendMessage(`What does this mean in the context of the text: "${text}"?`);
   };
 
   const sendChat = () => {
     if (!chatInput.trim()) return;
-    const userMsg = chatInput;
+    const txt = chatInput;
     setChatInput("");
-    setChatMessages((prev) => [
-      ...prev,
-      { role: "user", text: userMsg },
-      {
-        role: "ai",
-        text: `Great question about the article! "${userMsg}" — In Spanish, this relates to the concept of "aprendizaje automático" (machine learning), which the article uses to describe how companies like Clarity AI analyze investment impact. Would you like me to break down the grammar or vocabulary?`,
-      },
-    ]);
+    sendMessage(txt);
   };
 
-  const paragraphs = article.content?.split("\n\n").filter(Boolean) ?? [];
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-500">
+        Loading article...
+      </div>
+    );
+  }
+
+  if (!article) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-500">
+        Article not found.
+      </div>
+    );
+  }
+
+  const paragraphs = article.body?.split("\n\n").filter(Boolean) ?? [];
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg-base)" }}>
@@ -168,14 +181,16 @@ export default function ReaderPage() {
           <ArrowLeft className="w-4 h-4" />
         </button>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium truncate">{article.category}</div>
+          <div className="text-sm font-medium truncate uppercase">
+            {article.topic}
+          </div>
         </div>
         <div
           className="flex items-center gap-1.5 text-xs"
           style={{ color: "var(--text-muted)" }}
         >
           <Clock className="w-3 h-3" />
-          {article.readingTime} min
+          {article.reading_time_mins} min
         </div>
       </div>
 
@@ -184,27 +199,24 @@ export default function ReaderPage() {
         {/* Meta */}
         <div className="flex flex-wrap items-center gap-2 mb-4">
           <span
-            className="text-xs font-semibold px-2.5 py-1 rounded-full"
+            className="text-xs font-semibold px-2.5 py-1 rounded-full capitalize"
             style={{
               background: "rgba(34,197,94,0.15)",
               color: "var(--green-primary)",
               border: "1px solid rgba(34,197,94,0.3)",
             }}
           >
-            {article.level}
+            {article.difficulty}
           </span>
           <span
-            className="text-xs px-2 py-1 rounded-full flex items-center gap-1"
+            className="text-xs px-2 py-1 rounded-full flex items-center gap-1 uppercase"
             style={{
               background: "rgba(255,255,255,0.05)",
               color: "var(--text-muted)",
             }}
           >
             <Tag className="w-3 h-3" />
-            {article.category}
-          </span>
-          <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-            {article.language}
+            {article.topic}
           </span>
         </div>
 
@@ -214,14 +226,16 @@ export default function ReaderPage() {
         >
           {article.title}
         </h1>
-        <p
-          className="text-sm mb-6 italic"
-          style={{ color: "var(--text-secondary)" }}
-        >
-          {article.summary}
-        </p>
+        {article.summary && (
+          <p
+            className="text-sm mb-6 italic"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            {article.summary}
+          </p>
+        )}
 
-        {/* Translation tip */}
+        {/* Tip */}
         <div
           className="flex items-start gap-2 p-3 rounded-xl mb-6 text-sm"
           style={{
@@ -237,54 +251,46 @@ export default function ReaderPage() {
             >
               Tip:
             </strong>{" "}
-            Highlighted phrases can be tapped for instant translations. Ask
-            Atlas about any sentence!
+            Highlight any text to ask Atlas for explanations or save vocabulary!
           </p>
         </div>
 
         {/* Article text */}
-        <div className="prose-reader relative" onMouseUp={handleTextSelection} onTouchEnd={handleTextSelection}>
-          {paragraphs.map((para, pIdx) => {
-            const parts = highlightText(para);
-            return (
-              <p key={pIdx} className="mb-6 relative">
-                {parts.map((part, i) =>
-                  part.isHighlight ? (
-                    <span
-                      key={i}
-                      className="word-highlight"
-                      onClick={(e) => handleWordClick(part.text, e)}
-                      title={TRANSLATIONS[part.text.toLowerCase()] || ""}
-                    >
-                      {part.text}
-                    </span>
-                  ) : (
-                    <span key={i}>{part.text}</span>
-                  ),
-                )}
-              </p>
-            );
-          })}
+        <div
+          className="prose-reader relative"
+          onMouseUp={handleTextSelection}
+          onTouchEnd={handleTextSelection}
+        >
+          {paragraphs.map((para, pIdx) => (
+            <p key={pIdx} className="mb-6">
+              {para}
+            </p>
+          ))}
+        </div>
 
-          {/* Translation tooltip */}
-          <AnimatePresence>
-            {tooltip && (
-              <motion.div
-                initial={{ opacity: 0, y: 4, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl text-sm font-medium shadow-xl"
-                style={{
-                  background: "var(--green-primary)",
-                  color: "white",
-                  maxWidth: 280,
-                }}
-              >
-                <span style={{ opacity: 0.8 }}>"{tooltip.word}" =</span>{" "}
-                <strong>{TRANSLATIONS[tooltip.word.toLowerCase()]}</strong>
-              </motion.div>
-            )}
-          </AnimatePresence>
+        {/* Completion Area */}
+        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800 text-center flex flex-col items-center">
+          {isCompleted ? (
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="flex flex-col items-center gap-2 text-green-500"
+            >
+              <CheckCircle size={40} />
+              <p className="font-bold text-lg">Article Completed!</p>
+              <p className="text-sm opacity-80">+30 XP Earned</p>
+            </motion.div>
+          ) : (
+            <button
+              onClick={handleMarkCompleted}
+              className="px-8 py-3 rounded-2xl font-bold text-white shadow-lg card-hover"
+              style={{
+                background: "linear-gradient(135deg, #1a2b5e, #2d4080)",
+              }}
+            >
+              Mark as Completed
+            </button>
+          )}
         </div>
 
         {/* Selection bubble */}
@@ -294,24 +300,27 @@ export default function ReaderPage() {
               initial={{ opacity: 0, scale: 0.9, y: 6 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed z-50 flex items-center gap-1 rounded-2xl px-2 py-1.5 shadow-xl"
+              className="fixed z-50 flex items-center gap-1 rounded-full px-2 py-1.5 shadow-2xl"
               style={{
-                left: Math.min(selectionBubble.x, window.innerWidth - 200),
+                left: Math.min(selectionBubble.x, typeof window !== 'undefined' ? window.innerWidth - 210 : 0),
                 top: selectionBubble.y,
                 transform: "translate(-50%, -100%)",
-                background: "#1a2b5e",
-                border: "1px solid rgba(255,255,255,0.15)",
+                background: "#ffffff",
+                border: "1px solid rgba(26,43,94,0.1)",
+                boxShadow: "0 8px 30px rgba(26,43,94,0.12)",
               }}
             >
               <button
                 onClick={() => askAIAboutSelection(selectionBubble.text)}
-                className="flex items-center gap-1 px-2 py-1 rounded-xl text-xs font-semibold text-white"
-                style={{ background: "rgba(255,255,255,0.15)" }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-[#1a2b5e] hover:bg-[#f5f8ff] transition-colors"
               >
-                <Sparkles size={11} />
-                Ask AI
+                <Image src="/atlas-logo.png" alt="Atlas AI" width={16} height={16} className="object-cover rounded-full" />
+                Ask Atlas
               </button>
-              <div className="w-px h-4" style={{ background: "rgba(255,255,255,0.2)" }} />
+              <div
+                className="w-px h-5"
+                style={{ background: "rgba(26,43,94,0.1)" }}
+              />
               <button
                 onClick={() => {
                   setSaveWord(selectionBubble.text);
@@ -319,33 +328,34 @@ export default function ReaderPage() {
                   setSelectionBubble(null);
                   window.getSelection()?.removeAllRanges();
                 }}
-                className="flex items-center gap-1 px-2 py-1 rounded-xl text-xs font-semibold"
-                style={{ color: "#c9a84c" }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-[#c9a84c] hover:bg-[#fff9e6] transition-colors"
               >
-                <BookMarked size={11} />
+                <BookMarked size={14} />
                 Save
               </button>
               <button
                 onClick={() => setSelectionBubble(null)}
-                className="px-1"
-                style={{ color: "rgba(255,255,255,0.5)" }}
+                className="px-2 text-[#9aa5b1] hover:text-[#1a2b5e] transition-colors"
               >
-                <X size={12} />
+                <X size={14} />
               </button>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* FAB – AI Assistant */}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setPanelOpen(true)}
-        className="fixed bottom-24 right-5 z-40 w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl glow-green"
-        style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}
+        className="fixed bottom-24 right-5 z-40 w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl"
+        style={{
+          background: "#ffffff",
+          border: "1px solid rgba(26,43,94,0.08)",
+          boxShadow: "0 8px 30px rgba(26,43,94,0.12)",
+        }}
       >
-        <Bot className="w-6 h-6 text-white" />
+        <Image src="/atlas-logo.png" alt="Atlas AI" width={28} height={28} className="object-cover rounded-full" />
       </motion.button>
 
       {/* AI Assistant Bottom Panel */}
@@ -364,110 +374,120 @@ export default function ReaderPage() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl flex flex-col"
+              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[3rem] flex flex-col shadow-2xl overflow-hidden"
               style={{
-                background: "var(--bg-surface)",
-                border: "1px solid var(--border-medium)",
-                height: "60vh",
-                maxHeight: 480,
+                background: "#ffffff",
+                borderTop: "1px solid rgba(26,43,94,0.08)",
+                height: "65vh",
+                maxHeight: 600,
               }}
             >
+              <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mt-4 mb-2 shrink-0" />
+
               {/* Panel header */}
               <div
-                className="flex items-center justify-between p-4 border-b shrink-0"
-                style={{ borderColor: "var(--border-subtle)" }}
+                className="flex items-center justify-between px-6 py-4 border-b shrink-0"
+                style={{ borderColor: "rgba(26,43,94,0.05)" }}
               >
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-8 h-8 rounded-xl flex items-center justify-center"
-                    style={{
-                      background: "linear-gradient(135deg, #22c55e, #16a34a)",
-                    }}
-                  >
-                    <Bot className="w-4 h-4 text-white" />
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-[1rem] bg-[#f0f4ff] flex items-center justify-center shadow-inner">
+                    <Image src="/atlas-logo.png" alt="Atlas AI" width={20} height={20} className="object-cover rounded-full" />
                   </div>
                   <div>
-                    <div className="font-semibold text-sm">Atlas Assistant</div>
-                    <div
-                      className="text-xs"
-                      style={{ color: "var(--text-muted)" }}
-                    >
-                      Aware of: {article.title.substring(0, 30)}…
+                    <div className="font-bold text-[#1a2b5e]">Atlas Assistant</div>
+                    <div className="text-[10px] font-bold text-[#c9a84c] uppercase tracking-widest">
+                      Aware of: {article.title.substring(0, 20)}…
                     </div>
                   </div>
                 </div>
                 <button
                   onClick={() => setPanelOpen(false)}
-                  style={{ color: "var(--text-muted)" }}
+                  className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#f5f8ff] transition-colors"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-5 h-5 text-[#9aa5b1]" />
                 </button>
               </div>
 
               {/* Chat messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {chatMessages.map((msg, i) => (
-                  <div
-                    key={i}
-                    className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {chatMessages.map((msg) => (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    key={msg.id}
+                    className={`flex items-end gap-2 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
                   >
                     {msg.role === "ai" && (
-                      <div
-                        className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, #22c55e, #16a34a)",
-                          marginTop: 2,
-                        }}
-                      >
-                        <Bot className="w-3 h-3 text-white" />
+                      <div className="w-6 h-6 rounded-lg bg-[#f0f4ff] flex items-center justify-center shrink-0 mb-1">
+                        <Image src="/atlas-logo.png" alt="Atlas AI" width={14} height={14} className="object-cover rounded-full" />
                       </div>
                     )}
                     <div
-                      className="px-4 py-2.5 rounded-2xl max-w-xs text-sm leading-relaxed"
-                      style={
+                      className={`px-4 py-3 rounded-[1.5rem] max-w-[85%] text-sm leading-relaxed overflow-hidden ${
                         msg.role === "user"
-                          ? {
-                              background:
-                                "linear-gradient(135deg, #22c55e, #16a34a)",
-                              color: "white",
-                              borderRadius: "20px 20px 4px 20px",
-                            }
-                          : {
-                              background: "var(--bg-card)",
-                              border: "1px solid var(--border-subtle)",
-                              borderRadius: "20px 20px 20px 4px",
-                              color: "var(--text-primary)",
-                            }
-                      }
+                          ? "bg-[#f5f8ff] text-[#1a2b5e] rounded-br-none"
+                          : "bg-[#ffffff] text-[#1a2b5e] border border-[#1a2b5e]/5 rounded-bl-none shadow-sm"
+                      }`}
                     >
-                      {msg.text}
+                      <ReactMarkdown>
+                        {msg.content}
+                      </ReactMarkdown>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
+                
+                {isTyping && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-end gap-2 flex-row"
+                  >
+                    <div className="w-6 h-6 rounded-lg bg-[#f0f4ff] flex items-center justify-center shrink-0 mb-1">
+                      <Image src="/atlas-logo.png" alt="Atlas AI" width={14} height={14} className="object-cover rounded-full" />
+                    </div>
+                    <div className="px-4 py-3 rounded-[1.5rem] bg-[#ffffff] border border-[#1a2b5e]/5 rounded-bl-none shadow-sm flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 bg-[#9aa5b1] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-1.5 h-1.5 bg-[#9aa5b1] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-1.5 h-1.5 bg-[#9aa5b1] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  </motion.div>
+                )}
+                {error && (
+                  <div className="text-xs text-red-500 text-center my-2 p-2 bg-red-50 rounded-xl">
+                    {error}
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
               </div>
 
               {/* Input */}
               <div
-                className="p-4 border-t shrink-0"
-                style={{ borderColor: "var(--border-subtle)" }}
+                className="p-6 shrink-0 bg-[#ffffff] border-t"
+                style={{ borderColor: "rgba(26,43,94,0.05)" }}
               >
                 <div className="flex gap-2">
                   <input
-                    className="flex-1 px-3 py-2 text-sm input-dark"
+                    className="flex-1 px-5 py-3.5 text-sm rounded-2xl outline-none transition-all shadow-sm"
+                    style={{
+                      background: "#f8fafc",
+                      border: "1px solid rgba(26,43,94,0.1)",
+                      color: "#1a2b5e"
+                    }}
                     placeholder="Ask about this article…"
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && sendChat()}
+                    disabled={isTyping}
                   />
                   <button
                     onClick={sendChat}
-                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                    disabled={isTyping || !chatInput.trim()}
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0"
                     style={{
-                      background: "linear-gradient(135deg, #22c55e, #16a34a)",
+                      background: "linear-gradient(135deg, #1a2b5e, #2d4080)",
                     }}
                   >
-                    <Send className="w-4 h-4 text-white" />
+                    <Send className="w-5 h-5 text-white" />
                   </button>
                 </div>
               </div>

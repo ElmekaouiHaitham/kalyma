@@ -1,348 +1,534 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Mic, BookMarked } from "lucide-react";
+import { Send, Mic, BookMarked, Plus, AlertCircle } from "lucide-react";
+import Image from "next/image";
+import ReactMarkdown from "react-markdown";
 import SaveWordModal from "@/components/SaveWordModal";
-
-type Msg = { id: string; role: "user" | "ai"; content: string; ts: Date };
-
-const INIT_MSGS: Msg[] = [
-  {
-    id: "ai0",
-    role: "ai",
-    content: "Hello Samir! 👋\nHow can I help you today?",
-    ts: new Date(),
-  },
-];
-
-const TOPICS = [
-  { icon: "📖", title: "Daily Practice", sub: "Real-life conversations" },
-  { icon: "💼", title: "Business English", sub: "Work & Professional" },
-  { icon: "🌍", title: "Travel & Culture", sub: "Explore Morocco & World" },
-  { icon: "🎙️", title: "Pronunciation", sub: "Improve your accent" },
-];
-
-type Mode = "text" | "voice" | "scenario";
+import { useAtlasChat, ChatMessage } from "@/hooks/useAtlasChat";
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<Msg[]>(INIT_MSGS);
+  const { messages, isTyping, error, sendMessage, clearMessages, addMessage } = useAtlasChat({
+    context_type: "general",
+    context_content: "General English learning conversation. Be helpful, encouraging, and friendly.",
+  });
+
   const [input, setInput] = useState("");
-  const [mode, setMode] = useState<Mode>("text");
-  const [isTyping, setIsTyping] = useState(false);
   const [started, setStarted] = useState(false);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [saveWord, setSaveWord] = useState("");
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const [hoveredMsg, setHoveredMsg] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const openSaveModal = (content: string) => {
-    // Extract last bold word or first word from AI message
     const boldMatch = content.match(/\*\*([^*]+)\*\*/);
-    const extracted = boldMatch ? boldMatch[1] : content.split(" ").slice(0, 2).join(" ");
+    const extracted = boldMatch ? boldMatch[1] : content.split(" ").slice(0, 3).join(" ");
     setSaveWord(extracted);
     setSaveModalOpen(true);
   };
 
+  // Initial welcome message when started
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (started && messages.length === 0 && !isTyping) {
+      addMessage("ai", "Hello! I'm Atlas. How can I help you practice your English today?");
+    }
+  }, [started]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  const sendMessage = (text?: string) => {
-    const txt = text ?? input.trim();
-    if (!txt) return;
-    setInput("");
-    setStarted(true);
-
-    const newMsg: Msg = { id: `u${Date.now()}`, role: "user", content: txt, ts: new Date() };
-    setMessages((p) => [...p, newMsg]);
-    setIsTyping(true);
-
-    setTimeout(() => {
-      setIsTyping(false);
-      setMessages((p) => [
-        ...p,
-        {
-          id: `ai${Date.now()}`,
-          role: "ai",
-          content: `Great point! "${txt}" — Let me help you build on that. Would you like to practice using more complex sentence structures?`,
-          ts: new Date(),
-        },
-      ]);
-    }, 1600);
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    const el = textareaRef.current;
+    if (el) {
+      el.style.height = "auto";
+      el.style.height = Math.min(el.scrollHeight, 180) + "px";
+    }
   };
 
-  return (
-    <div
-      className="flex flex-col h-full"
-      style={{ background: "#f0f4ff", colorScheme: "light" }}
-    >
-      {/* Atlas AI Header */}
-      <div
-        className="shrink-0 px-5 py-5 text-center relative overflow-hidden"
-        style={{
-          background: "white",
-          borderBottom: "1px solid rgba(26,43,94,0.08)",
-        }}
-      >
-        <div className="absolute top-3 right-4 text-xl" style={{ color: "#c9a84c", opacity: 0.7 }}>
-          ✦
-        </div>
-        <div className="absolute bottom-3 left-5 text-sm" style={{ color: "rgba(201,168,76,0.5)" }}>
-          ✶
-        </div>
+  const handleSend = () => {
+    const txt = input.trim();
+    if (!txt) return;
+    setInput("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
+    setStarted(true);
+    sendMessage(txt);
+  };
 
-        <div className="flex justify-center mb-2">
-          <div
-            className="w-16 h-16 rounded-full flex items-center justify-center text-2xl shadow-md"
-            style={{
-              background: "linear-gradient(135deg, #1a2b5e 0%, #2d4080 100%)",
-              boxShadow: "0 4px 20px rgba(26,43,94,0.25)",
+
+  return (
+    <div className="atlas-chat-root">
+      <style>{`
+        .atlas-chat-root {
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+          background: #ffffff;
+          color: #1a2b5e;
+          font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        .atlas-messages {
+          flex: 1;
+          overflow-y: auto;
+          padding: 0;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(26,43,94,0.1) transparent;
+          display: flex;
+          flex-direction: column;
+        }
+        .atlas-messages::-webkit-scrollbar { width: 6px; }
+        .atlas-messages::-webkit-scrollbar-thumb {
+          background: rgba(26,43,94,0.15);
+          border-radius: 3px;
+        }
+
+        .atlas-msg-row {
+          padding: 24px 16px;
+          display: flex;
+          flex-direction: column;
+        }
+        .atlas-msg-row.ai-row {
+          background: transparent;
+        }
+        .atlas-msg-row.user-row {
+          background: transparent;
+          align-items: flex-end;
+        }
+
+        .atlas-msg-inner {
+          max-width: 720px;
+          width: 100%;
+          margin: 0 auto;
+        }
+
+        .atlas-ai-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 12px;
+        }
+
+        .atlas-avatar {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          overflow: hidden;
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .atlas-sender-name {
+          font-size: 14px;
+          font-weight: 700;
+          color: #1a2b5e;
+        }
+
+        .atlas-bubble-ai {
+          font-size: 15px;
+          line-height: 1.75;
+          color: #1a2b5e;
+          padding: 0;
+          white-space: pre-wrap;
+        }
+
+        .atlas-bubble-user {
+          background: #f5f8ff;
+          color: #1a2b5e;
+          border-radius: 20px 20px 4px 20px;
+          padding: 14px 20px;
+          font-size: 15px;
+          line-height: 1.65;
+          max-width: 600px;
+          white-space: pre-wrap;
+          border: 1px solid rgba(26,43,94,0.08);
+        }
+
+        .atlas-msg-actions {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-top: 12px;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+        }
+        .atlas-msg-row:hover .atlas-msg-actions,
+        .atlas-msg-actions.visible {
+          opacity: 1;
+        }
+
+        .atlas-action-btn {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 12px;
+          border-radius: 10px;
+          background: transparent;
+          border: 1px solid rgba(26,43,94,0.12);
+          color: #4a5568;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+        .atlas-action-btn:hover {
+          background: rgba(26,43,94,0.04);
+          color: #1a2b5e;
+          border-color: rgba(26,43,94,0.2);
+        }
+
+        .atlas-welcome-wrapper {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 0 24px;
+          width: 100%;
+        }
+
+        .atlas-welcome-logo {
+          border-radius: 50%;
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 20px rgba(26,43,94,0.06);
+        }
+
+        .atlas-welcome-title {
+          font-weight: 800;
+          color: #1a2b5e;
+          letter-spacing: -0.5px;
+        }
+
+        .atlas-welcome-sub {
+          color: #4a5568;
+          text-align: center;
+          font-weight: 500;
+        }
+
+        .atlas-typing-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #9aa5b1;
+          display: inline-block;
+        }
+
+        .atlas-input-area {
+          flex-shrink: 0;
+          padding: 12px 20px 24px;
+          background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, #ffffff 20%);
+        }
+
+        .atlas-input-wrap {
+          max-width: 760px;
+          margin: 0 auto;
+          background: #ffffff;
+          border: 1.5px solid rgba(26,43,94,0.15);
+          border-radius: 20px;
+          display: flex;
+          flex-direction: column;
+          transition: border-color 0.2s, box-shadow 0.2s;
+          box-shadow: 0 2px 12px rgba(26,43,94,0.04);
+        }
+        .atlas-input-wrap:focus-within {
+          border-color: #1a2b5e;
+          box-shadow: 0 4px 20px rgba(26,43,94,0.08);
+        }
+
+        .atlas-textarea {
+          flex: 1;
+          background: transparent;
+          border: none;
+          outline: none;
+          padding: 18px 20px 8px;
+          font-size: 15px;
+          color: #1a2b5e;
+          resize: none;
+          font-family: inherit;
+          line-height: 1.6;
+          min-height: 52px;
+          max-height: 200px;
+        }
+        .atlas-textarea::placeholder { color: #9aa5b1; }
+
+        .atlas-input-toolbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 8px 12px 12px;
+        }
+
+        .atlas-toolbar-left {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .atlas-tool-btn {
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #64748b;
+          transition: all 0.15s;
+        }
+        .atlas-tool-btn:hover {
+          background: rgba(26,43,94,0.06);
+          color: #1a2b5e;
+        }
+
+        .atlas-send-btn {
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          background: #1a2b5e;
+          border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          transition: all 0.15s;
+          flex-shrink: 0;
+        }
+        .atlas-send-btn:hover:not(:disabled) {
+          transform: scale(1.05);
+          background: #2d4080;
+        }
+        .atlas-send-btn:disabled {
+          background: #e2e8f0;
+          color: #94a3b8;
+          cursor: default;
+        }
+
+        .atlas-hint {
+          text-align: center;
+          font-size: 11px;
+          color: #9aa5b1;
+          margin-top: 12px;
+        }
+      `}</style>
+
+      {/* ── Messages Area ── */}
+      <div className="atlas-messages">
+        {/* Animated Welcome / Header Area */}
+        <motion.div
+          layout
+          initial={false}
+          animate={{
+            flex: started ? 0 : 1,
+            paddingTop: started ? 32 : 0,
+            paddingBottom: started ? 16 : 0,
+          }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            borderBottom: started ? "1px solid rgba(26,43,94,0.08)" : "none",
+          }}
+        >
+          <motion.div
+            layout
+            className="atlas-welcome-wrapper"
+            animate={{
+              flexDirection: started ? "row" : "column",
+              gap: started ? 16 : 0,
             }}
           >
-            ⭐
-          </div>
-        </div>
-
-        <h1
-          className="text-xl font-bold mb-0.5"
-          style={{ fontFamily: "'Outfit', sans-serif", color: "#1a2b5e" }}
-        >
-          Atlas AI
-        </h1>
-        <p className="text-xs mb-1" style={{ color: "#4a5568" }}>
-          Your Personal English Coach
-        </p>
-        <div className="flex items-center justify-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#22c55e" }} />
-          <span className="text-xs font-medium" style={{ color: "#4a5568" }}>
-            Online • Ready to chat
-          </span>
-        </div>
-      </div>
-
-      {/* Mode Tabs + Topics */}
-      {!started && (
-        <div className="shrink-0 px-4 py-4 space-y-4" style={{ background: "#f0f4ff" }}>
-          <div className="max-w-2xl mx-auto space-y-4">
-          <p className="text-xs font-bold text-center uppercase tracking-wider" style={{ color: "#9aa5b1" }}>
-            Start a conversation
-          </p>
-          <div
-            className="flex rounded-xl p-1 gap-1"
-            style={{ background: "white", border: "1px solid rgba(26,43,94,0.08)" }}
-          >
-            {(["voice", "text", "scenario"] as Mode[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => setMode(m)}
-                className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
-                style={{
-                  background: mode === m ? "#1a2b5e" : "transparent",
-                  color: mode === m ? "white" : "#9aa5b1",
-                }}
-              >
-                {m === "voice" ? "🎤" : m === "text" ? "💬" : "👤"}
-                {m === "voice" ? "Voice Mode" : m === "text" ? "Text Chat" : "Scenario"}
-              </button>
-            ))}
-          </div>
-
-          <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "#9aa5b1" }}>
-            Choose a topic
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            {TOPICS.map(({ icon, title, sub }) => (
-              <button
-                key={title}
-                onClick={() => sendMessage(`I want to practice ${title}`)}
-                className="p-3 rounded-xl text-left transition-all card-hover"
-                style={{
-                  background: "white",
-                  border: "1px solid rgba(26,43,94,0.08)",
-                  boxShadow: "0 2px 8px rgba(26,43,94,0.05)",
-                }}
-              >
-                <div className="text-xl mb-1">{icon}</div>
-                <div className="text-xs font-bold mb-0.5" style={{ color: "#1a2b5e" }}>
-                  {title}
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="text-[10px]" style={{ color: "#9aa5b1" }}>
-                    {sub}
-                  </div>
-                  <span className="text-[10px]" style={{ color: "#9aa5b1" }}>›</span>
-                </div>
-              </button>
-            ))}
-          </div>
-          </div>
-        </div>
-      )}
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
-        <div className="max-w-2xl mx-auto space-y-4">
-          {messages.map((msg) => (
             <motion.div
-              key={msg.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+              layout
+              className="atlas-welcome-logo"
+              animate={{
+                width: started ? 42 : 80,
+                height: started ? 42 : 80,
+                marginBottom: started ? 0 : 24,
+              }}
             >
-              {msg.role === "ai" && (
-                <div
-                  className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-sm"
-                  style={{ background: "linear-gradient(135deg, #1a2b5e, #2d4080)", marginTop: 4 }}
-                >
-                  ⭐
-                </div>
-              )}
-              {msg.role === "user" && (
-                <div
-                  className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center font-bold text-sm text-white"
-                  style={{ background: "linear-gradient(135deg, #1a2b5e, #2d4080)", marginTop: 4 }}
-                >
-                  S
-                </div>
-              )}
-
-              <div
-                className={`flex flex-col gap-1 max-w-sm sm:max-w-md ${msg.role === "user" ? "items-end" : "items-start"}`}
-              >
-                <div
-                  className="px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap"
-                  style={
-                    msg.role === "user"
-                      ? {
-                          background: "linear-gradient(135deg, #1a2b5e, #0f1d4e)",
-                          color: "white",
-                          borderRadius: "20px 20px 4px 20px",
-                        }
-                      : {
-                          background: "white",
-                          border: "1px solid rgba(26,43,94,0.08)",
-                          borderRadius: "20px 20px 20px 4px",
-                          color: "#1a2b5e",
-                          boxShadow: "0 2px 8px rgba(26,43,94,0.05)",
-                        }
-                  }
-                >
-                  {msg.content}
-                </div>
-                {msg.role === "user" && (
-                  <span className="text-xs px-1" style={{ color: "#9aa5b1" }}>
-                    {msg.ts.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} ✓
-                  </span>
-                )}
-                {msg.role === "ai" && (
-                  <button
-                    onClick={() => openSaveModal(msg.content)}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all mt-0.5 self-start"
-                    style={{
-                      background: "rgba(26,43,94,0.07)",
-                      border: "1px solid rgba(26,43,94,0.12)",
-                      color: "#1a2b5e",
-                    }}
-                  >
-                    <BookMarked size={11} />
-                    Save Word
-                  </button>
-                )}
-              </div>
+              <Image
+                src="/atlas-logo.png"
+                alt="Atlas AI"
+                width={80}
+                height={80}
+                className="object-cover"
+                style={{ width: "100%", height: "100%" }}
+              />
             </motion.div>
-          ))}
-
-          <AnimatePresence>
-            {isTyping && (
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="flex gap-2.5"
+            
+            <motion.div layout style={{ textAlign: started ? "left" : "center" }}>
+              <motion.h1
+                layout
+                className="atlas-welcome-title"
+                animate={{
+                  fontSize: started ? 20 : 32,
+                  marginBottom: started ? 2 : 8,
+                }}
               >
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
-                  style={{ background: "linear-gradient(135deg, #1a2b5e, #2d4080)", marginTop: 4 }}
-                >
-                  ⭐
-                </div>
-                <div
-                  className="px-4 py-3 flex items-center gap-1"
-                  style={{
-                    background: "white",
-                    border: "1px solid rgba(26,43,94,0.08)",
-                    borderRadius: "20px 20px 20px 4px",
-                    boxShadow: "0 2px 8px rgba(26,43,94,0.05)",
-                  }}
-                >
-                  {[0, 1, 2].map((i) => (
-                    <motion.div
-                      key={i}
-                      animate={{ y: [0, -4, 0] }}
-                      transition={{ duration: 0.6, delay: i * 0.15, repeat: Infinity }}
-                      className="w-2 h-2 rounded-full"
-                      style={{ background: "#1a2b5e" }}
-                    />
-                  ))}
+                Atlas AI
+              </motion.h1>
+              <motion.p
+                layout
+                className="atlas-welcome-sub"
+                animate={{
+                  fontSize: started ? 13 : 15,
+                  opacity: started ? 0.7 : 1,
+                  marginBottom: started ? 0 : 0,
+                }}
+                style={{ textAlign: started ? "left" : "center" }}
+              >
+                Your personal English coach — ask anything, practice anytime.
+              </motion.p>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+
+        {/* Message List */}
+        {started && (
+          <div style={{ flex: 1, paddingBottom: 20, paddingTop: 10 }}>
+            {messages.map((msg) => (
+              <motion.div
+                key={msg.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
+                className={`atlas-msg-row ${msg.role === "ai" ? "ai-row" : "user-row"}`}
+                onMouseEnter={() => setHoveredMsg(msg.id)}
+                onMouseLeave={() => setHoveredMsg(null)}
+              >
+                <div className="atlas-msg-inner">
+                  {msg.role === "ai" && (
+                    <>
+                      <div className="atlas-ai-header">
+                        <div className="atlas-avatar">
+                          <Image
+                            src="/atlas-logo.png"
+                            alt="Atlas AI"
+                            width={36}
+                            height={36}
+                            className="object-cover"
+                            style={{ width: "100%", height: "100%" }}
+                          />
+                        </div>
+                        <span className="atlas-sender-name">Atlas</span>
+                      </div>
+                      <div className="atlas-bubble-ai overflow-hidden">
+                        <ReactMarkdown>
+                          {msg.content}
+                        </ReactMarkdown>
+                      </div>
+
+                      <div className={`atlas-msg-actions ${hoveredMsg === msg.id ? "visible" : ""}`}>
+                        <button
+                          className="atlas-action-btn"
+                          onClick={() => openSaveModal(msg.content)}
+                          title="Save a word from this message"
+                        >
+                          <BookMarked size={14} />
+                          Save Word
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {msg.role === "user" && (
+                    <div className="atlas-bubble-user">{msg.content}</div>
+                  )}
                 </div>
               </motion.div>
-            )}
-          </AnimatePresence>
+            ))}
 
-          <div ref={bottomRef} />
-        </div>
+            <AnimatePresence>
+              {isTyping && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className="atlas-msg-row ai-row"
+                >
+                  <div className="atlas-msg-inner">
+                    <div className="atlas-ai-header">
+                      <div className="atlas-avatar">
+                        <Image
+                          src="/atlas-logo.png"
+                          alt="Atlas AI"
+                          width={36}
+                          height={36}
+                          className="object-cover"
+                          style={{ width: "100%", height: "100%" }}
+                        />
+                      </div>
+                      <span className="atlas-sender-name">Atlas</span>
+                    </div>
+                    <div style={{ display: "flex", gap: 5, alignItems: "center", paddingTop: 4 }}>
+                      {[0, 1, 2].map((i) => (
+                        <motion.span
+                          key={i}
+                          className="atlas-typing-dot"
+                          animate={{ opacity: [0.3, 1, 0.3] }}
+                          transition={{ duration: 1.2, delay: i * 0.2, repeat: Infinity }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <div ref={messagesEndRef} style={{ height: 8 }} />
+          </div>
+        )}
       </div>
 
-      {/* Input Bar */}
-      <div
-        className="shrink-0 px-4 py-3"
-        style={{
-          background: "white",
-          borderTop: "1px solid rgba(26,43,94,0.08)",
-        }}
-      >
-        <div className="max-w-2xl mx-auto flex gap-2 items-end">
+      {/* ── Input Area ── */}
+      <div className="atlas-input-area">
+        <div className="atlas-input-wrap">
           <textarea
-            className="flex-1 px-4 py-3 text-sm resize-none"
-            style={{
-              background: "#f5f8ff",
-              border: "1.5px solid rgba(26,43,94,0.15)",
-              borderRadius: "1rem",
-              color: "#1a2b5e",
-              lineHeight: 1.5,
-              minHeight: 44,
-              maxHeight: 100,
-            }}
-            placeholder="Type your message..."
+            ref={textareaRef}
+            className="atlas-textarea"
+            placeholder="Message Atlas..."
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
-                sendMessage();
+                handleSend();
               }
             }}
+
             rows={1}
           />
-          <button
-            className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-all"
-            style={{
-              background: "rgba(26,43,94,0.07)",
-              border: "1.5px solid rgba(26,43,94,0.15)",
-              color: "#1a2b5e",
-            }}
-          >
-            <Mic size={18} />
-          </button>
-          <button
-            onClick={() => sendMessage()}
-            disabled={!input.trim()}
-            className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-all disabled:opacity-40"
-            style={{ background: "linear-gradient(135deg, #1a2b5e, #0f1d4e)" }}
-          >
-            <Send size={16} className="text-white" />
-          </button>
+          <div className="atlas-input-toolbar">
+            <div className="atlas-toolbar-left">
+              <button className="atlas-tool-btn" title="New conversation" onClick={() => { clearMessages(); setStarted(false); setInput(""); }}>
+                <Plus size={18} />
+              </button>
+              <button className="atlas-tool-btn" title="Voice input">
+                <Mic size={18} />
+              </button>
+            </div>
+            <button
+              className="atlas-send-btn"
+              onClick={handleSend}
+              disabled={!input.trim()}
+              title="Send message"
+            >
+              <Send size={16} style={{ marginLeft: -2 }} />
+            </button>
+          </div>
         </div>
+        <p className="atlas-hint">Atlas AI can make mistakes. Practice for learning purposes.</p>
       </div>
+
       <SaveWordModal
         isOpen={saveModalOpen}
         onClose={() => setSaveModalOpen(false)}

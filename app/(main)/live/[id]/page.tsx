@@ -1,382 +1,348 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { useRouter, useParams } from "next/navigation";
-import {
-  ArrowLeft,
-  Users,
-  Mic,
-  MicOff,
-  Video,
-  VideoOff,
-  MessageSquare,
-  Send,
+import { 
+  ChevronLeft, 
+  Users, 
+  Star, 
+  MessageSquare, 
+  Info, 
+  Calendar, 
+  Clock, 
+  AlertCircle,
   X,
-  Maximize2,
+  CheckCircle2
 } from "lucide-react";
+import { useAuth } from "@/app/providers";
 
-const PARTICIPANTS = [
-  { id: "p1", initials: "SE", name: "Sarah E.", gradient: "linear-gradient(135deg, #ef4444, #f97316)" },
-  { id: "p2", initials: "JD", name: "Jean D.", gradient: "linear-gradient(135deg, #8b5cf6, #3b82f6)" },
-  { id: "p3", initials: "AM", name: "Amir M.", gradient: "linear-gradient(135deg, #22c55e, #16a34a)" },
-  { id: "p4", initials: "LK", name: "Lena K.", gradient: "linear-gradient(135deg, #f59e0b, #ef4444)" },
-];
-
-function LiveDot() {
-  return (
-    <span className="relative inline-flex items-center">
-      <span className="w-2 h-2 rounded-full" style={{ background: "#ef4444" }} />
-      <span
-        className="absolute inset-0 rounded-full animate-ping"
-        style={{ background: "#ef4444", opacity: 0.5 }}
-      />
-    </span>
-  );
+interface SessionDetails {
+  id: string;
+  title: string;
+  description?: string;
+  topic?: string;
+  scheduled_at: string;
+  duration_mins: number;
+  daily_room_url?: string;
+  status: 'scheduled' | 'live' | 'completed';
+  max_attendees?: number;
+  ai_summary?: string;
 }
 
-function Countdown() {
-  const [elapsed, setElapsed] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => setElapsed((e) => e + 1), 1000);
-    return () => clearInterval(t);
-  }, []);
-  const m = Math.floor(elapsed / 60).toString().padStart(2, "0");
-  const s = (elapsed % 60).toString().padStart(2, "0");
-  return <span>{m}:{s}</span>;
-}
-
-type ChatMsg = { role: "user" | "ai"; text: string };
-
-export default function LiveSessionPage() {
+export default function SessionRoomPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
-  const [micOn, setMicOn] = useState(false);
-  const [vidOn, setVidOn] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
-  const [chatInput, setChatInput] = useState("");
-  const [messages, setMessages] = useState<ChatMsg[]>([
-    { role: "ai", text: "Welcome to the session! Feel free to ask vocabulary questions or request clarification. 🎙️" },
-  ]);
+  const { user, session: authSession } = useAuth();
 
-  const send = () => {
-    if (!chatInput.trim()) return;
-    const txt = chatInput;
-    setChatInput("");
-    setMessages((p) => [
-      ...p,
-      { role: "user", text: txt },
-      {
-        role: "ai",
-        text: `Great participation! "${txt}" — let's explore that further in our next exercise.`,
-      },
-    ]);
+  const [session, setSession] = useState<SessionDetails | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showRating, setShowRating] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRated, setIsRated] = useState(false);
+
+  useEffect(() => {
+    if (!authSession?.access_token) return;
+
+    const fetchDetails = async () => {
+      setIsLoading(true);
+      try {
+        const headers = { Authorization: `Bearer ${authSession.access_token}` };
+        
+        // 1. Fetch Session Info
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sessions/${id}`, { headers });
+        if (!res.ok) throw new Error("Failed to load session details");
+        const data = await res.json();
+        setSession(data);
+
+        // 2. If Live and Pro, Fetch Token
+        if (data.status === 'live' || (data.status === 'scheduled' && new Date(data.scheduled_at).getTime() - Date.now() < 300000)) {
+           if (user?.plan !== 'pro') {
+              setError("PRO_REQUIRED");
+           } else {
+              const tokenRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sessions/${id}/token/student`, { 
+                method: 'POST',
+                headers 
+              });
+              if (tokenRes.ok) {
+                const tokenData = await tokenRes.json();
+                setToken(tokenData.token);
+              } else {
+                const errData = await tokenRes.json();
+                setError(errData.detail || "Unable to join session");
+              }
+           }
+        }
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDetails();
+  }, [id, authSession, user?.plan]);
+
+  const handleRate = async () => {
+    if (rating === 0) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sessions/${id}/rate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authSession?.access_token}`,
+        },
+        body: JSON.stringify({ rating, comment }),
+      });
+      if (res.ok) {
+        setIsRated(true);
+        setTimeout(() => setShowRating(false), 2000);
+      }
+    } catch (err) {
+      console.error("Failed to submit rating", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f0f4ff]">
+        <div className="w-12 h-12 border-4 border-[#1a2b5e]/10 border-t-[#c9a84c] rounded-full animate-spin mb-4" />
+        <p className="text-[#1a2b5e] font-medium">Securing your connection...</p>
+      </div>
+    );
+  }
+
+  if (error === "PRO_REQUIRED") {
+     return (
+        <div className="flex flex-col items-center justify-center min-h-[80vh] px-6 text-center">
+           <div className="w-16 h-16 bg-[#c9a84c]/10 rounded-full flex items-center justify-center mb-6">
+              <Star className="text-[#c9a84c]" size={32} fill="currentColor" />
+           </div>
+           <h2 className="text-2xl font-bold text-[#1a2b5e] mb-2">Pro Plan Required</h2>
+           <p className="text-[#4a5568] max-w-md mb-8">
+              Live sessions are exclusive to our Pro members. Upgrade now to participate in real-time practice and interactive lessons.
+           </p>
+           <button 
+              onClick={() => router.push('/profile')}
+              className="px-8 py-3 bg-[#1a2b5e] text-white rounded-xl font-bold shadow-lg hover:shadow-[#1a2b5e]/20 transition-all"
+           >
+              Upgrade to Pro
+           </button>
+           <button onClick={() => router.back()} className="mt-4 text-sm text-[#4a5568] hover:text-[#1a2b5e]">
+              Go Back
+           </button>
+        </div>
+     )
+  }
+
   return (
-    <div
-      className="flex flex-col h-full relative"
-      style={{ background: "#0a0f1e" }}
-    >
-      {/* Top bar */}
-      <div
-        className="shrink-0 flex items-center justify-between px-4 py-3 z-10"
-        style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(12px)" }}
-      >
-        <button
-          onClick={() => router.back()}
-          className="w-9 h-9 rounded-xl flex items-center justify-center"
-          style={{ background: "rgba(255,255,255,0.1)" }}
-        >
-          <ArrowLeft className="w-4 h-4 text-white" />
-        </button>
-
-        <div className="flex items-center gap-2">
-          <span
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white"
-            style={{ background: "rgba(239,68,68,0.25)", border: "1px solid rgba(239,68,68,0.4)" }}
+    <div className="min-h-screen bg-[#f8fafc] flex flex-col">
+      {/* Header */}
+      <header className="h-16 border-b bg-white/80 backdrop-blur-md sticky top-0 z-50 px-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => router.back()} 
+            className="p-2 hover:bg-[#f0f4ff] rounded-lg transition-colors text-[#1a2b5e]"
           >
-            <LiveDot />
-            LIVE · <Countdown />
-          </span>
+            <ChevronLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-sm font-bold text-[#1a2b5e] truncate max-w-[200px] md:max-w-md">
+              {session?.title || "Live Session"}
+            </h1>
+            <div className="flex items-center gap-2">
+               <span className="flex items-center gap-1 text-[10px] font-bold text-[#c9a84c] uppercase">
+                  <Star size={10} fill="currentColor" /> {session?.topic}
+               </span>
+               <span className="w-1 h-1 rounded-full bg-[#cbd5e1]" />
+               <span className="text-[10px] text-[#94a3b8] font-medium">
+                  ID: {id.slice(0,8)}
+               </span>
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <span
-            className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg"
-            style={{ background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.8)" }}
-          >
-            <Users size={12} />
-            {PARTICIPANTS.length + 1}
-          </span>
+        <div className="flex items-center gap-3">
+           {session?.status === 'live' && (
+              <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-[#ef4444]/10 rounded-full border border-[#ef4444]/20">
+                 <span className="w-1.5 h-1.5 bg-[#ef4444] rounded-full animate-pulse" />
+                 <span className="text-[10px] font-bold text-[#ef4444] uppercase tracking-wider">Live</span>
+              </div>
+           )}
+           <button 
+            onClick={() => setShowRating(true)}
+            className="hidden md:flex items-center gap-2 px-4 py-2 bg-[#f0f4ff] text-[#1a2b5e] text-xs font-bold rounded-xl border border-[#1a2b5e]/10 hover:bg-[#1a2b5e] hover:text-white transition-all"
+           >
+             <Star size={14} /> Rate Session
+           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Main video area */}
-      <div className="flex-1 relative overflow-hidden">
-        {/* Simulated "stage" video */}
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center"
-          style={{
-            background: "linear-gradient(160deg, #0b1535 0%, #1a2560 50%, #0d1a3e 100%)",
-          }}
-        >
-          {/* Stars background */}
-          {[
-            { top: "8%", left: "12%", size: 2 }, { top: "22%", left: "42%", size: 1.5 },
-            { top: "5%", left: "68%", size: 3 }, { top: "55%", left: "78%", size: 2 },
-            { top: "40%", left: "20%", size: 1.5 }, { top: "70%", left: "50%", size: 2 },
-            { top: "85%", left: "35%", size: 1 }, { top: "15%", left: "85%", size: 1.5 },
-          ].map((s, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full"
-              style={{ top: s.top, left: s.left, width: s.size, height: s.size, background: "rgba(255,255,255,0.6)" }}
+      <main className="flex-1 flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden">
+        {/* Main Content (Video Area) */}
+        <div className="flex-1 bg-black relative flex flex-col">
+          {token && session?.daily_room_url ? (
+            <iframe
+              src={`${session.daily_room_url}?t=${token}`}
+              className="w-full h-full border-none"
+              allow="camera; microphone; display-capture; autoplay; encrypted-media; fullscreen"
             />
-          ))}
-
-          {/* Host avatar */}
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2, type: "spring" }}
-            className="relative flex flex-col items-center gap-3"
-          >
-            <div
-              className="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold text-white relative"
-              style={{
-                background: "linear-gradient(135deg, #1a2b5e, #2d4080)",
-                border: "3px solid rgba(201,168,76,0.6)",
-                boxShadow: "0 0 40px rgba(201,168,76,0.25), 0 0 0 8px rgba(201,168,76,0.08)",
-              }}
-            >
-              SE
-              {/* Speaking indicator */}
-              <span
-                className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center"
-                style={{ background: "#22c55e", border: "2px solid #0a0f1e" }}
-              >
-                <Mic size={12} className="text-white" />
-              </span>
+          ) : (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
+               <div className="p-8 bg-white/5 rounded-3xl backdrop-blur-xl border border-white/10 max-w-md">
+                  <div className="w-16 h-16 bg-[#c9a84c]/20 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                    <Calendar className="text-[#c9a84c]" size={32} />
+                  </div>
+                  <h2 className="text-xl font-bold text-white mb-2">
+                    {session?.status === 'scheduled' ? "Waiting for the Host" : "Connection Issue"}
+                  </h2>
+                  <p className="text-white/60 text-sm mb-6">
+                    {session?.status === 'scheduled' 
+                       ? `This session is scheduled for ${new Date(session.scheduled_at).toLocaleString()}. Please check back once it starts.`
+                       : "We couldn't establish a live video connection. Please check your internet or contact support."}
+                  </p>
+                  <button onClick={() => router.back()} className="w-full py-3 bg-white text-black rounded-xl text-sm font-bold">
+                    Back to Dashboard
+                  </button>
+               </div>
             </div>
-            <div className="text-center">
-              <div className="font-bold text-white text-base">Sarah Elami</div>
-              <div className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
-                Host · English Coach
-              </div>
-            </div>
-
-            {/* Sound waves */}
-            <div className="flex items-end gap-1 h-8">
-              {[3, 6, 4, 8, 5, 7, 3, 5, 6, 4].map((h, i) => (
-                <motion.div
-                  key={i}
-                  animate={{ height: [h * 2, h * 4, h * 2] }}
-                  transition={{ duration: 0.8, delay: i * 0.08, repeat: Infinity, ease: "easeInOut" }}
-                  className="w-1 rounded-full"
-                  style={{ background: "#22c55e", minHeight: 4 }}
-                />
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Session info */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="absolute bottom-24 left-4 right-4 text-center"
-          >
-            <div className="text-sm font-bold text-white mb-1">
-              Practice Small Talk and Introductions
-            </div>
-            <div className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
-              15 participants watching · Level A2–B1
-            </div>
-          </motion.div>
+          )}
         </div>
 
-        {/* Participant thumbnails */}
-        <div className="absolute bottom-6 left-4 flex gap-2">
-          {PARTICIPANTS.map((p, i) => (
-            <motion.div
-              key={p.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 * i }}
-              className="relative"
-            >
-              <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center text-sm font-bold text-white"
-                style={{
-                  background: p.gradient,
-                  border: "2px solid rgba(255,255,255,0.15)",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
-                }}
-              >
-                {p.initials}
-              </div>
-              <div
-                className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[9px] font-semibold px-1.5 py-0.5 rounded-full whitespace-nowrap"
-                style={{ background: "rgba(0,0,0,0.7)", color: "rgba(255,255,255,0.9)" }}
-              >
-                {p.name.split(" ")[0]}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      {/* Controls bar */}
-      <div
-        className="shrink-0 flex items-center justify-center gap-4 py-4 px-4"
-        style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(12px)" }}
-      >
-        <button
-          onClick={() => setMicOn(!micOn)}
-          className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all"
-          style={{
-            background: micOn ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.1)",
-            border: micOn ? "1.5px solid rgba(34,197,94,0.5)" : "1.5px solid rgba(255,255,255,0.1)",
-          }}
-        >
-          {micOn
-            ? <Mic className="w-5 h-5" style={{ color: "#22c55e" }} />
-            : <MicOff className="w-5 h-5" style={{ color: "rgba(255,255,255,0.6)" }} />}
-        </button>
-
-        <button
-          onClick={() => setVidOn(!vidOn)}
-          className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all"
-          style={{
-            background: vidOn ? "rgba(59,130,246,0.2)" : "rgba(255,255,255,0.1)",
-            border: vidOn ? "1.5px solid rgba(59,130,246,0.5)" : "1.5px solid rgba(255,255,255,0.1)",
-          }}
-        >
-          {vidOn
-            ? <Video className="w-5 h-5" style={{ color: "#3b82f6" }} />
-            : <VideoOff className="w-5 h-5" style={{ color: "rgba(255,255,255,0.6)" }} />}
-        </button>
-
-        <button
-          onClick={() => setChatOpen(true)}
-          className="w-12 h-12 rounded-2xl flex items-center justify-center relative"
-          style={{ background: "rgba(201,168,76,0.2)", border: "1.5px solid rgba(201,168,76,0.4)" }}
-        >
-          <MessageSquare className="w-5 h-5" style={{ color: "#c9a84c" }} />
-        </button>
-
-        <button
-          onClick={() => router.back()}
-          className="w-12 h-12 rounded-2xl flex items-center justify-center"
-          style={{ background: "rgba(239,68,68,0.2)", border: "1.5px solid rgba(239,68,68,0.4)" }}
-        >
-          <X className="w-5 h-5" style={{ color: "#ef4444" }} />
-        </button>
-      </div>
-
-      {/* Atlas AI Chat Panel */}
-      <AnimatePresence>
-        {chatOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40"
-              onClick={() => setChatOpen(false)}
-            />
-            <motion.div
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 26, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl flex flex-col"
-              style={{
-                background: "#111827",
-                border: "1px solid rgba(255,255,255,0.1)",
-                height: "55vh",
-                maxHeight: 440,
-              }}
-            >
-              {/* Panel header */}
-              <div
-                className="flex items-center justify-between p-4 border-b shrink-0"
-                style={{ borderColor: "rgba(255,255,255,0.08)" }}
-              >
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-8 h-8 rounded-xl flex items-center justify-center text-sm"
-                    style={{ background: "linear-gradient(135deg, #1a2b5e, #2d4080)" }}
-                  >
-                    ⭐
-                  </div>
-                  <div>
-                    <div className="font-semibold text-sm text-white">Atlas AI</div>
-                    <div className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
-                      Session assistant
-                    </div>
-                  </div>
+        {/* Sidebar (Info & Summary) */}
+        <aside className="w-full md:w-80 border-l bg-white flex flex-col overflow-y-auto">
+          <div className="p-5 space-y-6">
+             {/* Stats */}
+             <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-[#f8fafc] rounded-2xl border border-[#e2e8f0]">
+                   <p className="text-[10px] font-bold text-[#94a3b8] uppercase mb-1">Duration</p>
+                   <div className="flex items-center gap-2">
+                      <Clock size={16} className="text-[#1a2b5e]" />
+                      <span className="text-sm font-bold text-[#1a2b5e]">{session?.duration_mins}m</span>
+                   </div>
                 </div>
-                <button onClick={() => setChatOpen(false)} style={{ color: "rgba(255,255,255,0.4)" }}>
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+                <div className="p-3 bg-[#f8fafc] rounded-2xl border border-[#e2e8f0]">
+                   <p className="text-[10px] font-bold text-[#94a3b8] uppercase mb-1">Participants</p>
+                   <div className="flex items-center gap-2">
+                      <Users size={16} className="text-[#1a2b5e]" />
+                      <span className="text-sm font-bold text-[#1a2b5e]">{session?.max_attendees || '∞'}</span>
+                   </div>
+                </div>
+             </div>
 
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {messages.map((msg, i) => (
-                  <div
-                    key={i}
-                    className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                  >
-                    <div
-                      className="px-4 py-2.5 rounded-2xl max-w-xs text-sm leading-relaxed"
-                      style={
-                        msg.role === "user"
-                          ? {
-                              background: "linear-gradient(135deg, #1a2b5e, #2d4080)",
-                              color: "white",
-                              borderRadius: "20px 20px 4px 20px",
-                            }
-                          : {
-                              background: "rgba(255,255,255,0.08)",
-                              border: "1px solid rgba(255,255,255,0.1)",
-                              borderRadius: "20px 20px 20px 4px",
-                              color: "rgba(255,255,255,0.9)",
-                            }
-                      }
-                    >
-                      {msg.text}
-                    </div>
-                  </div>
-                ))}
-              </div>
+             {/* Description */}
+             <div>
+                <h4 className="flex items-center gap-2 text-xs font-bold text-[#1a2b5e] mb-2 uppercase tracking-wider">
+                  <Info size={14} className="text-[#c9a84c]" /> Session Description
+                </h4>
+                <p className="text-sm text-[#4a5568] leading-relaxed">
+                  {session?.description || "In this session, you'll practice real-world conversations with an experienced tutor and other learners."}
+                </p>
+             </div>
 
-              {/* Input */}
-              <div className="p-4 shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-                <div className="flex gap-2">
-                  <input
-                    className="flex-1 px-3 py-2.5 text-sm rounded-xl outline-none"
-                    style={{
-                      background: "rgba(255,255,255,0.08)",
-                      border: "1px solid rgba(255,255,255,0.12)",
-                      color: "white",
-                    }}
-                    placeholder="Ask about this session…"
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && send()}
-                  />
-                  <button
-                    onClick={send}
-                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ background: "linear-gradient(135deg, #1a2b5e, #2d4080)" }}
-                  >
-                    <Send className="w-4 h-4 text-white" />
+             {/* AI Summary (if completed) */}
+             {session?.ai_summary && (
+                <div className="p-4 bg-[#f0f4ff] rounded-2xl border border-[#1a2b5e]/5">
+                   <h4 className="flex items-center gap-2 text-xs font-bold text-[#1a2b5e] mb-3 uppercase">
+                     <CheckCircle2 size={14} className="text-[#34d399]" /> Learning Summary
+                   </h4>
+                   <p className="text-xs text-[#4a5568] leading-relaxed italic">
+                      "{session.ai_summary}"
+                   </p>
+                </div>
+             )}
+
+             {/* Tips Notice */}
+             {!session?.ai_summary && (
+                <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
+                   <div className="flex gap-3">
+                      <AlertCircle className="text-orange-400 shrink-0" size={16} />
+                      <p className="text-[11px] text-orange-700 leading-snug">
+                         Stay active! Participating in the chat and speaking out loud helps you learn 3x faster.
+                      </p>
+                   </div>
+                </div>
+             )}
+          </div>
+        </aside>
+      </main>
+
+      {/* Rating Modal Content Overlay */}
+      <AnimatePresence>
+        {showRating && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              onClick={() => setShowRating(false)}
+              className="absolute inset-0 bg-[#0b1535]/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-3xl overflow-hidden shadow-2xl"
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-[#1a2b5e]">Rate Session</h3>
+                  <button onClick={() => setShowRating(false)} className="p-1 text-slate-400 hover:text-slate-600 transition-colors">
+                    <X size={20} />
                   </button>
                 </div>
+
+                {isRated ? (
+                   <div className="py-12 text-center">
+                      <div className="w-16 h-16 bg-[#34d399]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <CheckCircle2 className="text-[#34d399]" size={32} />
+                      </div>
+                      <h4 className="text-lg font-bold text-[#1a2b5e]">Thank you!</h4>
+                      <p className="text-sm text-[#64748b]">Your feedback helps our teachers improve.</p>
+                   </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-center gap-2 mb-6">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <button
+                          key={s}
+                          onClick={() => setRating(s)}
+                          className="p-1 transition-transform active:scale-90"
+                        >
+                          <Star 
+                            size={36} 
+                            className={s <= rating ? "text-[#c9a84c]" : "text-slate-200"} 
+                            fill={s <= rating ? "currentColor" : "none"} 
+                          />
+                        </button>
+                      ))}
+                    </div>
+
+                    <textarea
+                      placeholder="Any thoughts or suggestions? (Optional)"
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                      className="w-full h-32 p-4 bg-[#f8fafc] border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2b5e]/10 resize-none mb-6"
+                    />
+
+                    <button
+                      onClick={handleRate}
+                      disabled={rating === 0 || isSubmitting}
+                      className="w-full py-4 bg-[#1a2b5e] text-white rounded-2xl font-bold shadow-lg shadow-[#1a2b5e]/20 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                    >
+                      {isSubmitting ? "Submitting..." : "Submit Review"}
+                    </button>
+                  </>
+                )}
               </div>
             </motion.div>
-          </>
+          </div>
         )}
       </AnimatePresence>
     </div>

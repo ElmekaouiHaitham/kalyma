@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -15,7 +15,9 @@ import {
 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { BOOKS } from "@/lib/data";
+import Image from "next/image";
 import SaveWordModal from "@/components/SaveWordModal";
+import ReactMarkdown from "react-markdown";
 
 // Local extended book data (matching the books page)
 const BOOKS_EXTENDED = [
@@ -28,7 +30,8 @@ const BOOKS_EXTENDED = [
     language: "English",
     image: "/book_sherlock.png",
     cover: "🔍",
-    description: "Follow the world's greatest detective through mystery and crime in Victorian London.",
+    description:
+      "Follow the world's greatest detective through mystery and crime in Victorian London.",
     content: `To Sherlock Holmes she is always the woman. I have seldom heard him mention her under any other name. In his eyes she eclipses and predominates the whole of her sex. It was not that he felt any emotion akin to love for Irene Adler. All emotions, and that one particularly, were abhorrent to his cold, precise but admirably balanced mind.
 
 He was, I take it, the most perfect reasoning and observing machine that the world has seen, but as a lover he would have placed himself in a false position. He never spoke of the softer passions, save with a gibe and a sneer. They were admirable things for the observer — excellent for drawing the veil from men's motives and actions. But for the trained reasoner to admit such intrusions into his own delicate and finely adjusted temperament was to introduce a distracting factor which might throw a doubt upon all his mental results.
@@ -52,7 +55,8 @@ It was in the year '87 that Sherlock Holmes's studies first brought him into con
     language: "English",
     image: "/book_british.png",
     cover: "🇬🇧",
-    description: "Discover fascinating facts about British culture, history, and traditions.",
+    description:
+      "Discover fascinating facts about British culture, history, and traditions.",
     content: `The United Kingdom is a country full of fascinating contradictions. It is a nation that invented parliamentary democracy yet has an unelected monarch as its head of state. It built the largest empire in world history and yet its heartlands are characterized by understatement, reserve, and a deep suspicion of bombast.
 
 The British have given the world Shakespeare, Newton, Darwin, and the Beatles. They invented football, cricket, and lawn tennis — and subsequently complained for centuries about foreigners becoming better at them. They built railways, industrialised the world, and then developed a complicated relationship with the very technology they created.
@@ -98,7 +102,8 @@ That night, she opened her notebook and wrote: "Today I helped someone. I am imp
     language: "English",
     image: "/book_vocabulary.png",
     cover: "📝",
-    description: "Learn new words and expand your English vocabulary day by day.",
+    description:
+      "Learn new words and expand your English vocabulary day by day.",
     content: `Words are the building blocks of communication. The more words you know, the more precisely you can express your thoughts, understand others, and engage with the world around you. Building a strong vocabulary is not a matter of memorizing long lists — it is about encountering words in context and making them your own.
 
 The most effective vocabulary learners are voracious readers. They read widely: newspapers, novels, essays, and online articles. When they encounter an unfamiliar word, they pause at it. They try to guess its meaning from context first, and then they confirm their guess with a dictionary.
@@ -137,6 +142,12 @@ export default function BookReaderPage() {
     },
   ]);
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages, panelOpen]);
+
   const [selectionBubble, setSelectionBubble] = useState<{
     text: string;
     x: number;
@@ -152,7 +163,7 @@ export default function BookReaderPage() {
       setSelectionBubble(null);
       return;
     }
-    const text = selection.toString().trim().slice(0, 80);
+    const text = selection.toString().trim();
     const range = selection.getRangeAt(0);
     const rect = range.getBoundingClientRect();
     setSelectionBubble({
@@ -208,13 +219,19 @@ export default function BookReaderPage() {
         <button
           onClick={() => router.back()}
           className="w-9 h-9 rounded-xl flex items-center justify-center"
-          style={{ background: "rgba(26,43,94,0.06)", border: "1px solid rgba(26,43,94,0.1)" }}
+          style={{
+            background: "rgba(26,43,94,0.06)",
+            border: "1px solid rgba(26,43,94,0.1)",
+          }}
         >
           <ArrowLeft className="w-4 h-4" style={{ color: "#1a2b5e" }} />
         </button>
 
         <div className="flex-1 min-w-0 text-center">
-          <div className="text-xs font-semibold truncate" style={{ color: "#9aa5b1" }}>
+          <div
+            className="text-xs font-semibold truncate"
+            style={{ color: "#9aa5b1" }}
+          >
             {book.author}
           </div>
         </div>
@@ -247,7 +264,10 @@ export default function BookReaderPage() {
       >
         <div
           className="w-14 h-20 rounded-xl flex items-center justify-center text-3xl shrink-0 shadow-lg"
-          style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.2)" }}
+          style={{
+            background: "rgba(255,255,255,0.15)",
+            border: "1px solid rgba(255,255,255,0.2)",
+          }}
         >
           {(book as any).cover}
         </div>
@@ -258,7 +278,10 @@ export default function BookReaderPage() {
           >
             {book.title}
           </h1>
-          <div className="text-sm mb-2" style={{ color: "rgba(255,255,255,0.65)" }}>
+          <div
+            className="text-sm mb-2"
+            style={{ color: "rgba(255,255,255,0.65)" }}
+          >
             {book.author}
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -268,11 +291,19 @@ export default function BookReaderPage() {
             >
               {book.level}
             </span>
-            <span className="flex items-center gap-1 text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+            <span
+              className="flex items-center gap-1 text-xs"
+              style={{ color: "rgba(255,255,255,0.5)" }}
+            >
               <Clock size={11} />
-              {typeof book.readingTime === "number" ? `${book.readingTime} min` : book.readingTime}
+              {typeof book.readingTime === "number"
+                ? `${book.readingTime} min`
+                : book.readingTime}
             </span>
-            <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+            <span
+              className="text-xs"
+              style={{ color: "rgba(255,255,255,0.5)" }}
+            >
               {(book as any).language || "English"}
             </span>
           </div>
@@ -289,8 +320,11 @@ export default function BookReaderPage() {
       >
         <span className="text-base">💡</span>
         <p style={{ color: "#6b7280" }}>
-          <strong className="font-semibold" style={{ color: "#1a2b5e" }}>Tip:</strong>{" "}
-          Select any text to ask Atlas AI about it or save it as a vocabulary word.
+          <strong className="font-semibold" style={{ color: "#1a2b5e" }}>
+            Tip:
+          </strong>{" "}
+          Select any text to ask Atlas AI about it or save it as a vocabulary
+          word.
         </p>
       </div>
 
@@ -342,24 +376,27 @@ export default function BookReaderPage() {
             initial={{ opacity: 0, scale: 0.9, y: 6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="fixed z-50 flex items-center gap-1 rounded-2xl px-2 py-1.5 shadow-xl"
+            className="fixed z-50 flex items-center gap-1 rounded-full px-2 py-1.5 shadow-2xl"
             style={{
-              left: Math.min(selectionBubble.x, window.innerWidth - 210),
+              left: Math.min(selectionBubble.x, typeof window !== 'undefined' ? window.innerWidth - 210 : 0),
               top: selectionBubble.y,
               transform: "translate(-50%, -100%)",
-              background: "#1a2b5e",
-              border: "1px solid rgba(255,255,255,0.15)",
+              background: "#ffffff",
+              border: "1px solid rgba(26,43,94,0.1)",
+              boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
             }}
           >
             <button
               onClick={() => askAIAboutSelection(selectionBubble.text)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold text-white"
-              style={{ background: "rgba(255,255,255,0.15)" }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-[#1a2b5e] hover:bg-[#f5f8ff] transition-colors"
             >
-              <Sparkles size={11} />
-              Ask AI
+              <Image src="/atlas-logo.png" alt="Atlas AI" width={16} height={16} className="object-cover rounded-full" />
+              Ask Atlas
             </button>
-            <div className="w-px h-4" style={{ background: "rgba(255,255,255,0.2)" }} />
+            <div
+              className="w-px h-5"
+              style={{ background: "rgba(26,43,94,0.1)" }}
+            />
             <button
               onClick={() => {
                 setSaveWord(selectionBubble.text);
@@ -367,18 +404,16 @@ export default function BookReaderPage() {
                 setSelectionBubble(null);
                 window.getSelection()?.removeAllRanges();
               }}
-              className="flex items-center gap-1 px-2 py-1 rounded-xl text-xs font-semibold"
-              style={{ color: "#c9a84c" }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-[#c9a84c] hover:bg-[#fff9e6] transition-colors"
             >
-              <BookMarked size={11} />
+              <BookMarked size={14} />
               Save
             </button>
             <button
               onClick={() => setSelectionBubble(null)}
-              className="px-1"
-              style={{ color: "rgba(255,255,255,0.4)" }}
+              className="px-2 text-[#9aa5b1] hover:text-[#1a2b5e] transition-colors"
             >
-              <X size={12} />
+              <X size={14} />
             </button>
           </motion.div>
         )}
@@ -389,10 +424,14 @@ export default function BookReaderPage() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setPanelOpen(true)}
-        className="fixed bottom-24 right-5 z-40 w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl"
-        style={{ background: "linear-gradient(135deg, #1a2b5e, #2d4080)", boxShadow: "0 8px 30px rgba(26,43,94,0.4)" }}
+        className="fixed bottom-24 right-5 z-40 w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl"
+        style={{
+          background: "#ffffff",
+          border: "1px solid rgba(26,43,94,0.08)",
+          boxShadow: "0 8px 30px rgba(26,43,94,0.12)",
+        }}
       >
-        <Bot className="w-6 h-6 text-white" />
+        <Image src="/atlas-logo.png" alt="Atlas AI" width={28} height={28} className="object-cover rounded-full" />
       </motion.button>
 
       {/* Atlas AI Bottom Sheet */}
@@ -411,76 +450,82 @@ export default function BookReaderPage() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl flex flex-col"
+              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[3rem] flex flex-col shadow-2xl overflow-hidden"
               style={{
-                background: "var(--bg-surface, #1a2535)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                height: "62vh",
-                maxHeight: 500,
+                background: "#ffffff",
+                borderTop: "1px solid rgba(26,43,94,0.08)",
+                height: "65vh",
+                maxHeight: 600,
               }}
             >
-              <div className="w-10 h-1 rounded-full mx-auto mt-3 mb-1" style={{ background: "rgba(255,255,255,0.15)" }} />
+              <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mt-4 mb-2 shrink-0" />
 
+              {/* Panel header */}
               <div
-                className="flex items-center justify-between px-4 py-3 border-b shrink-0"
-                style={{ borderColor: "rgba(255,255,255,0.08)" }}
+                className="flex items-center justify-between px-6 py-4 border-b shrink-0"
+                style={{ borderColor: "rgba(26,43,94,0.05)" }}
               >
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-8 h-8 rounded-xl flex items-center justify-center text-sm"
-                    style={{ background: "linear-gradient(135deg, #1a2b5e, #2d4080)" }}
-                  >
-                    ⭐
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-[1rem] bg-[#f0f4ff] flex items-center justify-center shadow-inner">
+                    <Image src="/atlas-logo.png" alt="Atlas AI" width={20} height={20} className="object-cover rounded-full" />
                   </div>
                   <div>
-                    <div className="font-semibold text-sm text-white">Atlas AI</div>
-                    <div className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+                    <div className="font-bold text-[#1a2b5e]">Atlas Assistant</div>
+                    <div className="text-[10px] font-bold text-[#c9a84c] uppercase tracking-widest">
                       Reading assistant
                     </div>
                   </div>
                 </div>
-                <button onClick={() => setPanelOpen(false)} style={{ color: "rgba(255,255,255,0.4)" }}>
-                  <X className="w-5 h-5" />
+                <button
+                  onClick={() => setPanelOpen(false)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#f5f8ff] transition-colors"
+                >
+                  <X className="w-5 h-5 text-[#9aa5b1]" />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {/* Chat messages */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {chatMessages.map((msg, i) => (
-                  <div
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
                     key={i}
-                    className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                    className={`flex items-end gap-2 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
                   >
+                    {msg.role === "ai" && (
+                      <div className="w-6 h-6 rounded-lg bg-[#f0f4ff] flex items-center justify-center shrink-0 mb-1">
+                        <Image src="/atlas-logo.png" alt="Atlas AI" width={14} height={14} className="object-cover rounded-full" />
+                      </div>
+                    )}
                     <div
-                      className="px-4 py-2.5 rounded-2xl max-w-xs text-sm leading-relaxed"
-                      style={
+                      className={`px-4 py-3 rounded-[1.5rem] max-w-[85%] text-sm leading-relaxed overflow-hidden ${
                         msg.role === "user"
-                          ? {
-                              background: "linear-gradient(135deg, #1a2b5e, #2d4080)",
-                              color: "white",
-                              borderRadius: "20px 20px 4px 20px",
-                            }
-                          : {
-                              background: "rgba(255,255,255,0.08)",
-                              border: "1px solid rgba(255,255,255,0.1)",
-                              borderRadius: "20px 20px 20px 4px",
-                              color: "rgba(255,255,255,0.88)",
-                            }
-                      }
+                          ? "bg-[#f5f8ff] text-[#1a2b5e] rounded-br-none"
+                          : "bg-[#ffffff] text-[#1a2b5e] border border-[#1a2b5e]/5 rounded-bl-none shadow-sm"
+                      }`}
                     >
-                      {msg.text}
+                      <ReactMarkdown>
+                        {msg.text}
+                      </ReactMarkdown>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
+                <div ref={messagesEndRef} />
               </div>
 
-              <div className="p-4 shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              {/* Input */}
+              <div
+                className="p-6 shrink-0 bg-[#ffffff] border-t"
+                style={{ borderColor: "rgba(26,43,94,0.05)" }}
+              >
                 <div className="flex gap-2">
                   <input
-                    className="flex-1 px-3 py-2.5 text-sm rounded-xl outline-none"
+                    className="flex-1 px-5 py-3.5 text-sm rounded-2xl outline-none transition-all shadow-sm"
                     style={{
-                      background: "rgba(255,255,255,0.07)",
-                      border: "1px solid rgba(255,255,255,0.12)",
-                      color: "white",
+                      background: "#f8fafc",
+                      border: "1px solid rgba(26,43,94,0.1)",
+                      color: "#1a2b5e"
                     }}
                     placeholder="Ask about this book…"
                     value={chatInput}
@@ -489,10 +534,12 @@ export default function BookReaderPage() {
                   />
                   <button
                     onClick={sendChat}
-                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ background: "linear-gradient(135deg, #1a2b5e, #2d4080)" }}
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all"
+                    style={{
+                      background: "linear-gradient(135deg, #1a2b5e, #2d4080)",
+                    }}
                   >
-                    <Send className="w-4 h-4 text-white" />
+                    <Send className="w-5 h-5 text-white" />
                   </button>
                 </div>
               </div>
