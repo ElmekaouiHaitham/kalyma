@@ -498,16 +498,27 @@ export default function BookReaderPage() {
                         <Image src="/atlas-logo.png" alt="Atlas AI" width={14} height={14} className="object-cover rounded-full" />
                       </div>
                     )}
-                    <div
-                      className={`px-4 py-3 rounded-[1.5rem] max-w-[85%] text-sm leading-relaxed overflow-hidden ${
-                        msg.role === "user"
-                          ? "bg-[#f5f8ff] text-[#1a2b5e] rounded-br-none"
-                          : "bg-[#ffffff] text-[#1a2b5e] border border-[#1a2b5e]/5 rounded-bl-none shadow-sm"
-                      }`}
-                    >
-                      <ReactMarkdown>
-                        {msg.text}
-                      </ReactMarkdown>
+                    <div className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"} max-w-[85%]`}>
+                      <div
+                        className={`px-4 py-3 rounded-[1.5rem] text-sm leading-relaxed overflow-hidden ${
+                          msg.role === "user"
+                            ? "bg-[#f5f8ff] text-[#1a2b5e] rounded-br-none"
+                            : "bg-[#ffffff] text-[#1a2b5e] border border-[#1a2b5e]/5 rounded-bl-none shadow-sm"
+                        }`}
+                      >
+                        <ReactMarkdown>
+                          {msg.text}
+                        </ReactMarkdown>
+                      </div>
+                      {msg.role === "ai" && (
+                        <button
+                          onClick={() => { setSaveWord(""); setSaveModalOpen(true); }}
+                          className="flex items-center gap-1.5 mt-2 ml-2 text-[11px] font-bold uppercase tracking-wider text-[#9aa5b1] hover:text-[#1a2b5e] transition-colors"
+                        >
+                          <BookMarked size={12} />
+                          Save Word
+                        </button>
+                      )}
                     </div>
                   </motion.div>
                 ))}

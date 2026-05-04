@@ -1,14 +1,14 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Mic, BookMarked, Plus, AlertCircle } from "lucide-react";
+import { Send, Mic, BookMarked, Plus, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import SaveWordModal from "@/components/SaveWordModal";
 import { useAtlasChat, ChatMessage } from "@/hooks/useAtlasChat";
 
 export default function ChatPage() {
-  const { messages, isTyping, error, sendMessage, clearMessages, addMessage } = useAtlasChat({
+  const { messages, isTyping, error, sendMessage, clearMessages, addMessage, autoSaveToDeck } = useAtlasChat({
     context_type: "general",
     context_content: "General English learning conversation. Be helpful, encouraging, and friendly.",
   });
@@ -18,6 +18,8 @@ export default function ChatPage() {
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [saveWord, setSaveWord] = useState("");
   const [hoveredMsg, setHoveredMsg] = useState<string | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -26,6 +28,24 @@ export default function ChatPage() {
     const extracted = boldMatch ? boldMatch[1] : content.split(" ").slice(0, 3).join(" ");
     setSaveWord(extracted);
     setSaveModalOpen(true);
+  };
+
+  const handleAutoSave = async (aiMsgId: string, aiText: string) => {
+    const msgIndex = messages.findIndex(m => m.id === aiMsgId);
+    let question = "General chat";
+    for(let i = msgIndex - 1; i >= 0; i--){
+      if(messages[i].role === "user"){
+        question = messages[i].content;
+        break;
+      }
+    }
+    setSavingId(aiMsgId);
+    const success = await autoSaveToDeck(question, aiText);
+    setSavingId(null);
+    if(success) {
+       setSavedId(aiMsgId);
+       setTimeout(() => setSavedId(null), 2000);
+    }
   };
 
   // Initial welcome message when started
@@ -387,7 +407,7 @@ export default function ChatPage() {
                 }}
                 style={{ textAlign: started ? "left" : "center" }}
               >
-                Your personal English coach — ask anything, practice anytime.
+                Speak. Make mistakes. Grow.
               </motion.p>
             </motion.div>
           </motion.div>
@@ -430,12 +450,19 @@ export default function ChatPage() {
 
                       <div className={`atlas-msg-actions ${hoveredMsg === msg.id ? "visible" : ""}`}>
                         <button
-                          className="atlas-action-btn"
-                          onClick={() => openSaveModal(msg.content)}
-                          title="Save a word from this message"
+                          className="atlas-action-btn disabled:opacity-50"
+                          onClick={() => handleAutoSave(msg.id, msg.content)}
+                          disabled={savingId === msg.id || savedId === msg.id}
+                          title="Save this explanation to your Practice Deck"
                         >
-                          <BookMarked size={14} />
-                          Save Word
+                          {savingId === msg.id ? (
+                            <Loader2 size={14} className="animate-spin" />
+                          ) : savedId === msg.id ? (
+                            <CheckCircle2 size={14} className="text-green-500" />
+                          ) : (
+                            <BookMarked size={14} />
+                          )}
+                          {savingId === msg.id ? "Saving..." : savedId === msg.id ? "Saved to Deck" : "Save to Deck"}
                         </button>
                       </div>
                     </>

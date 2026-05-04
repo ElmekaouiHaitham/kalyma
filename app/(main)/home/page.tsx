@@ -348,37 +348,6 @@ export default function HomePage() {
 
         </div>
 
-        {/* ── NEWS NOTIFICATION BANNER ─────────────────────── */}
-        <motion.button
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => router.push("/news")}
-          className="w-full flex items-center gap-4 mb-10 rounded-2xl p-4 text-left"
-          style={{
-            background: "linear-gradient(135deg, #fff7e0, #fff3cd)",
-            border: "1.5px solid rgba(201,168,76,0.35)",
-            boxShadow: "0 4px 16px rgba(201,168,76,0.12)",
-          }}
-        >
-          <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 text-xl"
-            style={{ background: "rgba(201,168,76,0.2)" }}
-          >
-            📰
-          </div>
-          <div className="flex-1">
-            <div className="font-bold text-sm mb-0.5" style={{ color: "#92611a" }}>
-              3 new articles matching your interests
-            </div>
-            <div className="text-xs" style={{ color: "#b07d2a" }}>
-              Technology · Culture · Science — tailored for you
-            </div>
-          </div>
-          <ChevronRight size={16} style={{ color: "#c9a84c", flexShrink: 0 }} />
-        </motion.button>
         <div className="mb-10">
           <SectionHeader title="Practice" href="/chat" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -399,27 +368,6 @@ export default function HomePage() {
                gradient="linear-gradient(135deg, #a78bfa, #c4b5fd)"
                imageUrl="/live_teacher.png"
                href="/live"
-             />
-          </div>
-        </div>
-
-        {/* ── LEARN SECTION ─────────────────────────────────── */}
-        <div className="mb-10">
-          <SectionHeader title="Learn" href="/library/books" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-             <LearnCard 
-                icon={BookOpen}
-                title="Book of the Month"
-                subtitle="Expand your vocabulary with English books"
-                xp={10}
-                href="/library/books"
-             />
-             <LearnCard 
-                icon={Newspaper}
-                title="Daily Article"
-                subtitle="Discover interesting scientific articles"
-                xp={15}
-                href="/library"
              />
           </div>
         </div>

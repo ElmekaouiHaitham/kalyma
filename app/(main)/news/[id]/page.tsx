@@ -13,6 +13,9 @@ import {
   Bookmark,
   Share2,
   CheckCircle,
+  ArrowRight,
+  Loader2,
+  CheckCircle2
 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
@@ -44,8 +47,10 @@ export default function NewsDetailPage() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
 
-  const { messages: chatMessages, isTyping, error, sendMessage, addMessage } = useAtlasChat({
+  const { messages: chatMessages, isTyping, error, sendMessage, addMessage, autoSaveToDeck } = useAtlasChat({
     context_type: "news",
     context_id: id,
     context_content: news?.body || news?.summary || "No content loaded yet.",
@@ -126,6 +131,24 @@ export default function NewsDetailPage() {
     window.getSelection()?.removeAllRanges();
     setPanelOpen(true);
     sendMessage(`What does this mean: "${text}"?`);
+  };
+
+  const handleAutoSave = async (aiMsgId: string, aiText: string) => {
+    const msgIndex = chatMessages.findIndex(m => m.id === aiMsgId);
+    let question = "Contextual question";
+    for(let i = msgIndex - 1; i >= 0; i--){
+      if(chatMessages[i].role === "user"){
+        question = chatMessages[i].content;
+        break;
+      }
+    }
+    setSavingId(aiMsgId);
+    const success = await autoSaveToDeck(question, aiText);
+    setSavingId(null);
+    if(success) {
+       setSavedId(aiMsgId);
+       setTimeout(() => setSavedId(null), 2000);
+    }
   };
 
   const sendChat = () => {
@@ -380,16 +403,34 @@ export default function NewsDetailPage() {
                             <Image src="/atlas-logo.png" alt="Atlas AI" width={14} height={14} className="object-cover rounded-full" />
                         </div>
                     )}
-                    <div
-                      className={`px-4 py-3 rounded-[1.5rem] max-w-[85%] text-sm leading-relaxed overflow-hidden ${
-                        msg.role === "user"
-                          ? "bg-[#f5f8ff] text-[#1a2b5e] rounded-br-none"
-                          : "bg-[#ffffff] text-[#1a2b5e] border border-[#1a2b5e]/5 rounded-bl-none shadow-sm"
-                      }`}
-                    >
-                      <ReactMarkdown>
-                        {msg.content}
-                      </ReactMarkdown>
+                    <div className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"} max-w-[85%]`}>
+                      <div
+                        className={`px-4 py-3 rounded-[1.5rem] text-sm leading-relaxed overflow-hidden ${
+                          msg.role === "user"
+                            ? "bg-[#f5f8ff] text-[#1a2b5e] rounded-br-none"
+                            : "bg-[#ffffff] text-[#1a2b5e] border border-[#1a2b5e]/5 rounded-bl-none shadow-sm"
+                        }`}
+                      >
+                        <ReactMarkdown>
+                          {msg.content}
+                        </ReactMarkdown>
+                      </div>
+                      {msg.role === "ai" && (
+                        <button
+                          onClick={() => handleAutoSave(msg.id, msg.content)}
+                          disabled={savingId === msg.id || savedId === msg.id}
+                          className="flex items-center gap-1.5 mt-2 ml-2 text-[11px] font-bold uppercase tracking-wider text-[#9aa5b1] hover:text-[#1a2b5e] transition-colors disabled:opacity-50"
+                        >
+                          {savingId === msg.id ? (
+                            <Loader2 size={12} className="animate-spin" />
+                          ) : savedId === msg.id ? (
+                            <CheckCircle2 size={12} className="text-green-500" />
+                          ) : (
+                            <BookMarked size={12} />
+                          )}
+                          {savingId === msg.id ? "Saving..." : savedId === msg.id ? "Saved to Deck" : "Save to Deck"}
+                        </button>
+                      )}
                     </div>
                   </motion.div>
                 ))}
@@ -446,6 +487,9 @@ export default function NewsDetailPage() {
         isOpen={saveModalOpen}
         onClose={() => setSaveModalOpen(false)}
         prefillWord={saveWord}
+        context={selectionBubble?.text || ""}
+        sourceType="news"
+        sourceId={id}
       />
     </div>
   );

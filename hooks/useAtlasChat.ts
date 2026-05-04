@@ -132,6 +132,29 @@ export function useAtlasChat({ context_type, context_id, context_content }: UseA
     }
   };
 
+  const autoSaveToDeck = async (question: string, answer: string) => {
+    if (!session?.access_token) return false;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/review/items/auto`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          question,
+          answer,
+          source_type: context_type === "general" ? null : context_type,
+          source_id: context_id || null,
+        }),
+      });
+      return res.ok;
+    } catch (err) {
+      console.error("Auto save failed:", err);
+      return false;
+    }
+  };
+
   return {
     messages,
     setMessages,
@@ -140,5 +163,6 @@ export function useAtlasChat({ context_type, context_id, context_content }: UseA
     sendMessage,
     addMessage,
     clearMessages,
+    autoSaveToDeck,
   };
 }

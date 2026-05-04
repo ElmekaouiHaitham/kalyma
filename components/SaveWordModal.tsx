@@ -1,29 +1,70 @@
 "use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, BookMarked, CheckCircle2 } from "lucide-react";
+import { X, BookMarked, CheckCircle2, Loader2 } from "lucide-react";
+import { useAuth } from "@/app/providers";
 
 interface SaveWordModalProps {
   isOpen: boolean;
   onClose: () => void;
   prefillWord?: string;
+  context?: string;
+  sourceType?: "article" | "news" | "book" | "session" | "general";
+  sourceId?: string | null;
 }
 
-export default function SaveWordModal({ isOpen, onClose, prefillWord = "" }: SaveWordModalProps) {
+export default function SaveWordModal({ 
+  isOpen, 
+  onClose, 
+  prefillWord = "",
+  context = "",
+  sourceType = "general",
+  sourceId = null
+}: SaveWordModalProps) {
+  const { session } = useAuth();
   const [word, setWord] = useState(prefillWord);
   const [definition, setDefinition] = useState("");
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSave = () => {
-    if (!word.trim()) return;
-    // In a real app, this would persist to backend/state
-    setSaved(true);
-    setTimeout(() => {
-      setSaved(false);
-      setWord("");
-      setDefinition("");
-      onClose();
-    }, 1400);
+  const handleSave = async () => {
+    if (!word.trim() || !session?.access_token) return;
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/review/items`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          content: word,
+          translation: definition,
+          context: context,
+          type: "word", // Simplified, could be dynamic
+          source_type: sourceType === "general" ? null : sourceType,
+          source_id: sourceId || null,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to save item");
+
+      setSaved(true);
+      setTimeout(() => {
+        setSaved(false);
+        setWord("");
+        setDefinition("");
+        onClose();
+      }, 1400);
+    } catch (err: any) {
+      console.error(err);
+      setError("Failed to save. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Reset fields when opening with a new prefill
@@ -31,6 +72,8 @@ export default function SaveWordModal({ isOpen, onClose, prefillWord = "" }: Sav
     setWord(prefillWord);
     setDefinition("");
     setSaved(false);
+    setLoading(false);
+    setError("");
   };
 
   return (
@@ -159,18 +202,25 @@ export default function SaveWordModal({ isOpen, onClose, prefillWord = "" }: Sav
                   />
                 </div>
 
+                {error && (
+                  <p className="text-xs text-red-500 font-medium text-center">{error}</p>
+                )}
                 <motion.button
                   whileTap={{ scale: 0.98 }}
                   onClick={handleSave}
-                  disabled={!word.trim()}
+                  disabled={!word.trim() || loading}
                   className="w-full py-3.5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 disabled:opacity-40"
                   style={{
                     background: "linear-gradient(135deg, #1a2b5e, #0f1d4e)",
                     boxShadow: "0 6px 20px rgba(26,43,94,0.3)",
                   }}
                 >
-                  <BookMarked className="w-4 h-4" />
-                  Add to Practice Deck
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <BookMarked className="w-4 h-4" />
+                  )}
+                  {loading ? "Saving..." : "Add to Practice Deck"}
                 </motion.button>
               </div>
             )}
