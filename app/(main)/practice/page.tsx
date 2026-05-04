@@ -128,7 +128,7 @@ export default function PracticePage() {
         
         <div className="space-y-2">
           <h1 className="text-3xl font-bold text-[#1a2b5e] font-outfit">Session Complete!</h1>
-          <p className="text-[#64748b]">You've mastered {PRACTICE_DECK.length} cards today. Your memory is getting stronger!</p>
+          <p className="text-[#64748b]">You've mastered {deck.length} cards today. Your memory is getting stronger!</p>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full">

@@ -84,7 +84,7 @@ export default function ProfilePage() {
       const pref = user.preferences;
       if (pref) {
         const diffToCode: Record<string, string> = { "beginner": "A1", "intermediate": "B1", "upper_intermediate": "B2", "advanced": "C1" };
-        setSelectedLevel(diffToCode[pref.difficulty_pref] || "B1");
+        setSelectedLevel(pref.difficulty_pref ? diffToCode[pref.difficulty_pref] || "B1" : "B1");
         
         const p = DAILY_GOALS.find(g => g.minutes === pref.reading_pace);
         setSelectedPace(p ? p.label : "Regular");
