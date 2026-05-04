@@ -207,6 +207,19 @@ export default function AuthPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-4 rounded-2xl border-2 border-[#1a2b5e]/10 text-[#1a2b5e] focus:border-[#1a2b5e] focus:outline-none transition-colors"
             />
+
+            {!isLogin && (
+              <label className="flex items-start gap-3 mt-4 mb-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  required
+                  className="mt-1 w-4 h-4 rounded border-[#1a2b5e]/20 text-[#1a2b5e] focus:ring-[#1a2b5e]"
+                />
+                <span className="text-sm text-[#4a5568]">
+                  I agree to the <a href="/terms" target="_blank" className="text-[#1a2b5e] font-bold hover:underline">Terms of Service</a> and <a href="/privacy" target="_blank" className="text-[#1a2b5e] font-bold hover:underline">Privacy Policy</a>.
+                </span>
+              </label>
+            )}
             
             <button
               type="submit"
@@ -265,9 +278,9 @@ export default function AuthPage() {
           className="text-center mt-8 text-xs text-[#9aa5b1] font-medium"
         >
           By joining, you agree to our{" "}
-          <span className="underline cursor-pointer text-[#1a2b5e]">Terms</span>{" "}
+          <a href="/terms" target="_blank" className="underline cursor-pointer text-[#1a2b5e]">Terms</a>{" "}
           &{" "}
-          <span className="underline cursor-pointer text-[#1a2b5e]">Privacy Policy</span>
+          <a href="/privacy" target="_blank" className="underline cursor-pointer text-[#1a2b5e]">Privacy Policy</a>
         </motion.p>
       </div>
     </div>
