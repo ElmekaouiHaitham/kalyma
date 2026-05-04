@@ -13,12 +13,6 @@ import {
   LayoutDashboard,
   FileText,
   GraduationCap,
-  BookText,
-  BrainCircuit,
-  Bot,
-  RadioTower,
-  UserCircle,
-  Globe
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -90,10 +84,10 @@ function SidebarItem({
 
 const NAV_ITEMS = [
   { label: "Home", icon: Home, href: "/home" },
-  { label: "Articles", icon: BookText, href: "/articles" },
-  // { label: "Books", icon: BookOpen, href: "/library/books" },
-  { label: "Practice", icon: BrainCircuit, href: "/practice" },
-  { label: "News", icon: Globe, href: "/news" },
+  { label: "Articles", icon: FileText, href: "/articles" },
+  { label: "Books", icon: BookOpen, href: "/library/books" },
+  { label: "Practice", icon: Sparkles, href: "/practice" },
+  { label: "News", icon: Newspaper, href: "/news" },
 ];
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
@@ -101,14 +95,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const router = useRouter();
   const isHome = pathname === "/home";
 
-  const { user, session, isLoading } = useAuth();
+  const { user, session } = useAuth();
   const [xpHistory, setXpHistory] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (!isLoading && !session) {
-      router.push("/auth");
-    }
-  }, [isLoading, session, router]);
 
   useEffect(() => {
     if (session) {
@@ -155,18 +143,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const active = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
 
+  // Pages that provide their own custom header — hide the global top bar
   const hideHeaderRoutes = ["/live/", "/library/", "/news/", "/articles/"];
   const shouldHideHeader =
     hideHeaderRoutes.some((route) => pathname.startsWith(route)) &&
     pathname !== "/library/books";
-
-  if (isLoading || !session) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-[#f0f4ff]">
-        <Image src="/logo.png" alt="Loading..." width={48} height={48} className="animate-pulse opacity-50" />
-      </div>
-    );
-  }
 
   return (
     <div
@@ -212,7 +193,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         {/* Dashboard item */}
         <div className="px-3 pt-3">
           <SidebarItem
-            icon={Home}
+            icon={LayoutDashboard}
             label="Dashboard"
             href="/home"
             active={active("/home")}
@@ -254,52 +235,57 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* Study section */}
-        {/* <SidebarSection label="Study" /> */}
-        <nav className="px-3 space-y-0.5 mt-2 flex-1">
+        <SidebarSection label="Study" />
+        <nav className="px-3 space-y-0.5">
           <SidebarItem
-            icon={BookText}
+            icon={FileText}
             label="Articles"
             href="/articles"
             active={active("/articles")}
             onClick={() => nav("/articles")}
           />
-          {/* <SidebarItem
+          <SidebarItem
             icon={BookOpen}
             label="Books"
             href="/library/books"
             active={active("/library/books")}
             onClick={() => nav("/library/books")}
-          /> */}
+          />
           <SidebarItem
-            icon={BrainCircuit}
+            icon={GraduationCap}
             label="Practice"
             href="/practice"
             active={active("/practice")}
             onClick={() => nav("/practice")}
           />
+        </nav>
+
+        {/* Interact section */}
+        <SidebarSection label="Interact" />
+        <nav className="px-3 space-y-0.5 flex-1">
           <SidebarItem
-            icon={Bot}
+            icon={Sparkles}
             label="Atlas AI"
             href="/chat"
             active={active("/chat")}
             onClick={() => nav("/chat")}
           />
           <SidebarItem
-            icon={RadioTower}
+            icon={Radio}
             label="Live Sessions"
             href="/live"
             active={active("/live")}
             onClick={() => nav("/live")}
           />
           <SidebarItem
-            icon={Globe}
+            icon={Newspaper}
             label="News"
             href="/news"
             active={active("/news")}
             onClick={() => nav("/news")}
           />
           <SidebarItem
-            icon={UserCircle}
+            icon={Settings}
             label="Profile Settings"
             href="/profile"
             active={active("/profile")}
