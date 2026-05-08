@@ -1,14 +1,20 @@
 # Kalyma — Frontend
 
-> The client-side application for **kalyma.ma**, an AI-powered Moroccan Arabic (Darija) language learning platform. This repository contains the full Next.js frontend; the backend API is maintained in a private repository.
+> The client-side application for **kalyma.ma**, an English learning platform that blends language acquisition with real-world knowledge — through live topic sessions, curated articles, AI conversation, and news. This repository contains the full Next.js frontend; the backend API is maintained in a private repository.
 
 ---
 
 ## 🧭 Project Overview
 
-**kalyma.ma** helps learners acquire Moroccan Arabic through an immersive, content-driven approach — combining curated articles, authentic news, AI conversation, and spaced-repetition vocabulary practice in a single cohesive product.
+**kalyma.ma** is an English learning platform built around the idea that language is best acquired through meaningful content — not drills. Users improve their English while genuinely expanding their knowledge through:
 
-Kalyma is the web interface that ties all of these learning modules together, communicating with a dedicated REST API backend secured via Supabase authentication.
+- **Live sessions** on diverse real-world topics (hosted streams users can join and follow along in English)
+- **Curated articles** graded to the learner's level, with vocabulary saving built in
+- **News feed** covering Business, Technology, Culture, Health, Politics, and Sports
+- **Atlas AI** — an AI conversation partner for free-form English practice
+- **Spaced-repetition practice deck** to consolidate vocabulary encountered across all content modules
+
+The frontend communicates with a private REST API backend secured via Supabase authentication and exposes a gamification layer (XP, streaks, weekly engagement goals) to keep learners motivated.
 
 ---
 
@@ -87,7 +93,7 @@ Kalyma/
 
 ### Practice (Spaced Repetition) — `app/(main)/practice/`
 - Fetches the user's due flashcard deck from `GET /review/due` and session statistics from `GET /review/stats`.
-- Interactive **flip-card UI** — front shows the Darija term, back reveals its translation and in-context example sentence.
+- Interactive **flip-card UI** — front shows an English word or phrase saved by the user, back reveals its meaning and the original in-context sentence where it was encountered.
 - Each card response (Again / Hard / Good / Easy → ratings 0–5) is submitted to `POST /review/answer`, delegating the SM-2 scheduling logic to the backend.
 - Session completion screen shows accuracy and per-rating breakdowns.
 - Integrates the **SaveWordModal** component, allowing users to add new vocabulary directly from the practice view.
@@ -150,4 +156,4 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-> **Note:** The backend (API, database schema, AI orchestration, gamification engine) is maintained in a private repository and is not included here.
+> **Note:** The backend (API, database schema, AI orchestration, gamification engine, SRS scheduling) is maintained in a private repository and is not included here.
