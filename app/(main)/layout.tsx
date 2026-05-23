@@ -126,7 +126,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   return (
     <div
       className="flex h-screen overflow-hidden"
-      style={{ background: "#f7f2ea", colorScheme: "light" }}
+      style={{ background: pathname === "/home" ? "#f3f4fb" : "#f7f2ea", colorScheme: "light" }}
     >
       {/* ── SIDEBAR (md+) ─────────────────────────────── */}
       <aside
@@ -279,6 +279,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             // Chat manages its own scroll; other pages get pb for bottom nav
             overflowY: pathname === "/chat" ? "hidden" : "auto",
             paddingBottom: pathname === "/chat" ? 0 : undefined,
+            background: pathname === "/home" ? "#f3f4fb" : undefined,
           }}
           // Give chat page full height to flex properly
         >
@@ -286,6 +287,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             style={{
               height: pathname === "/chat" ? "100%" : "auto",
               paddingBottom: pathname === "/chat" ? 0 : "5rem",
+              background: pathname === "/home" ? "#f3f4fb" : undefined,
             }}
             className={pathname !== "/chat" ? "md:pb-6" : ""}
           >
