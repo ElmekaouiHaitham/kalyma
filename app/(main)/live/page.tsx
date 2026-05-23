@@ -5,6 +5,7 @@ import { Users, ChevronRight, Play, ChevronDown, ChevronUp, BookMarked, Calendar
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/providers";
 import SaveWordModal from "@/components/SaveWordModal";
+import PageShell from "@/components/PageShell";
 
 interface SessionData {
   id: string;
@@ -63,7 +64,7 @@ function Countdown({ scheduledAt }: { scheduledAt: string }) {
 }
 
 export default function LivePage() {
-  const { user, session: authSession } = useAuth();
+  const { session: authSession } = useAuth();
   const router = useRouter();
   
   const [recommended, setRecommended] = useState<SessionData[]>([]);
@@ -75,7 +76,10 @@ export default function LivePage() {
   const [saveWord, setSaveWord] = useState("");
 
   useEffect(() => {
-    if (!authSession?.access_token) return;
+    if (!authSession?.access_token) {
+      setIsLoading(false);
+      return;
+    }
 
     const fetchData = async () => {
       setIsLoading(true);
@@ -107,23 +111,11 @@ export default function LivePage() {
   const featured = recommended.find(s => s.status === 'live' || s.status === 'scheduled') || recommended[0];
 
   return (
-    <div
-      className="w-full max-w-6xl mx-auto px-4 md:px-8 py-6 space-y-6"
-      style={{ background: "#f0f4ff", colorScheme: "light", minHeight: "100%" }}
+    <PageShell
+      title="Live Sessions"
+      subtitle="Practice your English in live classes and revisit sessions you joined."
+      maxWidth="max-w-6xl"
     >
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <h1
-          className="text-2xl font-bold mb-0.5"
-          style={{ fontFamily: "'Outfit', sans-serif", color: "#1a2b5e" }}
-        >
-          Live Sessions
-        </h1>
-        <p className="text-sm" style={{ color: "#4a5568" }}>
-          Hi {user?.full_name?.split(' ')[0] || 'there'}! Ready to practice your English live?
-        </p>
-      </motion.div>
-
       {/* 2-col on lg: Upcoming | Previous */}
       <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-start space-y-6 lg:space-y-0">
 
@@ -246,7 +238,7 @@ export default function LivePage() {
               My Attended Sessions
             </h2>
             <p className="text-xs mb-1" style={{ color: "#9aa5b1" }}>
-              Continue learning from sessions you've joined
+              Continue learning from sessions you&apos;ve joined
             </p>
           </div>
 
@@ -255,7 +247,7 @@ export default function LivePage() {
                [1,2,3].map(i => <div key={i} className="h-20 bg-white/50 animate-pulse rounded-2xl" />)
             ) : history.length === 0 ? (
                <div className="p-8 text-center bg-white/50 rounded-2xl border border-dashed border-[#1a2b5e]/10">
-                 <p className="text-xs text-[#9aa5b1]">You haven't attended any sessions yet.</p>
+                 <p className="text-xs text-[#9aa5b1]">You haven&apos;t attended any sessions yet.</p>
                </div>
             ) : (
               history.map((session, i) => {
@@ -335,7 +327,7 @@ export default function LivePage() {
                             className="px-4 pb-4"
                             style={{ borderTop: "1px solid rgba(26,43,94,0.07)" }}
                           >
-                            <div className="rounded-xl p-3 mt-3" style={{ background: "#f5f8ff" }}>
+                            <div className="rounded-xl p-3 mt-3" style={{ background: "#f7f2ea" }}>
                               <p className="text-sm font-bold mb-2" style={{ color: "#1a2b5e" }}>
                                 📝 Session Summary
                               </p>
@@ -383,6 +375,6 @@ export default function LivePage() {
         onClose={() => setSaveModalOpen(false)}
         prefillWord={saveWord}
       />
-    </div>
+    </PageShell>
   );
 }

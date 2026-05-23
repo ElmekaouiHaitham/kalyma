@@ -388,7 +388,7 @@ export default function BookReaderPage() {
           >
             <button
               onClick={() => askAIAboutSelection(selectionBubble.text)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-[#1a2b5e] hover:bg-[#f5f8ff] transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-[#1a2b5e] hover:bg-[#f7f2ea] transition-colors"
             >
               <Image src="/atlas-logo.png" alt="Atlas AI" width={16} height={16} className="object-cover rounded-full" />
               Ask Atlas
@@ -466,7 +466,7 @@ export default function BookReaderPage() {
                 style={{ borderColor: "rgba(26,43,94,0.05)" }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-[1rem] bg-[#f0f4ff] flex items-center justify-center shadow-inner">
+                  <div className="w-10 h-10 rounded-[1rem] bg-[#f7f2ea] flex items-center justify-center shadow-inner">
                     <Image src="/atlas-logo.png" alt="Atlas AI" width={20} height={20} className="object-cover rounded-full" />
                   </div>
                   <div>
@@ -478,7 +478,7 @@ export default function BookReaderPage() {
                 </div>
                 <button
                   onClick={() => setPanelOpen(false)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#f5f8ff] transition-colors"
+                  className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#f7f2ea] transition-colors"
                 >
                   <X className="w-5 h-5 text-[#9aa5b1]" />
                 </button>
@@ -494,7 +494,7 @@ export default function BookReaderPage() {
                     className={`flex items-end gap-2 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
                   >
                     {msg.role === "ai" && (
-                      <div className="w-6 h-6 rounded-lg bg-[#f0f4ff] flex items-center justify-center shrink-0 mb-1">
+                      <div className="w-6 h-6 rounded-lg bg-[#f7f2ea] flex items-center justify-center shrink-0 mb-1">
                         <Image src="/atlas-logo.png" alt="Atlas AI" width={14} height={14} className="object-cover rounded-full" />
                       </div>
                     )}
@@ -502,7 +502,7 @@ export default function BookReaderPage() {
                       <div
                         className={`px-4 py-3 rounded-[1.5rem] text-sm leading-relaxed overflow-hidden ${
                           msg.role === "user"
-                            ? "bg-[#f5f8ff] text-[#1a2b5e] rounded-br-none"
+                            ? "bg-[#f7f2ea] text-[#1a2b5e] rounded-br-none"
                             : "bg-[#ffffff] text-[#1a2b5e] border border-[#1a2b5e]/5 rounded-bl-none shadow-sm"
                         }`}
                       >
@@ -534,7 +534,7 @@ export default function BookReaderPage() {
                   <input
                     className="flex-1 px-5 py-3.5 text-sm rounded-2xl outline-none transition-all shadow-sm"
                     style={{
-                      background: "#f8fafc",
+                      background: "#f7f2ea",
                       border: "1px solid rgba(26,43,94,0.1)",
                       color: "#1a2b5e"
                     }}

@@ -93,7 +93,7 @@ export default function OnboardingPage() {
 
   return (
     <div
-      className="min-h-screen flex flex-col bg-[#f8faff]"
+      className="min-h-screen flex flex-col bg-[#f7f2ea]"
     >
       {/* Header */}
       <div className="px-6 pt-8 pb-4 bg-white/50 backdrop-blur-sm sticky top-0 z-50 border-b border-[#1a2b5e]/5">
@@ -203,7 +203,7 @@ export default function OnboardingPage() {
                         className={`w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${
                           selectedLevel === level.code
                             ? "bg-[#1a2b5e] text-white"
-                            : "bg-[#f0f4ff] text-[#9aa5b1]"
+                            : "bg-[#f7f2ea] text-[#9aa5b1]"
                         }`}
                       >
                         {level.code}
@@ -322,7 +322,7 @@ export default function OnboardingPage() {
                         step="1"
                         value={articleFrequency || 2}
                         onChange={(e) => setArticleFrequency(parseInt(e.target.value))}
-                        className="w-full h-3 bg-[#f0f4ff] rounded-full appearance-none cursor-pointer accent-[#1a2b5e]"
+                        className="w-full h-3 bg-[#f7f2ea] rounded-full appearance-none cursor-pointer accent-[#1a2b5e]"
                       />
                       <div className="flex justify-between text-xs font-bold text-[#9aa5b1]">
                         <span>1</span>

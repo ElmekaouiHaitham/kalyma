@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronRight, Star, Bookmark, ArrowLeft } from "lucide-react";
+import { ChevronRight, Star, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/app/providers";
+import PageShell from "@/components/PageShell";
 
 interface Article {
   id: string;
@@ -28,7 +29,10 @@ export default function AllArticlesPage() {
   const [difficulty, setDifficulty] = useState<string>("");
 
   useEffect(() => {
-    if (!session?.access_token) return;
+    if (!session?.access_token) {
+      setIsLoading(false);
+      return;
+    }
 
     const fetchArticles = async () => {
       setIsLoading(true);
@@ -55,23 +59,21 @@ export default function AllArticlesPage() {
   }, [session, topic, difficulty]);
 
   return (
-    <div
-      className="max-w-lg mx-auto px-4 py-6 space-y-5 lg:max-w-5xl"
-      style={{ background: "#f0f4ff", colorScheme: "light", minHeight: "100vh" }}
-    >
-      {/* Header */}
-      <div className="flex items-center gap-3">
+    <PageShell
+      title="All Articles"
+      subtitle="Discover new topics."
+      maxWidth="max-w-5xl"
+      action={
         <button
           onClick={() => router.back()}
-          className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm"
+          className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold shadow-sm transition-all hover:border-black hover:bg-[#fbf7f1]"
+          style={{ color: "#1f1b17", border: "1px solid #e6d9c9" }}
         >
-          <ArrowLeft size={20} className="text-gray-700" />
+          <ArrowLeft size={16} />
+          Back
         </button>
-        <div>
-          <h1 className="text-xl font-bold" style={{ color: "#1a2b5e" }}>All Articles</h1>
-          <p className="text-xs text-gray-500">Discover new topics</p>
-        </div>
-      </div>
+      }
+    >
 
       {/* Filters */}
       <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
@@ -153,6 +155,6 @@ export default function AllArticlesPage() {
           ))}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

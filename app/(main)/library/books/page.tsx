@@ -1,12 +1,12 @@
 "use client";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, SlidersHorizontal, Clock, ChevronRight } from "lucide-react";
+import { Search, SlidersHorizontal, Clock } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import PageShell from "@/components/PageShell";
 
 type Level = "All Levels" | "Beginner" | "Intermediate" | "Advanced";
-type SortBy = "Reading Time" | "A-Z" | "Newest";
 
 const BOOKS = [
   {
@@ -52,13 +52,10 @@ const BOOKS = [
 ];
 
 const LEVELS: Level[] = ["All Levels", "Beginner", "Intermediate", "Advanced"];
-const SORT_OPTIONS: SortBy[] = ["Reading Time", "A-Z", "Newest"];
-
 export default function ReadingBooksPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState<Level>("All Levels");
-  const [sortBy, setSortBy] = useState<SortBy>("Reading Time");
   const [showFilters, setShowFilters] = useState(false);
 
   const filtered = BOOKS.filter((b) => {
@@ -71,25 +68,11 @@ export default function ReadingBooksPage() {
   });
 
   return (
-    <div
-      className="w-full max-w-6xl mx-auto px-4 md:px-8 py-6 space-y-5"
-      style={{ background: "#f0f4ff", colorScheme: "light", minHeight: "100%" }}
+    <PageShell
+      title="Reading Books"
+      subtitle="Expand your vocabulary and improve your reading comprehension."
+      maxWidth="max-w-6xl"
     >
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <p className="text-xs mb-1" style={{ color: "#9aa5b1" }}>
-          Home / Reading Books
-        </p>
-        <h1
-          className="text-2xl font-bold mb-0.5"
-          style={{ fontFamily: "'Outfit', sans-serif", color: "#1a2b5e" }}
-        >
-          Reading Books
-        </h1>
-        <p className="text-sm" style={{ color: "#4a5568" }}>
-          Expand your vocabulary and improve your reading comprehension
-        </p>
-      </motion.div>
 
       {/* Search bar + Filters */}
       <motion.div
@@ -252,6 +235,6 @@ export default function ReadingBooksPage() {
           </div>
         )}
       </motion.div>
-    </div>
+    </PageShell>
   );
 }

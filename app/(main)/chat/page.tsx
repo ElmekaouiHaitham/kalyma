@@ -1,34 +1,24 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Mic, BookMarked, Plus, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
+import { Send, Mic, BookMarked, Plus, Loader2, CheckCircle2 } from "lucide-react";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
-import SaveWordModal from "@/components/SaveWordModal";
-import { useAtlasChat, ChatMessage } from "@/hooks/useAtlasChat";
+import { useAtlasChat } from "@/hooks/useAtlasChat";
 
 export default function ChatPage() {
-  const { messages, isTyping, error, sendMessage, clearMessages, addMessage, autoSaveToDeck } = useAtlasChat({
+  const { messages, isTyping, sendMessage, clearMessages, addMessage, autoSaveToDeck } = useAtlasChat({
     context_type: "general",
     context_content: "General English learning conversation. Be helpful, encouraging, and friendly.",
   });
 
   const [input, setInput] = useState("");
   const [started, setStarted] = useState(false);
-  const [saveModalOpen, setSaveModalOpen] = useState(false);
-  const [saveWord, setSaveWord] = useState("");
   const [hoveredMsg, setHoveredMsg] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const openSaveModal = (content: string) => {
-    const boldMatch = content.match(/\*\*([^*]+)\*\*/);
-    const extracted = boldMatch ? boldMatch[1] : content.split(" ").slice(0, 3).join(" ");
-    setSaveWord(extracted);
-    setSaveModalOpen(true);
-  };
 
   const handleAutoSave = async (aiMsgId: string, aiText: string) => {
     const msgIndex = messages.findIndex(m => m.id === aiMsgId);
@@ -53,7 +43,7 @@ export default function ChatPage() {
     if (started && messages.length === 0 && !isTyping) {
       addMessage("ai", "Hello! I'm Atlas. How can I help you practice your English today?");
     }
-  }, [started]);
+  }, [started, messages.length, isTyping, addMessage]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -157,7 +147,7 @@ export default function ChatPage() {
         }
 
         .atlas-bubble-user {
-          background: #f5f8ff;
+          background: #f7f2ea;
           color: #1a2b5e;
           border-radius: 20px 20px 4px 20px;
           padding: 14px 20px;
@@ -304,7 +294,7 @@ export default function ChatPage() {
           transition: all 0.15s;
         }
         .atlas-tool-btn:hover {
-          background: rgba(26,43,94,0.06);
+          background: #f7f2ea;
           color: #1a2b5e;
         }
 
@@ -327,7 +317,7 @@ export default function ChatPage() {
           background: #2d4080;
         }
         .atlas-send-btn:disabled {
-          background: #e2e8f0;
+          background: #f0e7db;
           color: #94a3b8;
           cursor: default;
         }
@@ -337,6 +327,20 @@ export default function ChatPage() {
           font-size: 11px;
           color: #9aa5b1;
           margin-top: 12px;
+        }
+
+        @media (max-width: 767px) {
+          .atlas-input-area {
+            padding: 12px 14px calc(104px + env(safe-area-inset-bottom));
+          }
+
+          .atlas-input-wrap {
+            border-radius: 18px;
+          }
+
+          .atlas-hint {
+            display: none;
+          }
         }
       `}</style>
 
@@ -556,11 +560,6 @@ export default function ChatPage() {
         <p className="atlas-hint">Atlas AI can make mistakes. Practice for learning purposes.</p>
       </div>
 
-      <SaveWordModal
-        isOpen={saveModalOpen}
-        onClose={() => setSaveModalOpen(false)}
-        prefillWord={saveWord}
-      />
     </div>
   );
 }

@@ -159,25 +159,25 @@ export default function NewsDetailPage() {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-gray-400 bg-[#f8fafc]">Loading news article...</div>;
+    return <div className="min-h-screen flex items-center justify-center text-gray-400 bg-[#f7f2ea]">Loading news article...</div>;
   }
 
   if (!news) {
-    return <div className="min-h-screen flex items-center justify-center text-red-500 bg-[#f8fafc]">News article not found.</div>;
+    return <div className="min-h-screen flex items-center justify-center text-red-500 bg-[#f7f2ea]">News article not found.</div>;
   }
 
   const paragraphs = news.body?.split("\n\n").filter(Boolean) ?? [news.summary];
   const readingTime = Math.ceil(paragraphs.join(" ").split(" ").length / 200);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8fafc]" style={{ colorScheme: 'light' }}>
+    <div className="min-h-screen flex flex-col bg-[#f7f2ea]" style={{ colorScheme: 'light' }}>
       {/* Premium Header */}
       <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-[#1a2b5e]/10 px-4 py-3 sm:px-6">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
                 <button
                 onClick={() => router.back()}
-                className="w-10 h-10 rounded-xl bg-[#f0f4ff] flex items-center justify-center hover:bg-[#e0e7ff] transition-colors"
+                className="w-10 h-10 rounded-xl bg-[#f7f2ea] flex items-center justify-center hover:bg-[#fbf7f1] transition-colors"
                 >
                 <ArrowLeft className="w-5 h-5 text-[#1a2b5e]" />
                 </button>
@@ -268,7 +268,7 @@ export default function NewsDetailPage() {
                 >
                     <CheckCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
                     Mark as Completed
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-[#f8fafc]" />
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-[#f7f2ea]" />
                 </button>
             )}
         </div>
@@ -302,7 +302,7 @@ export default function NewsDetailPage() {
           >
             <button
               onClick={() => askAIAboutSelection(selectionBubble.text)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-[#1a2b5e] hover:bg-[#f5f8ff] transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-[#1a2b5e] hover:bg-[#f7f2ea] transition-colors"
             >
               <Image src="/atlas-logo.png" alt="Atlas AI" width={16} height={16} className="object-cover rounded-full" />
               Ask Atlas
@@ -346,7 +346,7 @@ export default function NewsDetailPage() {
         }}
       >
         <Image src="/atlas-logo.png" alt="Atlas AI" width={32} height={32} className="object-cover rounded-full" />
-        <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-4 border-[#f8fafc]" />
+        <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-4 border-[#f7f2ea]" />
       </motion.button>
 
       {/* AI Assistant Sheet */}
@@ -377,7 +377,7 @@ export default function NewsDetailPage() {
               
               <div className="flex items-center justify-between px-6 py-4 border-b shrink-0" style={{ borderColor: "rgba(26,43,94,0.05)" }}>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-[1rem] bg-[#f0f4ff] flex items-center justify-center shadow-inner">
+                  <div className="w-10 h-10 rounded-[1rem] bg-[#f7f2ea] flex items-center justify-center shadow-inner">
                     <Image src="/atlas-logo.png" alt="Atlas AI" width={20} height={20} className="object-cover rounded-full" />
                   </div>
                   <div>
@@ -385,7 +385,7 @@ export default function NewsDetailPage() {
                     <p className="text-[10px] font-bold text-[#c9a84c] uppercase tracking-widest">News Specialist</p>
                   </div>
                 </div>
-                <button onClick={() => setPanelOpen(false)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#f5f8ff] transition-colors">
+                <button onClick={() => setPanelOpen(false)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#f7f2ea] transition-colors">
                   <X className="w-5 h-5 text-[#9aa5b1]" />
                 </button>
               </div>
@@ -399,7 +399,7 @@ export default function NewsDetailPage() {
                     className={`flex items-end gap-2 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
                   >
                     {msg.role === "ai" && (
-                        <div className="w-6 h-6 rounded-lg bg-[#f0f4ff] flex items-center justify-center shrink-0 mb-1">
+                        <div className="w-6 h-6 rounded-lg bg-[#f7f2ea] flex items-center justify-center shrink-0 mb-1">
                             <Image src="/atlas-logo.png" alt="Atlas AI" width={14} height={14} className="object-cover rounded-full" />
                         </div>
                     )}
@@ -407,7 +407,7 @@ export default function NewsDetailPage() {
                       <div
                         className={`px-4 py-3 rounded-[1.5rem] text-sm leading-relaxed overflow-hidden ${
                           msg.role === "user"
-                            ? "bg-[#f5f8ff] text-[#1a2b5e] rounded-br-none"
+                            ? "bg-[#f7f2ea] text-[#1a2b5e] rounded-br-none"
                             : "bg-[#ffffff] text-[#1a2b5e] border border-[#1a2b5e]/5 rounded-bl-none shadow-sm"
                         }`}
                       >
@@ -440,7 +440,7 @@ export default function NewsDetailPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="flex items-end gap-2 flex-row"
                   >
-                    <div className="w-6 h-6 rounded-lg bg-[#f0f4ff] flex items-center justify-center shrink-0 mb-1">
+                    <div className="w-6 h-6 rounded-lg bg-[#f7f2ea] flex items-center justify-center shrink-0 mb-1">
                       <Image src="/atlas-logo.png" alt="Atlas AI" width={14} height={14} className="object-cover rounded-full" />
                     </div>
                     <div className="px-4 py-3 rounded-[1.5rem] bg-[#ffffff] border border-[#1a2b5e]/5 rounded-bl-none shadow-sm flex items-center gap-1">
@@ -463,7 +463,7 @@ export default function NewsDetailPage() {
                   <input
                     className="flex-1 px-5 py-3.5 text-sm rounded-2xl outline-none transition-all shadow-sm"
                     style={{
-                      background: "#f8fafc",
+                      background: "#f7f2ea",
                       border: "1px solid rgba(26,43,94,0.1)",
                       color: "#1a2b5e"
                     }}
@@ -503,5 +503,4 @@ const NewspaperIcon = () => (
 );
 
 function Newspaper(props: any) { return <NewspaperIcon /> }
-
 

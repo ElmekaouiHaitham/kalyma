@@ -109,7 +109,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-6 bg-[#f0f4ff]">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-6 bg-[#f7f2ea]">
       {/* Decorative background elements */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-[-5%] left-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#1a2b5e]/10 to-[#c9a84c]/5 blur-3xl" />

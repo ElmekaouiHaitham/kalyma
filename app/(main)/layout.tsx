@@ -2,15 +2,11 @@
 import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
-  BookOpen,
   Radio,
-  Bell,
-  ChevronLeft,
   LogOut,
   Newspaper,
   Sparkles,
   Settings,
-  LayoutDashboard,
   FileText,
   GraduationCap,
 } from "lucide-react";
@@ -19,28 +15,15 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/app/providers";
 import { useEffect, useState } from "react";
 
-function SidebarSection({ label }: { label: string }) {
-  return (
-    <div
-      className="px-4 pt-4 pb-1 text-[10px] font-bold uppercase tracking-widest"
-      style={{ color: "#9aa5b1" }}
-    >
-      {label}
-    </div>
-  );
-}
-
 function SidebarItem({
   icon: Icon,
   label,
-  href,
   active,
   dot,
   onClick,
 }: {
   icon: React.ElementType;
   label: string;
-  href: string;
   active: boolean;
   dot?: boolean;
   onClick: () => void;
@@ -49,29 +32,34 @@ function SidebarItem({
     <button
       onClick={onClick}
       className={cn(
-        "w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all text-left relative"
+        "w-full flex items-center rounded-[14px] border text-left transition-all duration-200 hover:border-black hover:bg-[#f7f2ea] hover:text-black",
+        active
+          ? "border-[#e5e5eb] bg-[#e5e5eb] text-[#18265d]"
+          : "border-transparent bg-transparent text-[#667084]"
       )}
       style={{
-        background: active ? "rgba(26,43,94,0.07)" : "transparent",
-        color: active ? "#1a2b5e" : "#64748b",
-        fontWeight: active ? 700 : 500,
+        height: "clamp(50px, 3.18vw, 61px)",
+        gap: "clamp(14px, 1.05vw, 20px)",
+        paddingInline: "clamp(16px, 1.05vw, 20px)",
+        fontWeight: 500,
       }}
     >
-      {active && (
-        <span
-          className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full"
-          style={{ background: "#1a2b5e" }}
-        />
-      )}
       <Icon
-        size={17}
+        size={25}
         style={{
-          strokeWidth: active ? 2.2 : 1.8,
-          color: active ? "#1a2b5e" : "#9aa5b1",
+          width: "clamp(20px, 1.3vw, 25px)",
+          height: "clamp(20px, 1.3vw, 25px)",
+          strokeWidth: 2,
+          color: "currentColor",
           flexShrink: 0,
         }}
       />
-      <span className="flex-1 truncate">{label}</span>
+      <span
+        className="flex-1 truncate leading-none"
+        style={{ fontSize: "clamp(18px, 1.15vw, 22px)" }}
+      >
+        {label}
+      </span>
       {dot && (
         <span
           className="w-2 h-2 rounded-full shrink-0"
@@ -84,19 +72,23 @@ function SidebarItem({
 
 const NAV_ITEMS = [
   { label: "Home", icon: Home, href: "/home" },
-  { label: "Articles", icon: FileText, href: "/articles" },
-  { label: "Books", icon: BookOpen, href: "/library/books" },
-  { label: "Practice", icon: Sparkles, href: "/practice" },
   { label: "News", icon: Newspaper, href: "/news" },
+  { label: "Atlas", icon: Sparkles, href: "/chat", atlas: true },
+  { label: "Live", icon: Radio, href: "/live" },
+  { label: "Practice", icon: GraduationCap, href: "/practice" },
 ];
+
+type XpHistoryEntry = {
+  reason: string;
+  created_at: string;
+};
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const isHome = pathname === "/home";
 
   const { user, session } = useAuth();
-  const [xpHistory, setXpHistory] = useState<any[]>([]);
+  const [xpHistory, setXpHistory] = useState<XpHistoryEntry[]>([]);
 
   useEffect(() => {
     if (session) {
@@ -110,18 +102,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         .catch(console.error);
     }
   }, [session]);
-
-  const difficultyMap: Record<string, string> = {
-    beginner: "A1/A2 — Beginner",
-    intermediate: "B1 — Intermediate",
-    upper_intermediate: "B2 — Upper-Int",
-    advanced: "C1/C2 — Advanced",
-  };
-  const levelStr = user?.preferences?.difficulty_pref
-    ? difficultyMap[user.preferences.difficulty_pref] || "Level not set"
-    : "Level not set";
-  const firstName = user?.full_name ? user.full_name.split(" ")[0] : "Learner";
-  const firstLetter = firstName.charAt(0).toUpperCase();
 
   const isThisWeek = (dateString: string) => {
     if (!dateString) return false;
@@ -143,59 +123,45 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const active = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
 
-  // Pages that provide their own custom header — hide the global top bar
-  const hideHeaderRoutes = ["/live/", "/library/", "/news/", "/articles/"];
-  const shouldHideHeader =
-    hideHeaderRoutes.some((route) => pathname.startsWith(route)) &&
-    pathname !== "/library/books";
-
   return (
     <div
       className="flex h-screen overflow-hidden"
-      style={{ background: "#f0f4ff", colorScheme: "light" }}
+      style={{ background: "#f7f2ea", colorScheme: "light" }}
     >
       {/* ── SIDEBAR (md+) ─────────────────────────────── */}
       <aside
         className="hidden md:flex flex-col shrink-0 overflow-y-auto"
         style={{
-          width: 240,
+          width: "clamp(256px, 18.75vw, 360px)",
           background: "white",
           borderRight: "1px solid rgba(26,43,94,0.08)",
-          boxShadow: "2px 0 12px rgba(26,43,94,0.05)",
         }}
       >
         {/* Logo */}
         <div
-          className="flex items-center gap-3 px-5 py-5 shrink-0"
-          style={{ borderBottom: "1px solid rgba(26,43,94,0.07)" }}
+          className="flex items-center shrink-0"
+          style={{
+            paddingInline: "clamp(24px, 1.66vw, 32px)",
+            paddingTop: "clamp(28px, 1.875vw, 36px)",
+            paddingBottom: "clamp(28px, 1.66vw, 32px)",
+          }}
         >
           <Image
-            src="/logo.png"
+            src="/logo with word.webp"
             alt="kalyma.ma"
-            width={38}
-            height={38}
-            className="object-contain shrink-0"
-            style={{ filter: "drop-shadow(0 1px 4px rgba(201,168,76,0.4))" }}
+            width={225}
+            height={68}
+            className="h-auto object-contain"
+            style={{ width: "clamp(175px, 11.72vw, 225px)" }}
+            priority
           />
-          <div>
-            <div
-              className="font-bold text-sm leading-tight"
-              style={{ color: "#1a2b5e", fontFamily: "'Outfit', sans-serif" }}
-            >
-              kalyma.ma
-            </div>
-            <div className="text-[10px]" style={{ color: "#9aa5b1" }}>
-              Speak with confidence
-            </div>
-          </div>
         </div>
 
         {/* Dashboard item */}
-        <div className="px-3 pt-3">
+        <div className="px-6 pt-2">
           <SidebarItem
-            icon={LayoutDashboard}
+            icon={Home}
             label="Dashboard"
-            href="/home"
             active={active("/home")}
             onClick={() => nav("/home")}
           />
@@ -203,17 +169,18 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
         {/* Weekly Engagement widget */}
         <div
-          className="mx-3 mt-3 rounded-xl p-3"
+          className="mx-6 mt-4 rounded-[14px]"
           style={{
-            background: "rgba(26,43,94,0.04)",
+            background: "rgba(245,246,250,0.8)",
             border: "1px solid rgba(26,43,94,0.08)",
+            padding: "clamp(12px, 0.84vw, 16px)",
           }}
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold" style={{ color: "#1a2b5e" }}>
+            <span className="text-[13px] font-semibold" style={{ color: "#1a2b5e" }}>
               Weekly Engagement
             </span>
-            <span className="text-[11px] font-bold" style={{ color: "#1a2b5e" }}>
+            <span className="text-[13px] font-semibold" style={{ color: "#1a2b5e" }}>
               {WEEKLY_PERCENT}%
             </span>
           </div>
@@ -229,98 +196,74 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               }}
             />
           </div>
-          <div className="text-[10px] mt-1.5" style={{ color: "#9aa5b1" }}>
+          <div className="text-[12px] mt-2" style={{ color: "#8b94a7" }}>
             {WEEKLY_PERCENT === 100 ? "Goal reached! Amazing!" : "Keep up the momentum!"}
           </div>
         </div>
 
-        {/* Study section */}
-        <SidebarSection label="Study" />
-        <nav className="px-3 space-y-0.5">
+        <nav className="px-6 pt-5 space-y-2">
           <SidebarItem
             icon={FileText}
             label="Articles"
-            href="/articles"
             active={active("/articles")}
             onClick={() => nav("/articles")}
           />
           <SidebarItem
-            icon={BookOpen}
-            label="Books"
-            href="/library/books"
-            active={active("/library/books")}
-            onClick={() => nav("/library/books")}
-          />
-          <SidebarItem
             icon={GraduationCap}
             label="Practice"
-            href="/practice"
             active={active("/practice")}
             onClick={() => nav("/practice")}
           />
         </nav>
 
-        {/* Interact section */}
-        <SidebarSection label="Interact" />
-        <nav className="px-3 space-y-0.5 flex-1">
+        <nav className="px-6 pt-2 space-y-2 flex-1">
           <SidebarItem
             icon={Sparkles}
             label="Atlas AI"
-            href="/chat"
             active={active("/chat")}
             onClick={() => nav("/chat")}
           />
           <SidebarItem
             icon={Radio}
             label="Live Sessions"
-            href="/live"
             active={active("/live")}
             onClick={() => nav("/live")}
           />
           <SidebarItem
             icon={Newspaper}
             label="News"
-            href="/news"
             active={active("/news")}
             onClick={() => nav("/news")}
           />
           <SidebarItem
             icon={Settings}
             label="Profile Settings"
-            href="/profile"
             active={active("/profile")}
             onClick={() => nav("/profile")}
           />
         </nav>
 
         {/* User + Sign out */}
-        <div
-          className="px-3 pb-4 pt-3 mt-auto shrink-0"
-          style={{ borderTop: "1px solid rgba(26,43,94,0.07)" }}
-        >
-          <div className="flex items-center gap-3 px-4 py-2.5 mb-1">
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
-              style={{ background: "linear-gradient(135deg, #1a2b5e, #2d4080)" }}
-            >
-              {firstLetter}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold truncate" style={{ color: "#1a2b5e" }}>
-                {firstName}
-              </div>
-              <div className="text-[10px]" style={{ color: "#9aa5b1" }}>
-                {levelStr}
-              </div>
-            </div>
-          </div>
+        <div className="px-6 pb-8 pt-6 mt-auto shrink-0">
           <button
             onClick={() => router.push("/auth")}
-            className="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium transition-all"
-            style={{ color: "#ef4444" }}
+            className="w-full flex items-center rounded-[14px] border border-transparent font-medium text-[#667084] transition-all hover:border-black hover:bg-[#f7f2ea] hover:text-black"
+            style={{
+              height: "clamp(50px, 3.18vw, 61px)",
+              gap: "clamp(14px, 1.05vw, 20px)",
+              paddingInline: "clamp(16px, 1.05vw, 20px)",
+              fontSize: "clamp(18px, 1.15vw, 22px)",
+            }}
           >
-            <LogOut size={14} style={{ color: "#ef4444" }} />
-            Sign Out
+            <LogOut
+              size={25}
+              style={{
+                width: "clamp(20px, 1.3vw, 25px)",
+                height: "clamp(20px, 1.3vw, 25px)",
+                color: "currentColor",
+              }}
+            />
+            Sign out
           </button>
         </div>
       </aside>
@@ -329,120 +272,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* Mobile top bar — hidden on reader pages and home */}
-        {!isHome && !shouldHideHeader && (
-          <header
-            className="md:hidden shrink-0 flex items-center justify-between px-4 z-40"
-            style={{
-              height: 60,
-              background: "white",
-              borderBottom: "1px solid rgba(26,43,94,0.08)",
-              boxShadow: "0 1px 6px rgba(26,43,94,0.06)",
-            }}
-          >
-            <button
-              onClick={() => router.back()}
-              className="w-9 h-9 flex items-center justify-center rounded-full"
-              style={{ color: "#1a2b5e" }}
-            >
-              <ChevronLeft size={22} />
-            </button>
-
-            <div className="flex items-center gap-2">
-              <Image
-                src="/logo.png"
-                alt="kalyma.ma"
-                width={34}
-                height={34}
-                className="object-contain"
-                style={{ filter: "drop-shadow(0 1px 3px rgba(201,168,76,0.4))" }}
-              />
-              <div>
-                <div
-                  className="text-sm font-bold leading-none"
-                  style={{ fontFamily: "'Outfit', sans-serif", color: "#1a2b5e" }}
-                >
-                  kalyma.ma
-                </div>
-                <div className="text-[9px] leading-none" style={{ color: "#9aa5b1" }}>
-                  Speak with confidence
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <button
-                className="w-9 h-9 flex items-center justify-center rounded-full"
-                style={{ color: "#64748b" }}
-              >
-                <Bell size={18} />
-              </button>
-              <button
-                onClick={() => router.push("/profile")}
-                className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm text-white"
-                style={{
-                  background: "linear-gradient(135deg, #1a2b5e, #2d4080)",
-                  boxShadow:
-                    pathname === "/profile"
-                      ? "0 0 0 2px white, 0 0 0 3.5px #1a2b5e"
-                      : "0 2px 6px rgba(26,43,94,0.25)",
-                }}
-              >
-                {firstLetter}
-              </button>
-            </div>
-          </header>
-        )}
-
-        {/* Desktop top utility bar — hidden on reader pages */}
-        {!shouldHideHeader && (
-          <div
-            className="hidden md:flex items-center justify-between px-6 py-3 shrink-0"
-            style={{
-              background: "white",
-              borderBottom: "1px solid rgba(26,43,94,0.07)",
-            }}
-          >
-            {!isHome && (
-              <button
-                onClick={() => router.back()}
-                className="flex items-center gap-1.5 text-sm font-medium transition-all rounded-lg px-2 py-1.5 hover:bg-gray-100"
-                style={{ color: "#1a2b5e" }}
-              >
-                <ChevronLeft size={16} />
-                Back
-              </button>
-            )}
-            {isHome && <div />}
-
-            <div className="flex items-center gap-3">
-              <button
-                className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition-all"
-                style={{ color: "#64748b" }}
-              >
-                <Bell size={18} />
-              </button>
-              <button
-                onClick={() => router.push("/profile")}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all hover:bg-gray-50"
-                style={{
-                  border: "1px solid rgba(26,43,94,0.12)",
-                  background: pathname === "/profile" ? "rgba(26,43,94,0.05)" : "white",
-                }}
-              >
-                <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-                  style={{ background: "linear-gradient(135deg, #1a2b5e, #2d4080)" }}
-                >
-                  {firstLetter}
-                </div>
-                <span className="text-sm font-medium" style={{ color: "#1a2b5e" }}>
-                  {firstName}
-                </span>
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Scrollable content */}
         <main
           className="flex-1 overflow-hidden"
@@ -466,49 +295,50 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
         {/* Bottom nav — mobile only */}
         <nav
-          className="md:hidden fixed bottom-0 left-0 right-0 z-50"
+          className="pointer-events-none fixed bottom-4 left-0 right-0 z-50 px-5 md:hidden"
           style={{
-            background: "white",
-            borderTop: "1px solid rgba(26,43,94,0.08)",
-            boxShadow: "0 -4px 20px rgba(26,43,94,0.08)",
+            paddingBottom: "env(safe-area-inset-bottom)",
           }}
         >
-          <div className="flex items-center h-16 px-2 max-w-md mx-auto">
-            {NAV_ITEMS.map(({ label, icon: Icon, href }) => {
+          <div
+            className="pointer-events-auto mx-auto flex h-[66px] max-w-[340px] items-center rounded-[28px] border bg-white px-3"
+            style={{
+              borderColor: "#eee6dd",
+              boxShadow: "0 14px 32px rgba(31,27,23,0.12)",
+            }}
+          >
+            {NAV_ITEMS.map(({ label, icon: Icon, href, atlas }) => {
               const isActive = pathname === href || pathname.startsWith(href + "/");
-              const isLive = href === "/live";
               return (
                 <button
                   key={href}
                   onClick={() => router.push(href)}
-                  className="flex-1 flex flex-col items-center justify-center gap-1 py-2 transition-all relative"
+                  className="relative flex h-full flex-1 flex-col items-center justify-center gap-1 rounded-2xl text-[10px] font-medium transition-colors"
+                  style={{ color: isActive ? "#1a2b5e" : "#667084" }}
                 >
-                  {isLive && (
-                    <span
-                      className="absolute top-1.5 right-[calc(50%-14px)] w-1.5 h-1.5 rounded-full"
-                      style={{ background: "#ef4444" }}
+                  {atlas ? (
+                    <Image
+                      src="/atlas-logo.png"
+                      alt=""
+                      width={23}
+                      height={23}
+                      className="h-[23px] w-[23px] object-contain"
+                    />
+                  ) : (
+                    <Icon
+                      style={{
+                        width: 21,
+                        height: 21,
+                        strokeWidth: isActive ? 2.3 : 1.9,
+                        color: "currentColor",
+                      }}
                     />
                   )}
-                  <Icon
-                    style={{
-                      width: 22,
-                      height: 22,
-                      strokeWidth: isActive ? 2.2 : 1.8,
-                      color: isActive ? (isLive ? "#ef4444" : "#1a2b5e") : "#9aa5b1",
-                    }}
-                  />
-                  <span
-                    className="text-[10px] font-semibold"
-                    style={{
-                      color: isActive ? (isLive ? "#ef4444" : "#1a2b5e") : "#9aa5b1",
-                    }}
-                  >
-                    {label}
-                  </span>
+                  <span className="leading-none">{label}</span>
                   {isActive && (
                     <span
-                      className="absolute bottom-1 w-1 h-1 rounded-full"
-                      style={{ background: isLive ? "#ef4444" : "#1a2b5e" }}
+                      className="absolute bottom-2 h-[3px] w-6 rounded-full"
+                      style={{ background: "#1a2b5e" }}
                     />
                   )}
                 </button>

@@ -2,9 +2,9 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Newspaper, Search, ChevronRight, Clock, CheckCircle2, Bookmark } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/providers";
+import PageShell from "@/components/PageShell";
 
 interface NewsItem {
   id: string;
@@ -32,7 +32,10 @@ export default function NewsPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    if (!session?.access_token) return;
+    if (!session?.access_token) {
+      setIsLoading(false);
+      return;
+    }
 
     const fetchNews = async () => {
       try {
@@ -60,31 +63,44 @@ export default function NewsPage() {
   );
 
   if (isLoading) {
-    return <div className="p-8 text-center text-gray-400">Loading your news...</div>;
+    return (
+      <PageShell title="News Feed" subtitle="Stay updated with the latest happenings around the world.">
+        <div className="p-8 text-center" style={{ color: "#6f6b66" }}>
+          Loading your news...
+        </div>
+      </PageShell>
+    );
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 space-y-10 min-h-full">
-      {/* Header & Search */}
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-[#1a2b5e] font-outfit">News Feed</h1>
-          <p className="text-[#64748b]">Stay updated with the latest happenings around the world.</p>
-        </div>
-
-        <div className="flex flex-col md:flex-row gap-4">
+    <PageShell
+      title="News Feed"
+      subtitle="Stay updated with the latest happenings around the world."
+      maxWidth="max-w-[1180px]"
+      action={
+        <button
+          onClick={() => router.push('/news/all-news')}
+          className="rounded-full border px-5 py-2.5 text-[15px] font-medium transition-colors hover:border-black hover:bg-[#fbf7f1] hover:text-black"
+          style={{ borderColor: "#e6d9c9", color: "#1f1b17" }}
+        >
+          Browse All
+        </button>
+      }
+    >
+      <div className="space-y-10">
+        <div className="flex flex-col gap-4 md:flex-row">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9aa5b1]" size={18} />
             <input
               type="text"
               placeholder="Search news..."
-              className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white border border-[#1a2b5e]/10 focus:outline-none focus:ring-2 focus:ring-[#1a2b5e]/20 transition-all shadow-sm"
+              className="w-full rounded-[22px] border bg-white py-3 pl-10 pr-4 transition-all focus:outline-none focus:ring-2 focus:ring-[#c9842f]/20"
+              style={{ borderColor: "#e6d9c9", color: "#1f1b17" }}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
         </div>
-      </div>
 
       {/* Recommended News */}
       <section className="space-y-6">
@@ -100,7 +116,7 @@ export default function NewsPage() {
             <button 
               onClick={() => router.push('/news/all-news')}
               className="text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap"
-              style={{ background: "rgba(26,43,94,0.08)", color: "#1a2b5e" }}
+              style={{ background: "#fbf7f1", color: "#1f1b17" }}
             >
               Browse All
             </button>
@@ -119,10 +135,11 @@ export default function NewsPage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ delay: idx * 0.05 }}
-                    className="group bg-white rounded-2xl sm:rounded-[2rem] overflow-hidden border border-[#1a2b5e]/10 hover:border-[#1a2b5e]/30 transition-all hover:shadow-xl hover:shadow-[#1a2b5e]/5 flex flex-col cursor-pointer"
+                    className="group flex cursor-pointer flex-col overflow-hidden rounded-[22px] border bg-white transition-all hover:-translate-y-0.5 hover:bg-[#fbf7f1]"
+                    style={{ borderColor: "#e6d9c9" }}
                     onClick={() => router.push(`/news/${item.id}`)}
                   >
-                    <div className="bg-[#f8fafc] flex items-center justify-center text-4xl sm:text-6xl h-32 sm:h-48 w-full group-hover:scale-105 transition-transform duration-700 shrink-0 relative">
+                    <div className="bg-[#f7f2ea] flex items-center justify-center text-4xl sm:text-6xl h-32 sm:h-48 w-full group-hover:scale-105 transition-transform duration-700 shrink-0 relative">
                       {item.thumbnail_url ? (
                         <img src={item.thumbnail_url} alt="" className="w-full h-full object-cover" />
                       ) : "🗞️"}
@@ -136,7 +153,7 @@ export default function NewsPage() {
                           Today
                         </span>
                       </div>
-                      <h3 className="font-bold text-[#1a2b5e] text-xs sm:text-base leading-tight group-hover:text-[#2d4080] transition-colors mb-1.5 sm:mb-2 line-clamp-2">
+                      <h3 className="mb-1.5 line-clamp-2 text-xs font-semibold leading-tight transition-colors sm:mb-2 sm:text-base" style={{ color: "#1f1b17", fontFamily: "'Playfair Display', Georgia, serif" }}>
                         {item.title}
                       </h3>
                       <p className="hidden sm:block text-[#64748b] text-xs sm:text-sm mb-4 line-clamp-2">
@@ -184,9 +201,9 @@ export default function NewsPage() {
               <div
                 key={item.news_id}
                 onClick={() => router.push(`/news/${item.news_id}`)}
-                className="p-4 sm:p-6 hover:bg-[#f8fafc] transition-colors flex items-center gap-4 sm:gap-6 group cursor-pointer"
+                className="p-4 sm:p-6 hover:bg-[#fbf7f1] transition-colors flex items-center gap-4 sm:gap-6 group cursor-pointer"
               >
-                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-[#f1f5f9] flex items-center justify-center text-2xl sm:text-3xl shrink-0 overflow-hidden relative">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-[#fbf7f1] flex items-center justify-center text-2xl sm:text-3xl shrink-0 overflow-hidden relative">
                   {item.news_article.thumbnail_url ? (
                     <img src={item.news_article.thumbnail_url} alt="" className="w-full h-full object-cover" />
                   ) : "🗞️"}
@@ -220,7 +237,8 @@ export default function NewsPage() {
           )}
         </div>
       </section>
-    </div>
+      </div>
+    </PageShell>
   );
 }
 

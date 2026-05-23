@@ -37,7 +37,7 @@ export default function RootLayout({
       <body
         className="antialiased"
         style={{
-          background: "#f0f4ff",
+          background: "#f7f2ea",
           color: "#1a2b5e",
           fontFamily: "'Inter', sans-serif",
           colorScheme: "light",

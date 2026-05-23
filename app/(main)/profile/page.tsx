@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/app/providers";
 import { PROFICIENCY_LEVELS, DAILY_GOALS } from "@/lib/data";
+import PageShell from "@/components/PageShell";
 
 const PLAN_FEATURES = [
   "Unlimited AI conversations",
@@ -194,9 +195,10 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div
-      className="max-w-lg mx-auto px-4 py-6 space-y-5 lg:max-w-5xl"
-      style={{ background: "#f0f4ff", colorScheme: "light", minHeight: "100%" }}
+    <PageShell
+      title="Profile Settings"
+      subtitle="Update your learning profile, preferences, and plan."
+      maxWidth="max-w-5xl"
     >
       <div className="lg:grid lg:grid-cols-[2fr_3fr] lg:gap-6 lg:items-start space-y-5 lg:space-y-0">
         {/* Left Column */}
@@ -433,7 +435,7 @@ export default function ProfilePage() {
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full bg-[#f0f4ff] rounded-xl px-4 py-2.5 text-sm font-semibold text-[#1a2b5e] outline-none border border-transparent focus:border-[#1a2b5e]/20 transition-all"
+                  className="w-full bg-[#f7f2ea] rounded-xl px-4 py-2.5 text-sm font-semibold text-[#1a2b5e] outline-none border border-transparent focus:border-[#1a2b5e]/20 transition-all"
                 />
               </div>
 
@@ -501,7 +503,7 @@ export default function ProfilePage() {
                   onChange={(e) =>
                     setArticleFrequency(parseInt(e.target.value))
                   }
-                  className="w-full h-2 bg-[#f0f4ff] rounded-full appearance-none cursor-pointer accent-[#1a2b5e]"
+                  className="w-full h-2 bg-[#f7f2ea] rounded-full appearance-none cursor-pointer accent-[#1a2b5e]"
                 />
               </div>
 
@@ -540,6 +542,6 @@ export default function ProfilePage() {
           </p>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ArrowLeft, Filter, Calendar, Users, Star, PlayCircle } from "lucide-react";
+import { ChevronRight, ArrowLeft, Filter, Calendar, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/providers";
+import PageShell from "@/components/PageShell";
 
 interface SessionData {
   id: string;
@@ -28,7 +29,10 @@ export default function AllSessionsPage() {
   const [topic, setTopic] = useState<string>("");
 
   useEffect(() => {
-    if (!session?.access_token) return;
+    if (!session?.access_token) {
+      setIsLoading(false);
+      return;
+    }
 
     const fetchSessions = async () => {
       setIsLoading(true);
@@ -55,25 +59,21 @@ export default function AllSessionsPage() {
   }, [session, status, topic]);
 
   return (
-    <div
-      className="w-full max-w-6xl mx-auto px-4 md:px-8 py-6 space-y-6"
-      style={{ background: "#f0f4ff", colorScheme: "light", minHeight: "100vh" }}
-    >
-      {/* Header */}
-      <div className="flex items-center gap-4">
+    <PageShell
+      title="Discovery Sessions"
+      subtitle="Browse all upcoming and past live events."
+      maxWidth="max-w-6xl"
+      action={
         <button
           onClick={() => router.back()}
-          className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm hover:shadow-md transition-all text-[#1a2b5e]"
+          className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold shadow-sm transition-all hover:border-black hover:bg-[#fbf7f1]"
+          style={{ color: "#1f1b17", border: "1px solid #e6d9c9" }}
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={16} />
+          Back
         </button>
-        <div>
-          <h1 className="text-2xl font-bold" style={{ fontFamily: "'Outfit', sans-serif", color: "#1a2b5e" }}>
-            Discovery sessions
-          </h1>
-          <p className="text-sm text-[#4a5568]">Browse all upcoming and past live events</p>
-        </div>
-      </div>
+      }
+    >
 
       {/* Filters Container */}
       <div className="flex flex-wrap gap-3 items-center">
@@ -167,7 +167,7 @@ export default function AllSessionsPage() {
                          {new Date(sess.scheduled_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                       </span>
                    </div>
-                   <div className="flex items-center gap-1 px-3 py-1.5 bg-[#f8fafc] rounded-xl group-hover:bg-[#1a2b5e] group-hover:text-white transition-all text-[#1a2b5e]">
+                   <div className="flex items-center gap-1 px-3 py-1.5 bg-[#fbf7f1] rounded-xl group-hover:bg-[#1a2b5e] group-hover:text-white transition-all text-[#1a2b5e]">
                       <span className="text-xs font-bold">Join</span>
                       <ChevronRight size={14} />
                    </div>
@@ -177,6 +177,6 @@ export default function AllSessionsPage() {
           </AnimatePresence>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

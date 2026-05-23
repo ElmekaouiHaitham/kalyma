@@ -111,7 +111,7 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f0f4ff]">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f7f2ea]">
         <div className="w-12 h-12 border-4 border-[#1a2b5e]/10 border-t-[#c9a84c] rounded-full animate-spin mb-4" />
         <p className="text-[#1a2b5e] font-medium">Securing your connection...</p>
       </div>
@@ -142,13 +142,13 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex flex-col">
+    <div className="min-h-screen bg-[#f7f2ea] flex flex-col">
       {/* Header */}
       <header className="h-16 border-b bg-white/80 backdrop-blur-md sticky top-0 z-50 px-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button 
             onClick={() => router.back()} 
-            className="p-2 hover:bg-[#f0f4ff] rounded-lg transition-colors text-[#1a2b5e]"
+            className="p-2 hover:bg-[#f7f2ea] rounded-lg transition-colors text-[#1a2b5e]"
           >
             <ChevronLeft size={20} />
           </button>
@@ -177,7 +177,7 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
            )}
            <button 
             onClick={() => setShowRating(true)}
-            className="hidden md:flex items-center gap-2 px-4 py-2 bg-[#f0f4ff] text-[#1a2b5e] text-xs font-bold rounded-xl border border-[#1a2b5e]/10 hover:bg-[#1a2b5e] hover:text-white transition-all"
+            className="hidden md:flex items-center gap-2 px-4 py-2 bg-[#f7f2ea] text-[#1a2b5e] text-xs font-bold rounded-xl border border-[#1a2b5e]/10 hover:bg-[#1a2b5e] hover:text-white transition-all"
            >
              <Star size={14} /> Rate Session
            </button>
@@ -220,14 +220,14 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
           <div className="p-5 space-y-6">
              {/* Stats */}
              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-[#f8fafc] rounded-2xl border border-[#e2e8f0]">
+                <div className="p-3 bg-[#f7f2ea] rounded-2xl border border-[#e6d9c9]">
                    <p className="text-[10px] font-bold text-[#94a3b8] uppercase mb-1">Duration</p>
                    <div className="flex items-center gap-2">
                       <Clock size={16} className="text-[#1a2b5e]" />
                       <span className="text-sm font-bold text-[#1a2b5e]">{session?.duration_mins}m</span>
                    </div>
                 </div>
-                <div className="p-3 bg-[#f8fafc] rounded-2xl border border-[#e2e8f0]">
+                <div className="p-3 bg-[#f7f2ea] rounded-2xl border border-[#e6d9c9]">
                    <p className="text-[10px] font-bold text-[#94a3b8] uppercase mb-1">Participants</p>
                    <div className="flex items-center gap-2">
                       <Users size={16} className="text-[#1a2b5e]" />
@@ -248,7 +248,7 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
 
              {/* AI Summary (if completed) */}
              {session?.ai_summary && (
-                <div className="p-4 bg-[#f0f4ff] rounded-2xl border border-[#1a2b5e]/5">
+                <div className="p-4 bg-[#f7f2ea] rounded-2xl border border-[#1a2b5e]/5">
                    <h4 className="flex items-center gap-2 text-xs font-bold text-[#1a2b5e] mb-3 uppercase">
                      <CheckCircle2 size={14} className="text-[#34d399]" /> Learning Summary
                    </h4>
@@ -328,7 +328,7 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
                       placeholder="Any thoughts or suggestions? (Optional)"
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
-                      className="w-full h-32 p-4 bg-[#f8fafc] border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2b5e]/10 resize-none mb-6"
+                      className="w-full h-32 p-4 bg-[#f7f2ea] border border-[#e6d9c9] rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1a2b5e]/10 resize-none mb-6"
                     />
 
                     <button

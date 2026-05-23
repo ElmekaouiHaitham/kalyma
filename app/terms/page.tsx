@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 export default function TermsOfService() {
   return (
-    <div className="min-h-screen bg-[#f0f4ff] p-6 lg:p-12 font-outfit">
+    <div className="min-h-screen bg-[#f7f2ea] p-6 lg:p-12 font-outfit">
       <div className="max-w-3xl mx-auto bg-white p-8 lg:p-12 rounded-3xl shadow-xl shadow-[#1a2b5e]/5">
         <Link href="/" className="inline-flex items-center gap-2 text-[#64748b] hover:text-[#1a2b5e] transition-colors mb-8">
           <ArrowLeft size={18} />

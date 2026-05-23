@@ -3,6 +3,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Bell, MessageSquare, Zap, Newspaper, BookOpen, Radio } from "lucide-react";
+import PageShell from "@/components/PageShell";
 
 const NOTIF_SETTINGS = [
   {
@@ -40,21 +41,21 @@ export default function NotificationsPage() {
     setSettings((prev) => ({ ...prev, [id]: !prev[id] }));
 
   return (
-    <div
-      className="max-w-lg mx-auto px-4 py-6 space-y-5"
-      style={{ background: "#f0f4ff", colorScheme: "light", minHeight: "100%" }}
-    >
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <h1
-          className="text-2xl font-bold mb-0.5"
-          style={{ fontFamily: "'Outfit', sans-serif", color: "#1a2b5e" }}
+    <PageShell
+      title="Notifications"
+      subtitle="Control how and when kalyma.ma notifies you."
+      maxWidth="max-w-lg"
+      action={
+        <button
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold shadow-sm transition-all hover:border-black hover:bg-[#fbf7f1]"
+          style={{ color: "#1f1b17", border: "1px solid #e6d9c9" }}
         >
-          Notifications
-        </h1>
-        <p className="text-sm" style={{ color: "#4a5568" }}>
-          Control how and when kalyma.ma notifies you.
-        </p>
-      </motion.div>
+          <ArrowLeft size={16} />
+          Back
+        </button>
+      }
+    >
 
       {NOTIF_SETTINGS.map((section, si) => (
         <motion.div
@@ -135,6 +136,6 @@ export default function NotificationsPage() {
       >
         Notification preferences are saved automatically
       </motion.p>
-    </div>
+    </PageShell>
   );
 }

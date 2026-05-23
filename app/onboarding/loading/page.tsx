@@ -41,7 +41,7 @@ export default function LoadingPage() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center bg-[#f0f4ff]"
+      className="min-h-screen flex flex-col items-center justify-center bg-[#f7f2ea]"
     >
       {/* Background glow */}
       <div className="fixed inset-0 flex items-center justify-center pointer-events-none">

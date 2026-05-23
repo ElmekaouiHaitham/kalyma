@@ -14,10 +14,10 @@
   --gold-dark: #a8882e;
 
   /* Backgrounds */
-  --bg-base: #f0f4ff;
+  --bg-base: #f7f2ea;
   --bg-surface: #ffffff;
   --bg-card: #ffffff;
-  --bg-card-hover: #f5f8ff;
+  --bg-card-hover: #f7f2ea;
   --bg-subtle: #eef2fc;
 
   /* Text */
@@ -50,7 +50,7 @@ html {
 }
 
 body {
-  background-color: #f0f4ff !important;
+  background-color: #f7f2ea !important;
   color: #1a2b5e !important;
   font-family: "Inter", "Outfit", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -188,7 +188,7 @@ body {
 
 /* Input styles */
 .input-field {
-  background: #f8faff;
+  background: #f7f2ea;
   border: 1.5px solid var(--border-medium);
   border-radius: 0.75rem;
   color: var(--text-primary);
@@ -205,7 +205,7 @@ body {
 
 /* Keep old name for compat */
 .input-dark {
-  background: #f8faff;
+  background: #f7f2ea;
   border: 1.5px solid var(--border-medium);
   border-radius: 0.75rem;
   color: var(--text-primary);

@@ -3,16 +3,13 @@ import { motion } from "framer-motion";
 import { 
   ChevronRight, 
   CheckCircle2, 
-  Search, 
-  Mic, 
   Award, 
   BookOpen, 
   Newspaper,
   MessageSquare,
-  Sparkles,
-  Users,
   Flame,
-  Zap
+  Zap,
+  CircleUserRound
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -25,10 +22,15 @@ function SectionHeader({ title, href }: { title: string; href: string }) {
   const router = useRouter();
   return (
     <div className="flex items-center justify-between mb-4 px-1">
-      <h2 className="text-lg font-bold text-[#1a2b5e]">{title}</h2>
+      <h2
+        className="text-[24px] font-semibold text-[#1a2b5e]"
+        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+      >
+        {title}
+      </h2>
       <button 
         onClick={() => router.push(href)}
-        className="text-xs font-semibold text-[#9aa5b1] flex items-center gap-0.5 hover:text-[#1a2b5e] transition-colors"
+        className="flex items-center gap-0.5 rounded-full px-3 py-1.5 text-xs font-semibold text-[#8b94a7] transition-colors hover:bg-[#f7f2ea] hover:text-black"
       >
         View All <ChevronRight size={14} />
       </button>
@@ -84,7 +86,7 @@ function ProgressCircle({ percent }: { percent: number }) {
 function DashboardCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div 
-      className={`bg-white rounded-[2rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-[rgba(26,43,94,0.05)] ${className}`}
+      className={`bg-white rounded-[24px] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.035)] border border-[rgba(26,43,94,0.05)] ${className}`}
     >
       {children}
     </div>
@@ -114,7 +116,7 @@ function PracticeCard({
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => router.push(href)}
-      className="relative w-full aspect-[1.6/1] rounded-3xl overflow-hidden text-left p-4 flex flex-col justify-between"
+      className="relative w-full aspect-[1.85/1] rounded-[24px] overflow-hidden text-left p-4 flex flex-col justify-between"
       style={{ background: gradient }}
     >
       <div className="flex justify-between items-start">
@@ -124,7 +126,7 @@ function PracticeCard({
       </div>
       
       <div className="z-10">
-        <h3 className="text-white font-bold text-lg leading-tight mb-1">{title}</h3>
+        <h3 className="text-white font-bold text-base leading-tight mb-1">{title}</h3>
         <p className="text-white/80 text-[11px] leading-tight max-w-[140px]">{subtitle}</p>
       </div>
 
@@ -146,56 +148,17 @@ function PracticeCard({
   );
 }
 
-function LearnCard({ 
-  icon: Icon, 
-  title, 
-  subtitle, 
-  xp, 
-  href 
-}: { 
-  icon: any; 
-  title: string; 
-  subtitle: string; 
-  xp: number; 
-  href: string;
-}) {
-  const router = useRouter();
-  return (
-    <motion.button
-      whileHover={{ y: -4 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={() => router.push(href)}
-      className="w-full bg-white rounded-3xl p-4 border border-[rgba(26,43,94,0.05)] shadow-sm text-left flex flex-col justify-between"
-    >
-      <div className="flex gap-3 items-start mb-2">
-        <div className="w-10 h-10 rounded-2xl bg-[#f0f4ff] flex items-center justify-center text-[#1a2b5e] shrink-0">
-          <Icon size={20} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-[#1a2b5e] font-bold text-[13px] leading-tight mb-0.5">{title}</h3>
-          <p className="text-[#9aa5b1] text-[10px] leading-relaxed line-clamp-2">{subtitle}</p>
-        </div>
-        <ChevronRight size={16} className="text-[#9aa5b1] shrink-0 mt-1" />
-      </div>
-
-      <div className="flex items-center justify-between mt-1">
-        <span className="text-[#c9a84c] text-[11px] font-bold">+{xp} XP</span>
-        <div className="flex gap-1">
-          {[1,2,3,4].map((i) => (
-            <div key={i} className={`w-1.5 h-1.5 rounded-full ${i === 1 ? "bg-[#1a2b5e]" : "bg-[rgba(26,43,94,0.1)]"}`} />
-          ))}
-        </div>
-      </div>
-    </motion.button>
-  );
-}
+type XpHistoryEntry = {
+  reason: string;
+  created_at: string;
+};
 
 // ── Main Content ────────────────────────────────────────────────────────────
 
 export default function HomePage() {
   const router = useRouter();
   const { user, session } = useAuth();
-  const [xpHistory, setXpHistory] = useState<any[]>([]);
+  const [xpHistory, setXpHistory] = useState<XpHistoryEntry[]>([]);
 
   useEffect(() => {
     if (session) {
@@ -209,17 +172,6 @@ export default function HomePage() {
       .catch(err => console.error(err));
     }
   }, [session]);
-
-  const difficultyMap: Record<string, string> = {
-    beginner: "A1/A2 — Beginner",
-    intermediate: "B1 — Intermediate",
-    upper_intermediate: "B2 — Upper-Int",
-    advanced: "C1/C2 — Advanced"
-  };
-
-  const levelStr = user?.preferences?.difficulty_pref 
-     ? difficultyMap[user.preferences.difficulty_pref] || "Level not set"
-     : "Level not set";
 
   const firstName = user?.full_name ? user.full_name.split(' ')[0] : 'Learner';
 
@@ -254,40 +206,36 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-full w-full bg-[#f8faff] pb-12 overflow-x-hidden">
-      <div className="max-w-xl mx-auto px-5 pt-8">
+    <div className="relative min-h-full w-full overflow-x-hidden bg-[#f7f2ea] pb-12">
+      <button
+        onClick={() => router.push("/profile")}
+        aria-label="Open profile settings"
+        className="absolute right-5 top-5 z-10 flex h-11 w-11 items-center justify-center rounded-full border bg-white text-sm font-semibold shadow-sm md:hidden"
+        style={{ borderColor: "#eee6dd", color: "#1a2b5e" }}
+      >
+        <CircleUserRound size={22} />
+      </button>
+
+      <div className="mx-auto max-w-[1040px] px-6 pt-16 md:pt-12 lg:px-8">
         
         {/* ── HEADER ────────────────────────────────────────── */}
-        <div className="flex flex-col items-center text-center mb-8">
-          <div className="flex items-center gap-2 mb-2">
-            <Image src="/logo.png" alt="kalyma.ma" width={42} height={42} className="object-contain" />
-            <div className="text-left">
-              <div className="text-2xl font-black text-[#1a2b5e] leading-none" style={{ fontFamily: "'Outfit', sans-serif" }}>
-                kalyma<span className="text-[#c9a84c]">.ma</span>
-              </div>
-              <div className="text-[10px] text-[#9aa5b1] font-medium tracking-wide">Speak with confidence</div>
-            </div>
-          </div>
-          
-          <h1 className="text-2xl font-bold text-[#1a2b5e] mt-4 mb-1">
+        <div className="mb-9 flex flex-col items-center text-center">
+          <h1 className="text-[34px] font-semibold text-[#1a2b5e] mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
             Hello <span className="font-black">{firstName}!</span> 👋🏼
           </h1>
-          <p className="text-[#4a5568] text-sm font-semibold mb-2">
-            {levelStr}
-          </p>
-          <p className="text-[#4a5568] text-sm opacity-80">
+          <p className="text-[#667084] text-[22px] opacity-95">
             Ready to speak English with confidence?
           </p>
         </div>
 
         {/* ── DASHBOARD ─────────────────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-10">
           
           {/* Progress Card */}
           <DashboardCard className="flex flex-col">
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
-                <h3 className="text-[#1a2b5e] font-bold text-sm mb-4">Progress</h3>
+                <h3 className="text-[#1a2b5e] font-bold text-sm mb-3">Progress</h3>
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5">
                     <Flame size={16} className="text-[#c9a84c]" />
@@ -300,14 +248,16 @@ export default function HomePage() {
                   </div>
                 </div>
               </div>
-              <ProgressCircle percent={progressPercent} />
+              <div className="scale-90 origin-top-right">
+                <ProgressCircle percent={progressPercent} />
+              </div>
             </div>
             
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => router.push("/chat")}
-              className="w-full bg-[#1a2b5e] py-3.5 rounded-2xl text-white text-sm font-bold shadow-[0_8px_20px_rgba(26,43,94,0.25)] mt-auto"
+              className="w-full bg-[#1a2b5e] py-3 rounded-2xl text-white text-sm font-bold shadow-[0_8px_20px_rgba(26,43,94,0.2)] mt-auto"
               style={{ background: "linear-gradient(135deg, #1a2b5e, #2d4080)" }}
             >
               Continue Learning
@@ -326,7 +276,7 @@ export default function HomePage() {
                 <button
                   key={i}
                   onClick={() => router.push(item.href)}
-                  className="w-full flex items-center gap-3 text-left transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full flex items-center gap-3 rounded-2xl text-left transition-colors hover:bg-[#f7f2ea] active:scale-[0.99]"
                 >
                   <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${item.done ? "bg-[#f0fdf4]" : "bg-[#f0fafb]"}`}>
                     <item.icon size={18} className={item.done ? "text-[#10b981]" : "text-[#1a2b5e]"} />
@@ -350,14 +300,14 @@ export default function HomePage() {
 
         <div className="mb-10">
           <SectionHeader title="Practice" href="/chat" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
              <PracticeCard 
                title="Atlas AI"
                subtitle="Practice English conversation with AI Coach"
                xp={20}
                badge="AI"
                gradient="linear-gradient(135deg, #1a2b5e, #33599e)"
-               imageUrl="/ai_badge.png" // We'll assume these assets exist or use generic ones
+               imageUrl="/atlas-ai-card.svg"
                href="/chat"
              />
              <PracticeCard 
@@ -366,7 +316,7 @@ export default function HomePage() {
                xp={30}
                badge="LIVE"
                gradient="linear-gradient(135deg, #a78bfa, #c4b5fd)"
-               imageUrl="/live_teacher.png"
+               imageUrl="/live-session-card.svg"
                href="/live"
              />
           </div>

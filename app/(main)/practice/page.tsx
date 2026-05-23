@@ -2,13 +2,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Sparkles,
   RotateCcw,
   Check,
-  X,
   ChevronRight,
-  Trophy,
-  History,
   Info,
   BrainCircuit,
   Plus,
@@ -16,10 +12,22 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/app/providers";
 import SaveWordModal from "@/components/SaveWordModal";
+import PageShell from "@/components/PageShell";
+
+type ReviewDeckItem = {
+  card: { id: string };
+  item: {
+    type: string;
+    content: string;
+    translation?: string;
+    context?: string;
+    source_type: string;
+  };
+};
 
 export default function PracticePage() {
   const { session } = useAuth();
-  const [deck, setDeck] = useState<any[]>([]);
+  const [deck, setDeck] = useState<ReviewDeckItem[]>([]);
   const [stats, setStats] = useState({ total_saved: 0, due_today: 0 });
   const [loading, setLoading] = useState(true);
 
@@ -30,7 +38,10 @@ export default function PracticePage() {
   const [saveModalOpen, setSaveModalOpen] = useState(false);
 
   const fetchDueCards = async () => {
-    if (!session?.access_token) return;
+    if (!session?.access_token) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const headers = { Authorization: `Bearer ${session.access_token}` };
@@ -85,21 +96,24 @@ export default function PracticePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500">
-        Loading your deck...
-      </div>
+      <PageShell title="Practice" subtitle="Review saved words with spaced repetition." maxWidth="max-w-2xl">
+        <div className="flex items-center justify-center py-16 text-gray-500">
+          Loading your deck...
+        </div>
+      </PageShell>
     );
   }
 
   if (deck.length === 0 && !sessionComplete) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-full p-6 text-center space-y-8 max-w-lg mx-auto">
+      <PageShell title="Practice" subtitle="Review saved words with spaced repetition." maxWidth="max-w-2xl">
+      <div className="flex flex-col items-center justify-center p-6 text-center space-y-8">
         <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mb-4">
           <Check className="w-12 h-12 text-green-500" />
         </div>
         <div className="space-y-2">
           <h1 className="text-3xl font-bold text-[#1a2b5e] font-outfit">
-            You're all caught up!
+            You&apos;re all caught up!
           </h1>
           <p className="text-[#64748b]">
             There are no cards due for review right now. Add more vocabulary
@@ -128,12 +142,14 @@ export default function PracticePage() {
           onClose={() => setSaveModalOpen(false)}
         />
       </div>
+      </PageShell>
     );
   }
 
   if (sessionComplete) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-full p-6 text-center space-y-8 max-w-2xl mx-auto">
+      <PageShell title="Practice" subtitle="Review saved words with spaced repetition." maxWidth="max-w-2xl">
+      <div className="flex flex-col items-center justify-center p-6 text-center space-y-8">
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -147,7 +163,7 @@ export default function PracticePage() {
             Session Complete!
           </h1>
           <p className="text-[#64748b]">
-            You've mastered {deck.length} cards today. Your memory is
+            You&apos;ve mastered {deck.length} cards today. Your memory is
             getting stronger!
           </p>
         </div>
@@ -209,11 +225,13 @@ export default function PracticePage() {
           Return to Dashboard
         </button>
       </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="flex flex-col items-center max-w-2xl mx-auto px-4 py-8 h-full space-y-8">
+    <PageShell title="Practice" subtitle="Review saved words with spaced repetition." maxWidth="max-w-2xl">
+    <div className="flex flex-col items-center space-y-8">
       {/* Header & Progress */}
       <div className="w-full space-y-6">
         <div className="flex items-center justify-between">
@@ -241,7 +259,7 @@ export default function PracticePage() {
             </div>
             <button
               onClick={() => setSaveModalOpen(true)}
-              className="w-10 h-10 rounded-xl bg-[#f0f4ff] flex items-center justify-center text-[#1a2b5e] hover:bg-[#e0e7ff] transition-colors"
+              className="w-10 h-10 rounded-xl bg-[#f7f2ea] flex items-center justify-center text-[#1a2b5e] hover:bg-[#fbf7f1] transition-colors"
               title="Add New Card"
             >
               <Plus size={20} />
@@ -283,7 +301,7 @@ export default function PracticePage() {
                   </h2>
                 </div>
                 <div className="mt-4 flex flex-col items-center gap-2">
-                  <div className="w-10 h-10 rounded-full bg-[#f0f4ff] flex items-center justify-center text-[#1a2b5e] animate-bounce">
+                  <div className="w-10 h-10 rounded-full bg-[#f7f2ea] flex items-center justify-center text-[#1a2b5e] animate-bounce">
                     <ChevronRight size={20} className="rotate-90" />
                   </div>
                   <p className="text-xs font-bold text-[#9aa5b1] uppercase tracking-widest">
@@ -303,12 +321,12 @@ export default function PracticePage() {
                 </div>
 
                 {currentCard.item.context && (
-                  <div className="bg-[#f8faff] p-5 sm:p-7 rounded-2xl sm:rounded-3xl border border-[#1a2b5e]/5 relative">
+                  <div className="bg-[#f7f2ea] p-5 sm:p-7 rounded-2xl sm:rounded-3xl border border-[#1a2b5e]/5 relative">
                     <div className="absolute -top-3 left-6 px-3 py-1 bg-white border border-[#1a2b5e]/5 rounded-lg text-[10px] font-bold text-[#1a2b5e] uppercase tracking-wider">
                       Context
                     </div>
                     <p className="italic text-[#4a5568] text-sm sm:text-base leading-relaxed">
-                      "{currentCard.item.context}"
+                      &quot;{currentCard.item.context}&quot;
                     </p>
                   </div>
                 )}
@@ -379,7 +397,7 @@ export default function PracticePage() {
               ].map((btn) => (
                 <button
                   key={btn.type}
-                  onClick={() => handleResponse(btn.type as any, btn.rating)}
+                  onClick={() => handleResponse(btn.type as keyof typeof scores, btn.rating)}
                   className="flex flex-col items-center gap-2 group/btn"
                 >
                   <div
@@ -414,5 +432,6 @@ export default function PracticePage() {
         onClose={() => setSaveModalOpen(false)}
       />
     </div>
+    </PageShell>
   );
 }

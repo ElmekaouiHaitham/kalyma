@@ -173,7 +173,7 @@ export default function SaveWordModal({
                     placeholder="e.g. Ephemeral"
                     className="w-full px-4 py-3 rounded-xl text-sm outline-none"
                     style={{
-                      background: "#f5f8ff",
+                      background: "#f7f2ea",
                       border: "1.5px solid rgba(26,43,94,0.12)",
                       color: "#1a2b5e",
                     }}
@@ -195,7 +195,7 @@ export default function SaveWordModal({
                     rows={3}
                     className="w-full px-4 py-3 rounded-xl text-sm outline-none resize-none"
                     style={{
-                      background: "#f5f8ff",
+                      background: "#f7f2ea",
                       border: "1.5px solid rgba(26,43,94,0.12)",
                       color: "#1a2b5e",
                     }}

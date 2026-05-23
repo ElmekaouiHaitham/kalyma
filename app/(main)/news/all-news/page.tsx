@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Search, ChevronRight, Clock, ArrowLeft, Bookmark } from "lucide-react";
+import { motion } from "framer-motion";
+import { ChevronRight, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/providers";
+import PageShell from "@/components/PageShell";
 
 interface NewsItem {
   id: string;
@@ -26,7 +27,10 @@ export default function AllNewsPage() {
   const [topic, setTopic] = useState<string>("");
 
   useEffect(() => {
-    if (!session?.access_token) return;
+    if (!session?.access_token) {
+      setIsLoading(false);
+      return;
+    }
 
     const fetchNews = async () => {
       setIsLoading(true);
@@ -52,23 +56,21 @@ export default function AllNewsPage() {
   }, [session, topic]);
 
   return (
-    <div
-      className="max-w-5xl mx-auto px-4 py-8 space-y-10 min-h-screen"
-      style={{ background: "#f8fafc", colorScheme: "light" }}
-    >
-      {/* Header */}
-      <div className="flex items-center gap-4">
+    <PageShell
+      title="Today's Latest News"
+      subtitle="All news from the last 30 hours."
+      maxWidth="max-w-5xl"
+      action={
         <button
           onClick={() => router.back()}
-          className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm border border-[#1a2b5e]/10"
+          className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold shadow-sm transition-all hover:border-black hover:bg-[#fbf7f1]"
+          style={{ color: "#1f1b17", border: "1px solid #e6d9c9" }}
         >
-          <ArrowLeft size={20} className="text-[#1a2b5e]" />
+          <ArrowLeft size={16} />
+          Back
         </button>
-        <div>
-          <h1 className="text-2xl font-bold text-[#1a2b5e]" style={{ fontFamily: "'Outfit', sans-serif" }}>Today's Latest News</h1>
-          <p className="text-sm text-[#64748b]">All news from the last 30 hours</p>
-        </div>
-      </div>
+      }
+    >
 
       {/* Filters */}
       <div className="flex gap-2 mb-4 overflow-x-auto pb-2 no-scrollbar">
@@ -105,9 +107,10 @@ export default function AllNewsPage() {
               onClick={() => router.push(`/news/${item.id}`)}
               className="group bg-white rounded-[2rem] overflow-hidden border border-[#1a2b5e]/10 hover:border-[#1a2b5e]/30 transition-all hover:shadow-lg flex items-center p-4 gap-4 cursor-pointer"
             >
-              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl bg-[#f1f5f9] flex items-center justify-center text-4xl shrink-0 overflow-hidden relative">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl bg-[#fbf7f1] flex items-center justify-center text-4xl shrink-0 overflow-hidden relative">
                 {item.thumbnail_url ? (
-                  <img src={item.thumbnail_url} alt="" className="w-full h-full object-cover" />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={item.thumbnail_url} alt="" className="h-full w-full object-cover" />
                 ) : "🗞️"}
               </div>
               <div className="flex-1 min-w-0">
@@ -133,6 +136,6 @@ export default function AllNewsPage() {
           ))}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
