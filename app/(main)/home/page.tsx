@@ -33,11 +33,36 @@ type HomeCardProps = {
 };
 
 const toneMap = {
-  atlas: { bg: "#ffffff", iconBg: "#ffffff", icon: "#111111", border: "#1f1b17" },
-  purple: { bg: "#f3edff", iconBg: "#f6f0ff", icon: "#7c3cff", border: "#1f1b17" },
-  orange: { bg: "#fff2eb", iconBg: "#fff3ed", icon: "#df4b14", border: "#1f1b17" },
-  green: { bg: "#ebfff3", iconBg: "#effff7", icon: "#119a53", border: "#1f1b17" },
-  blue: { bg: "#eefaff", iconBg: "#effbff", icon: "#0b7bb2", border: "#1f1b17" },
+  atlas: {
+    bg: "#ffffff",
+    iconBg: "#ffffff",
+    icon: "#111111",
+    border: "#1f1b17",
+  },
+  purple: {
+    bg: "#f3edff",
+    iconBg: "#f6f0ff",
+    icon: "#7c3cff",
+    border: "#1f1b17",
+  },
+  orange: {
+    bg: "#fff2eb",
+    iconBg: "#fff3ed",
+    icon: "#df4b14",
+    border: "#1f1b17",
+  },
+  green: {
+    bg: "#ebfff3",
+    iconBg: "#effff7",
+    icon: "#119a53",
+    border: "#1f1b17",
+  },
+  blue: {
+    bg: "#eefaff",
+    iconBg: "#effbff",
+    icon: "#0b7bb2",
+    border: "#1f1b17",
+  },
 };
 
 function SectionHeader({
@@ -90,12 +115,21 @@ function ProgressRing({ percent }: { percent: number }) {
           strokeLinecap="round"
         />
       </svg>
-      <span className="absolute text-[10px] font-bold text-[#162056] sm:text-xs">{percent}%</span>
+      <span className="absolute text-[10px] font-bold text-[#162056] sm:text-xs">
+        {percent}%
+      </span>
     </div>
   );
 }
 
-function HomeCard({ title, subtitle, href, icon: Icon, tone, active }: HomeCardProps) {
+function HomeCard({
+  title,
+  subtitle,
+  href,
+  icon: Icon,
+  tone,
+  active,
+}: HomeCardProps) {
   const router = useRouter();
   const colors = toneMap[tone];
 
@@ -106,16 +140,30 @@ function HomeCard({ title, subtitle, href, icon: Icon, tone, active }: HomeCardP
       onClick={() => router.push(href)}
       className="flex min-h-[134px] flex-col items-start rounded-[14px] bg-white p-4 text-left shadow-sm transition-all sm:min-h-[170px] sm:rounded-[18px] sm:p-6"
       style={{
-        border: active ? "1.5px solid #9fa8bf" : "1px solid rgba(230,217,201,0.7)",
-        boxShadow: active ? "0 2px 0 rgba(22,32,86,0.16)" : "0 1px 0 rgba(22,32,86,0.02)",
+        border: active
+          ? "1.5px solid #9fa8bf"
+          : "1px solid rgba(230,217,201,0.7)",
+        boxShadow: active
+          ? "0 2px 0 rgba(22,32,86,0.16)"
+          : "0 1px 0 rgba(22,32,86,0.02)",
       }}
     >
       <div
         className="mb-auto flex h-12 w-12 items-center justify-center rounded-full border-2 sm:h-16 sm:w-16"
-        style={{ background: colors.iconBg, borderColor: colors.border, color: colors.icon }}
+        style={{
+          background: colors.iconBg,
+          borderColor: colors.border,
+          color: colors.icon,
+        }}
       >
         {tone === "atlas" ? (
-          <Image src="/atlas-logo.png" alt="" width={42} height={42} className="h-10 w-10 rounded-full object-cover sm:h-12 sm:w-12" />
+          <Image
+            src="/atlas-logo.png"
+            alt=""
+            width={42}
+            height={42}
+            className="h-10 w-10 rounded-full object-cover sm:h-12 sm:w-12"
+          />
         ) : (
           <Icon size={22} strokeWidth={2.1} />
         )}
@@ -172,40 +220,52 @@ export default function HomePage() {
   };
 
   const articleReadsThisWeek = xpHistory.filter(
-    (h) => h.reason === "article_completed" && isThisWeek(h.created_at)
+    (h) => h.reason === "article_completed" && isThisWeek(h.created_at),
   ).length;
   const targetFreq = user?.preferences?.article_frequency || 2;
   const progressPercent = Math.min(
     100,
-    Math.round((articleReadsThisWeek / Math.max(targetFreq, 1)) * 100)
+    Math.round((articleReadsThisWeek / Math.max(targetFreq, 1)) * 100),
   );
 
   const hasArticleToday = xpHistory.some(
-    (h) => h.reason === "article_completed" && isToday(h.created_at)
+    (h) => h.reason === "article_completed" && isToday(h.created_at),
   );
   const hasReviewToday = xpHistory.some(
-    (h) => h.reason === "review_session" && isToday(h.created_at)
+    (h) => h.reason === "review_session" && isToday(h.created_at),
   );
-  const hasNewsToday = xpHistory.some((h) => h.reason === "news_read" && isToday(h.created_at));
+  const hasNewsToday = xpHistory.some(
+    (h) => h.reason === "news_read" && isToday(h.created_at),
+  );
 
   const feedItems = [
-    { icon: BookOpen, label: "Read an Article", xp: 10, done: hasArticleToday, href: "/articles" },
-    { icon: MessageSquare, label: "Review Session", xp: 10, done: hasReviewToday, href: "/practice" },
-    { icon: Newspaper, label: "Read News", xp: 10, done: hasNewsToday, href: "/news" },
+    {
+      icon: BookOpen,
+      label: "Read an Article",
+      xp: 10,
+      done: hasArticleToday,
+      href: "/articles",
+    },
+    {
+      icon: MessageSquare,
+      label: "Review Session",
+      xp: 10,
+      done: hasReviewToday,
+      href: "/practice",
+    },
+    {
+      icon: Newspaper,
+      label: "Read News",
+      xp: 10,
+      done: hasNewsToday,
+      href: "/news",
+    },
   ];
 
   return (
     <div className="min-h-screen bg-[#f3f4fb] pb-[112px] text-[#162056] md:pb-14">
       <div className="mx-auto w-full max-w-[1080px] px-6 pt-5 sm:px-8 md:pt-10">
-        <header className="relative mb-6 flex min-h-[84px] items-center justify-center md:mb-8">
-          <Image
-            src="/logo with word.webp"
-            alt="kalyma.ma"
-            width={188}
-            height={76}
-            priority
-            className="h-auto w-[152px] sm:w-[190px]"
-          />
+        <header className="relative mb-6 flex min-h-[84px] items-center justify-center md:mb-8 md:hidden">
           <button
             onClick={() => router.push("/profile")}
             aria-label="Open profile settings"
@@ -237,7 +297,8 @@ export default function HomePage() {
                   Today&apos;s progress
                 </h2>
                 <p className="mt-1 text-[12px] font-semibold text-[#667084] sm:text-base">
-                  {feedItems.filter((item) => item.done).length} of {feedItems.length} tasks -{" "}
+                  {feedItems.filter((item) => item.done).length} of{" "}
+                  {feedItems.length} tasks -{" "}
                   <span className="text-[#c9842f]">30 XP</span>
                 </p>
               </div>
