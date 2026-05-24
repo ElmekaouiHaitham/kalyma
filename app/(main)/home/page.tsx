@@ -1,185 +1,84 @@
 "use client";
 
-import { motion } from "framer-motion";
-import {
-  Award,
-  BookOpen,
-  Bot,
-  ChevronRight,
-  CheckCircle2,
-  CircleUserRound,
-  MessageSquare,
-  Newspaper,
-  Radio,
-  Repeat2,
-} from "lucide-react";
-import Image from "next/image";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/providers";
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import {
+  Check,
+  Search,
+  Mic,
+  BookOpen,
+  Bookmark,
+  ChevronRight,
+  Radio,
+  Brain,
+  Microscope,
+  Headphones,
+  CircleUserRound,
+  Newspaper,
+} from "lucide-react";
 
 type XpHistoryEntry = {
   reason: string;
   created_at: string;
 };
 
-type HomeCardProps = {
-  title: string;
-  subtitle: string;
-  href: string;
-  icon: React.ElementType;
-  tone: "atlas" | "purple" | "orange" | "green" | "blue";
-  active?: boolean;
-};
+const SectionHeader = ({ title, onView, viewLabel = "View all" }: { title: string; onView?: () => void; viewLabel?: string }) => (
+  <div className="flex items-center justify-between px-1">
+    <h2 className="text-[18px] font-semibold text-[#1a2b5e] tracking-tight" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>{title}</h2>
+    {onView && (
+      <button onClick={onView} className="cursor-pointer text-[13px] text-[#667084] hover:text-[#1a2b5e] inline-flex items-center gap-0.5 transition-colors active:scale-[0.98]">
+        {viewLabel} <ChevronRight className="h-3.5 w-3.5" />
+      </button>
+    )}
+  </div>
+);
 
-const toneMap = {
-  atlas: {
-    bg: "#ffffff",
-    iconBg: "#ffffff",
-    icon: "#111111",
-    border: "#1f1b17",
-  },
-  purple: {
-    bg: "#f3edff",
-    iconBg: "#f6f0ff",
-    icon: "#7c3cff",
-    border: "#1f1b17",
-  },
-  orange: {
-    bg: "#fff2eb",
-    iconBg: "#fff3ed",
-    icon: "#df4b14",
-    border: "#1f1b17",
-  },
-  green: {
-    bg: "#ebfff3",
-    iconBg: "#effff7",
-    icon: "#119a53",
-    border: "#1f1b17",
-  },
-  blue: {
-    bg: "#eefaff",
-    iconBg: "#effbff",
-    icon: "#0b7bb2",
-    border: "#1f1b17",
-  },
-};
-
-function SectionHeader({
-  title,
-  action,
-}: {
-  title: string;
-  action?: React.ReactNode;
-}) {
-  return (
-    <div className="mb-4 flex items-center justify-between px-1">
-      <h2
-        className="text-[18px] font-semibold leading-tight text-[#162056] sm:text-[24px]"
-        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-      >
-        {title}
-      </h2>
-      {action}
-    </div>
-  );
-}
-
-function ProgressRing({ percent }: { percent: number }) {
-  const radius = 28;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (percent / 100) * circumference;
-
-  return (
-    <div className="relative flex h-[68px] w-[68px] shrink-0 items-center justify-center sm:h-20 sm:w-20">
-      <svg className="h-full w-full -rotate-90">
-        <circle
-          cx="50%"
-          cy="50%"
-          r={radius}
-          fill="transparent"
-          stroke="#f0ebe4"
-          strokeWidth="5"
-        />
-        <motion.circle
-          initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-          cx="50%"
-          cy="50%"
-          r={radius}
-          fill="transparent"
-          stroke="#c9842f"
-          strokeWidth="5"
-          strokeDasharray={circumference}
-          strokeLinecap="round"
-        />
-      </svg>
-      <span className="absolute text-[10px] font-bold text-[#162056] sm:text-xs">
-        {percent}%
+const FeedRow = ({
+  done = false, icon, label, xp, onClick,
+}: { done?: boolean; icon: React.ReactNode; label: string; xp: number; onClick?: () => void }) => (
+  <li>
+    <button
+      onClick={onClick}
+      className="cursor-pointer w-full flex items-center justify-between py-1.5 px-1 hover:bg-[#eef2fc]/40 rounded-lg transition-colors active:scale-[0.98]"
+    >
+      <span className="flex items-center gap-2.5 min-w-0">
+        <span className={`h-5 w-5 rounded-full grid place-items-center shrink-0 ${
+          done ? "bg-[#10b981]/15 text-[#10b981]" : "bg-[#eef2fc] text-[#667084]"
+        }`}>
+          {icon}
+        </span>
+        <span className={`text-[12px] truncate ${done ? "text-[#667084] line-through" : "text-[#1a2b5e]"}`}>{label}</span>
       </span>
-    </div>
-  );
-}
+      <span className="text-[11px] font-semibold text-[#c9842f] shrink-0">+{xp} XP</span>
+    </button>
+  </li>
+);
 
-function HomeCard({
-  title,
-  subtitle,
-  href,
-  icon: Icon,
-  tone,
-  active,
-}: HomeCardProps) {
-  const router = useRouter();
-  const colors = toneMap[tone];
-
-  return (
-    <motion.button
-      whileHover={{ y: -3 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={() => router.push(href)}
-      className="flex min-h-[134px] flex-col items-start rounded-[14px] bg-white p-4 text-left shadow-sm transition-all sm:min-h-[170px] sm:rounded-[18px] sm:p-6"
+const SimpleCard = ({
+  icon, title, subtitle, onClick, iconColor, isAtlas,
+}: { icon: React.ReactNode; title: string; subtitle: string; onClick?: () => void; iconColor?: string; isAtlas?: boolean }) => (
+  <button
+    onClick={onClick}
+    className="text-left cursor-pointer rounded-[20px] bg-white border-2 border-[rgba(26,43,94,0.08)] p-4 min-h-[140px] flex flex-col justify-between hover:border-[#aeb5c9] active:scale-[0.98] transition-all duration-200"
+    style={{ boxShadow: "0 2px 12px rgba(26, 43, 94, 0.02)" }}
+  >
+    <div
+      className="h-11 w-11 rounded-full grid place-items-center overflow-hidden shrink-0"
       style={{
-        border: active
-          ? "1.5px solid #9fa8bf"
-          : "1px solid rgba(230,217,201,0.7)",
-        boxShadow: active
-          ? "0 2px 0 rgba(22,32,86,0.16)"
-          : "0 1px 0 rgba(22,32,86,0.02)",
+        border: isAtlas ? "none" : `1.5px solid #111827`,
+        backgroundColor: iconColor ? `${iconColor}1A` : "transparent",
       }}
     >
-      <div
-        className="mb-auto flex h-12 w-12 items-center justify-center rounded-full border-2 sm:h-16 sm:w-16"
-        style={{
-          background: colors.iconBg,
-          borderColor: colors.border,
-          color: colors.icon,
-        }}
-      >
-        {tone === "atlas" ? (
-          <Image
-            src="/atlas-logo.png"
-            alt=""
-            width={42}
-            height={42}
-            className="h-10 w-10 rounded-full object-cover sm:h-12 sm:w-12"
-          />
-        ) : (
-          <Icon size={22} strokeWidth={2.1} />
-        )}
-      </div>
-      <h3
-        className="mt-7 text-[13px] font-semibold leading-tight text-[#171225] sm:text-[18px]"
-        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-      >
-        {title}
-      </h3>
-      <p className="mt-1 text-[11px] font-medium leading-snug text-[#667084] sm:text-[15px]">
-        {subtitle}
-      </p>
-    </motion.button>
-  );
-}
+      {icon}
+    </div>
+    <div className="mt-2">
+      <h3 className="font-bold text-[14px] leading-tight text-[#1a2b5e]">{title}</h3>
+      <p className="mt-1 text-[12px] text-[#667084] leading-snug">{subtitle}</p>
+    </div>
+  </button>
+);
 
 export default function HomePage() {
   const router = useRouter();
@@ -188,7 +87,6 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!session) return;
-
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/gamification/me/xp-history`, {
       headers: { Authorization: `Bearer ${session.access_token}` },
     })
@@ -220,190 +118,153 @@ export default function HomePage() {
   };
 
   const articleReadsThisWeek = xpHistory.filter(
-    (h) => h.reason === "article_completed" && isThisWeek(h.created_at),
+    (h) => h.reason === "article_completed" && isThisWeek(h.created_at)
   ).length;
   const targetFreq = user?.preferences?.article_frequency || 2;
   const progressPercent = Math.min(
     100,
-    Math.round((articleReadsThisWeek / Math.max(targetFreq, 1)) * 100),
+    Math.round((articleReadsThisWeek / Math.max(targetFreq, 1)) * 100)
   );
 
-  const hasArticleToday = xpHistory.some(
-    (h) => h.reason === "article_completed" && isToday(h.created_at),
-  );
-  const hasReviewToday = xpHistory.some(
-    (h) => h.reason === "review_session" && isToday(h.created_at),
-  );
-  const hasNewsToday = xpHistory.some(
-    (h) => h.reason === "news_read" && isToday(h.created_at),
-  );
+  const hasArticleToday = xpHistory.some((h) => h.reason === "article_completed" && isToday(h.created_at));
+  const hasReviewToday = xpHistory.some((h) => h.reason === "review_session" && isToday(h.created_at));
+  const hasNewsToday = xpHistory.some((h) => h.reason === "news_read" && isToday(h.created_at));
 
-  const feedItems = [
-    {
-      icon: BookOpen,
-      label: "Read an Article",
-      xp: 10,
-      done: hasArticleToday,
-      href: "/articles",
-    },
-    {
-      icon: MessageSquare,
-      label: "Review Session",
-      xp: 10,
-      done: hasReviewToday,
-      href: "/practice",
-    },
-    {
-      icon: Newspaper,
-      label: "Read News",
-      xp: 10,
-      done: hasNewsToday,
-      href: "/news",
-    },
+  const TASKS = [
+    { id: "article", label: "Read an Article", icon: <BookOpen className="h-3 w-3" />, xp: 10, route: "/articles", done: hasArticleToday },
+    { id: "speak", label: "Review Session", icon: <Mic className="h-3 w-3" />, xp: 10, route: "/practice", done: hasReviewToday },
+    { id: "news", label: "Read News", icon: <Newspaper className="h-3 w-3" />, xp: 10, route: "/news", done: hasNewsToday },
   ];
 
-  return (
-    <div className="min-h-screen bg-[#f3f4fb] pb-[112px] text-[#162056] md:pb-14">
-      <div className="mx-auto w-full max-w-[1080px] px-6 pt-5 sm:px-8 md:pt-10">
-        <header className="relative mb-6 flex min-h-[84px] items-center justify-center md:mb-8 md:hidden">
-          <button
-            onClick={() => router.push("/profile")}
-            aria-label="Open profile settings"
-            className="absolute right-0 top-3 flex h-9 w-9 items-center justify-center rounded-full border bg-white text-[#667084] shadow-sm transition-colors hover:border-black hover:text-black sm:h-11 sm:w-11"
-            style={{ borderColor: "#e6d9c9" }}
-          >
-            <CircleUserRound size={20} />
-          </button>
-        </header>
+  const doneCount = TASKS.filter((t) => t.done).length;
 
-        <section className="mb-7 text-center md:mb-9">
-          <h1
-            className="text-[26px] font-semibold leading-tight sm:text-[38px]"
-            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-          >
-            Hello, {firstName}
+  return (
+    <div className="min-h-screen bg-[#f7f2ea] pb-28 md:pb-10">
+      <header className="px-5 pt-6 pb-2 flex items-center justify-between max-w-md md:max-w-5xl mx-auto">
+        <div className="w-10 h-10 md:hidden" />
+        <Image src="/logo with word.webp" alt="kalyma.ma" width={164} height={64} className="h-8 w-auto md:hidden" priority />
+        <button
+          onClick={() => router.push("/profile")}
+          aria-label="Profile settings"
+          className="cursor-pointer w-10 h-10 rounded-full flex items-center justify-center text-[#667084] hover:text-[#1a2b5e] active:bg-[#eef2fc] transition-colors md:hidden"
+        >
+          <CircleUserRound className="h-[18px] w-[18px]" />
+        </button>
+        <div className="hidden md:block" />
+      </header>
+
+      <main className="max-w-md md:max-w-5xl mx-auto px-5 space-y-8">
+        <section className="pt-3 animate-fade-in text-center">
+          <h1 className="text-[28px] leading-tight text-[#1a2b5e] tracking-tight" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+            Hello, <span className="font-semibold">{firstName}</span>
           </h1>
-          <p className="mt-3 text-[14px] font-medium text-[#667084] sm:text-[18px]">
-            Ready to speak with confidence?
-          </p>
+          <p className="mt-1.5 text-[15px] text-[#667084]">Ready to speak with confidence?</p>
         </section>
 
-        <section className="mb-8 rounded-[14px] bg-white p-4 shadow-sm sm:mb-10 sm:rounded-[22px] sm:p-7">
-          <div className="grid gap-5 md:grid-cols-[1fr_2fr] md:items-center">
-            <div className="flex items-center gap-4">
-              <ProgressRing percent={progressPercent} />
-              <div>
-                <h2 className="text-[14px] font-extrabold text-[#162056] sm:text-xl">
-                  Today&apos;s progress
-                </h2>
-                <p className="mt-1 text-[12px] font-semibold text-[#667084] sm:text-base">
-                  {feedItems.filter((item) => item.done).length} of{" "}
-                  {feedItems.length} tasks -{" "}
-                  <span className="text-[#c9842f]">30 XP</span>
-                </p>
+        <section className="rounded-2xl bg-white border border-[rgba(26,43,94,0.08)] p-3.5 animate-fade-in">
+          <div className="flex items-center gap-3.5">
+            <div className="relative h-14 w-14 shrink-0">
+              <div
+                className="absolute inset-0 rounded-full transition-all duration-700"
+                style={{
+                  background: `conic-gradient(#c9842f 0% ${progressPercent}%, #eef2fc ${progressPercent}% 100%)`,
+                }}
+              />
+              <div className="absolute inset-[4px] rounded-full bg-white flex items-center justify-center">
+                <span className="text-sm font-semibold tracking-tight text-[#1a2b5e]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+                  {progressPercent}<span className="text-[9px] text-[#667084]">%</span>
+                </span>
               </div>
             </div>
-
-            <div className="rounded-[16px] bg-white sm:px-2">
-              <div className="mb-3 flex items-center gap-2">
-                <Award size={16} className="text-[#c9842f]" />
-                <h2 className="text-[13px] font-extrabold text-[#162056] sm:text-base">
-                  Today&apos;s Feed
-                </h2>
-              </div>
-
-              <div className="space-y-3">
-                {feedItems.map(({ icon: Icon, label, xp, done, href }) => (
-                  <button
-                    key={label}
-                    onClick={() => router.push(href)}
-                    className="flex w-full items-center gap-3 rounded-2xl text-left transition-colors hover:bg-[#f3f4fb]"
-                  >
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[16px] bg-[#eefaff] text-[#162056]">
-                      <Icon size={18} strokeWidth={2} />
-                    </span>
-                    <span className="flex-1 text-[12px] font-semibold text-[#162056] sm:text-[14px]">
-                      {label}
-                    </span>
-                    {done ? (
-                      <CheckCircle2 size={18} className="text-[#10b981]" />
-                    ) : (
-                      <span className="rounded-full bg-[#f7f8fb] px-3 py-1.5 text-[10px] font-extrabold text-[#8b94a7]">
-                        + {xp} XP
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
+            <div className="min-w-0">
+              <p className="text-[13px] font-semibold text-[#1a2b5e]">Today's progress</p>
+              <p className="mt-0.5 text-[11px] text-[#667084]">
+                {doneCount} of {TASKS.length} tasks ·{" "}
+                <span className="text-[#c9842f] font-semibold">30 XP</span>
+              </p>
             </div>
           </div>
 
+          <ul className="mt-3 space-y-0.5">
+            {TASKS.map((t) => (
+              <FeedRow
+                key={t.id}
+                done={t.done}
+                icon={t.icon}
+                label={t.label}
+                xp={t.xp}
+                onClick={() => router.push(t.route)}
+              />
+            ))}
+          </ul>
+
           <button
             onClick={() => router.push("/practice")}
-            className="mt-5 w-full rounded-full bg-[#202b67] py-3 text-[13px] font-extrabold text-white transition-all hover:bg-[#121a46] sm:mt-7 sm:py-4 sm:text-base"
+            className="cursor-pointer mt-3.5 w-full h-9 rounded-full bg-[#1a2b5e] text-white text-[13px] font-semibold inline-flex items-center justify-center gap-2 hover:bg-[#2d4080] hover:shadow-md hover:-translate-y-[1px] active:scale-[0.98] transition-all duration-200"
           >
             Start quiz
           </button>
         </section>
 
-        <section className="mb-8 sm:mb-12">
+        <section className="animate-fade-in">
           <SectionHeader title="Practice" />
-          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
-            <HomeCard
+          <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
+            <SimpleCard
+              onClick={() => router.push("/chat")}
+              icon={<Image src="/atlas-logo.png" alt="" width={44} height={44} className="h-full w-full object-cover" />}
+              isAtlas
               title="Atlas AI"
               subtitle="Chat with your AI coach"
-              href="/chat"
-              icon={Bot}
-              tone="atlas"
             />
-            <HomeCard
+            <SimpleCard
+              onClick={() => router.push("/practice")}
+              icon={<Headphones className="h-5 w-5" style={{ color: "#7C3AED" }} />}
+              iconColor="#7C3AED"
               title="Review Session"
-              subtitle="Practice saved words"
-              href="/practice"
-              icon={Repeat2}
-              tone="purple"
+              subtitle="Practice saved words and Learn My notes"
+            />
+            <SimpleCard
+              onClick={() => router.push("/live")}
+              icon={<Radio className="h-5 w-5" style={{ color: "#C2410C" }} />}
+              iconColor="#C2410C"
+              title="Live Session"
+              subtitle="Practice with real speakers"
             />
           </div>
         </section>
 
-        <section>
-          <SectionHeader
-            title="Learn"
-            action={
-              <button
-                onClick={() => router.push("/profile/notifications")}
-                className="flex items-center gap-1 text-[12px] font-semibold text-[#667084] transition-colors hover:text-black sm:text-sm"
-              >
-                My notes <ChevronRight size={15} />
-              </button>
-            }
-          />
-          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
-            <HomeCard
+        <section className="animate-fade-in">
+          <SectionHeader title="Learn" onView={() => router.push("/profile/notifications")} viewLabel="My notes" />
+          <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
+            <SimpleCard
+              onClick={() => router.push("/articles")}
+              icon={<BookOpen className="h-5 w-5" style={{ color: "#15803D" }} />}
+              iconColor="#15803D"
               title="Articles"
               subtitle="Read level-matched articles"
-              href="/articles"
-              icon={BookOpen}
-              tone="green"
             />
-            <HomeCard
+            <SimpleCard
+              onClick={() => router.push("/news")}
+              icon={<Microscope className="h-5 w-5" style={{ color: "#0369A1" }} />}
+              iconColor="#0369A1"
               title="News"
               subtitle="Learn from current events"
-              href="/news"
-              icon={Newspaper}
-              tone="blue"
-              active
-            />
-            <HomeCard
-              title="Live Session"
-              subtitle="Practice with real speakers"
-              href="/live"
-              icon={Radio}
-              tone="orange"
             />
           </div>
         </section>
-      </div>
+
+        <button
+          onClick={() => router.push("/profile/notifications")}
+          className="cursor-pointer w-full flex items-center gap-3 px-5 py-4 rounded-[20px] border-2 border-[rgba(26,43,94,0.08)] bg-white text-[15px] font-medium text-[#1a2b5e] hover:border-[#aeb5c9] hover:bg-[#f4efe7] active:scale-[0.99] transition-all duration-200 animate-fade-in"
+        >
+          <Bookmark className="h-[20px] w-[20px] text-[#1a2b5e]" />
+          <span>My notes</span>
+        </button>
+
+        <p className="text-center text-[15px] text-[#667084] pt-2 pb-2" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+          Speak. Make mistakes. <span className="italic text-[#c9842f] font-semibold">Grow.</span>
+        </p>
+      </main>
     </div>
   );
 }
