@@ -1,21 +1,40 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "./providers";
+import PWARegister from "./PWARegister";
 
 export const metadata: Metadata = {
-  title: "kalyma.ma — Speak English with Confidence",
+  applicationName: "kalyma.ma",
+  title: "kalyma.ma - Speak English with Confidence",
   description:
     "Master English with AI-powered articles, live sessions, and conversational practice. kalyma.ma adapts to your level and interests.",
+  manifest: "/manifest.webmanifest",
   icons: {
     icon: "/icon.png",
-    apple: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/apple-touch-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Kalyma",
+  },
+  formatDetection: {
+    telephone: false,
   },
   openGraph: {
     title: "kalyma.ma",
-    description:
-      "Learn English through real-world content and AI conversation",
+    description: "Learn English through real-world content and AI conversation",
     type: "website",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#1a2b5e",
+  colorScheme: "light",
 };
 
 export default function RootLayout({
@@ -44,6 +63,7 @@ export default function RootLayout({
         }}
       >
         <AuthProvider>
+          <PWARegister />
           {children}
         </AuthProvider>
       </body>

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import AddToHomeButton from "@/components/AddToHomeButton";
 
 const featureCards = [
   {
@@ -65,12 +66,15 @@ export default function LandingPage() {
           />
         </Link>
 
-        <Link
-          href="/auth"
-          className="rounded-full border-2 border-[#050a2f] px-6 py-2.5 text-sm font-extrabold text-[#050a2f] transition-all hover:bg-[#050a2f] hover:text-white sm:px-8 sm:text-base"
-        >
-          Login
-        </Link>
+        <div className="flex items-center gap-3">
+          <AddToHomeButton className="hidden sm:inline-flex" />
+          <Link
+            href="/auth"
+            className="rounded-full border-2 border-[#050a2f] px-6 py-2.5 text-sm font-extrabold text-[#050a2f] transition-all hover:bg-[#050a2f] hover:text-white sm:px-8 sm:text-base"
+          >
+            Login
+          </Link>
+        </div>
       </nav>
 
       <section className="relative z-10 mx-auto flex max-w-6xl flex-col items-center px-6 pb-14 pt-8 text-center sm:pb-20 sm:pt-14">
@@ -122,6 +126,7 @@ export default function LandingPage() {
           >
             How it Works
           </a>
+          <AddToHomeButton className="w-full py-4 sm:hidden" />
         </motion.div>
 
         <motion.div
@@ -208,6 +213,7 @@ export default function LandingPage() {
             Create Account
             <ChevronRight size={18} />
           </Link>
+          <AddToHomeButton variant="dark" />
         </div>
       </section>
 
