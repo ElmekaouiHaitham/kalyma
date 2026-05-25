@@ -1,36 +1,31 @@
 "use client";
-import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+
+import { motion } from "framer-motion";
 import {
+  ArrowLeft,
+  Award,
+  Book,
   BookOpen,
+  Check,
+  ChevronRight,
+  CreditCard,
+  Edit3,
+  Flame,
+  Loader2,
+  LogOut,
+  MessageSquare,
   Newspaper,
-  MessageCircle,
   Radio,
   Settings,
-  ChevronRight,
-  LogOut,
-  Bell,
-  Globe,
   Star,
-  Award,
-  Flame,
-  BarChart2,
-  Book,
-  MessageSquare,
   Users,
   Zap,
-  FileText,
-  User,
-  Check,
-  Timer,
-  Target,
-  Loader2,
-  CreditCard,
 } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/app/providers";
-import { PROFICIENCY_LEVELS, DAILY_GOALS } from "@/lib/data";
-import PageShell from "@/components/PageShell";
+import { DAILY_GOALS, PROFICIENCY_LEVELS } from "@/lib/data";
 
 const PLAN_FEATURES = [
   "Unlimited AI conversations",
@@ -42,71 +37,82 @@ const PLAN_FEATURES = [
 
 const ACHIEVEMENT_MAP: Record<
   number,
-  { title: string; icon: any; color: string }
+  { title: string; icon: React.ElementType; color: string }
 > = {
-  200: { title: "Bookworm", icon: Book, color: "#1a2b5e" },
+  200: { title: "Bookworm", icon: Book, color: "#41329c" },
   150: { title: "Consistent reviewer", icon: MessageSquare, color: "#10b981" },
-  50: { title: "First read", icon: BookOpen, color: "#3b82f6" },
-  100: { title: "Live learner", icon: Radio, color: "#ef4444" },
-  110: { title: "7-day streak", icon: Flame, color: "#f97316" },
-  60: { title: "Community voice", icon: Users, color: "#8b5cf6" },
-  500: { title: "30-day streak", icon: Zap, color: "#eab308" },
-  75: { title: "Word collector", icon: FileText, color: "#2d4080" },
+  50: { title: "First read", icon: BookOpen, color: "#008ed0" },
+  100: { title: "Live learner", icon: Radio, color: "#ef6c22" },
+  110: { title: "7-day streak", icon: Flame, color: "#f2bd35" },
+  60: { title: "Community voice", icon: Users, color: "#7c3aed" },
+  500: { title: "30-day streak", icon: Zap, color: "#f2bd35" },
+};
+
+const diffLabelMap: Record<string, string> = {
+  beginner: "A1/A2 - Beginner",
+  intermediate: "B1 - Intermediate",
+  upper_intermediate: "B2 - Upper-Int",
+  advanced: "C1/C2 - Advanced",
+};
+
+type XpHistoryEntry = {
+  amount?: number;
+  reason?: string;
+};
+
+const cardMotion = {
+  initial: { opacity: 0, y: 14 },
+  animate: { opacity: 1, y: 0 },
 };
 
 export default function ProfilePage() {
   const router = useRouter();
   const { user, session } = useAuth();
 
-  const [xpHistory, setXpHistory] = useState<any[]>([]);
+  const [xpHistory, setXpHistory] = useState<XpHistoryEntry[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Preference Form State
   const [fullName, setFullName] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const [selectedPace, setSelectedPace] = useState<string | null>(null);
   const [articleFrequency, setArticleFrequency] = useState<number>(2);
 
-  const fetchHistory = () => {
-    if (session) {
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/gamification/me/xp-history`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data)) setXpHistory(data);
-        })
-        .catch(console.error);
-    }
-  };
-
   useEffect(() => {
-    fetchHistory();
+    if (!session) return;
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/gamification/me/xp-history`, {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setXpHistory(data);
+      })
+      .catch(console.error);
   }, [session]);
 
   useEffect(() => {
-    if (user) {
-      setFullName(user.full_name || "");
-      const pref = user.preferences;
-      if (pref) {
-        const diffToCode: Record<string, string> = {
-          beginner: "A1",
-          intermediate: "B1",
-          upper_intermediate: "B2",
-          advanced: "C1",
-        };
-        setSelectedLevel(pref.difficulty_pref ? diffToCode[pref.difficulty_pref] || "B1" : "B1");
+    if (!user) return;
 
-        const p = DAILY_GOALS.find((g) => g.minutes === pref.reading_pace);
-        setSelectedPace(p ? p.label : "Regular");
-        setArticleFrequency(pref.article_frequency || 2);
-      }
-    }
+    setFullName(user.full_name || "");
+    const pref = user.preferences;
+    if (!pref) return;
+
+    const diffToCode: Record<string, string> = {
+      beginner: "A1",
+      intermediate: "B1",
+      upper_intermediate: "B2",
+      advanced: "C1",
+    };
+    setSelectedLevel(pref.difficulty_pref ? diffToCode[pref.difficulty_pref] || "B1" : "B1");
+
+    const pace = DAILY_GOALS.find((goal) => goal.minutes === pref.reading_pace);
+    setSelectedPace(pace ? pace.label : "Regular");
+    setArticleFrequency(pref.article_frequency || 2);
   }, [user]);
 
   const handleSavePreferences = async () => {
     if (!session) return;
     setIsSubmitting(true);
+
     try {
       const difficultyMap: Record<string, string> = {
         A1: "beginner",
@@ -118,430 +124,359 @@ export default function ProfilePage() {
       };
       const payload = {
         full_name: fullName.trim(),
-        difficulty_pref: selectedLevel
-          ? difficultyMap[selectedLevel]
-          : "intermediate",
+        difficulty_pref: selectedLevel ? difficultyMap[selectedLevel] : "intermediate",
         reading_pace: selectedPace
-          ? DAILY_GOALS.find((g) => g.label === selectedPace)?.minutes || 10
+          ? DAILY_GOALS.find((goal) => goal.label === selectedPace)?.minutes || 10
           : 10,
         article_frequency: articleFrequency,
       };
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/me/preferences`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify(payload),
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me/preferences`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
         },
-      );
-      if (res.ok) {
-        // Force reload or mutate context
-        window.location.reload();
-      }
-    } catch (e) {
-      console.error(e);
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) window.location.reload();
+    } catch (error) {
+      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const totalNews = xpHistory.filter((h) => h.reason === "news_read").length;
-  const totalSessions = xpHistory.filter(
-    (h) => h.reason === "review_session",
-  ).length;
-  const totalArticles = xpHistory.filter(
-    (h) => h.reason === "article_completed",
-  ).length;
+  const totalNews = xpHistory.filter((entry) => entry.reason === "news_read").length;
+  const totalSessions = xpHistory.filter((entry) => entry.reason === "review_session").length;
+  const totalArticles = xpHistory.filter((entry) => entry.reason === "article_completed").length;
+  const achievements = xpHistory.filter((entry) => entry.reason === "achievement_earned");
 
-  const achievements = xpHistory.filter(
-    (h) => h.reason === "achievement_earned",
-  );
+  const totalXp = useMemo(() => {
+    if (typeof user?.xp === "number") return user.xp;
+    return xpHistory.reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
+  }, [user?.xp, xpHistory]);
 
-  const diffLabelMap: Record<string, string> = {
-    beginner: "A1/A2 — Beginner",
-    intermediate: "B1 — Intermediate",
-    upper_intermediate: "B2 — Upper-Int",
-    advanced: "C1/C2 — Advanced",
-  };
+  const currentLevel = selectedLevel || "B1";
+  const currentLevelLabel = user?.preferences?.difficulty_pref
+    ? diffLabelMap[user.preferences.difficulty_pref]
+    : currentLevel;
+  const xpInLevel = Math.max(0, totalXp % 100);
+  const xpPercent = Math.min(100, xpInLevel);
 
-  const STATS = [
-    {
-      icon: Flame,
-      label: "Day Streak",
-      value: user?.streak_count || 0,
-      color: "#f97316",
-    },
-    {
-      icon: Newspaper,
-      label: "Total News",
-      value: totalNews,
-      color: "#1a2b5e",
-    },
-    {
-      icon: Star,
-      label: "Total Sessions",
-      value: totalSessions,
-      color: "#c9a84c",
-    },
-    {
-      icon: BookOpen,
-      label: "Total Articles",
-      value: totalArticles,
-      color: "#8b5cf6",
-    },
+  const stats = [
+    { icon: Zap, label: "Total XP", value: totalXp, color: "#f2bd35" },
+    { icon: Flame, label: "Day streak", value: user?.streak_count || 0, color: "#f2bd35" },
+    { icon: Newspaper, label: "Total News", value: totalNews, color: "#41329c" },
+    { icon: BookOpen, label: "Total Articles", value: totalArticles, color: "#41329c" },
+    { icon: Star, label: "Total Sessions", value: totalSessions, color: "#c9842f" },
   ];
 
   return (
-    <PageShell
-      title="Profile Settings"
-      subtitle="Update your learning profile, preferences, and plan."
-      maxWidth="max-w-5xl"
-    >
-      <div className="lg:grid lg:grid-cols-[2fr_3fr] lg:gap-6 lg:items-start space-y-5 lg:space-y-0">
-        {/* Left Column */}
-        <div className="space-y-5">
-          {/* Profile Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl overflow-hidden"
-            style={{
-              background: "linear-gradient(135deg, #1a2b5e 0%, #2d4080 100%)",
-              boxShadow: "0 6px 24px rgba(26,43,94,0.25)",
-            }}
-          >
-            <div className="px-5 pt-6 pb-5">
-              <div className="flex items-center gap-4 mb-4">
-                <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white shrink-0"
-                  style={{
-                    background: "rgba(255,255,255,0.2)",
-                    border: "2px solid rgba(255,255,255,0.3)",
-                  }}
+    <div className="min-h-full bg-[#f7f2ea] px-5 pb-28 pt-4 text-[#17172f] md:px-8 md:pb-12 md:pt-8">
+      <div className="mx-auto max-w-4xl">
+        <button
+          onClick={() => router.back()}
+          className="mb-4 inline-flex items-center gap-2 text-[18px] font-medium text-[#6d6d80] transition-colors hover:text-[#17172f] md:text-base"
+        >
+          <ArrowLeft size={20} />
+          Back
+        </button>
+
+        <div className="grid gap-5 lg:grid-cols-[1.02fr_0.98fr] lg:items-start">
+          <div className="space-y-5">
+            <motion.section
+              {...cardMotion}
+              className="rounded-[26px] border bg-white px-5 py-6 text-center shadow-[0_3px_14px_rgba(31,27,23,0.08)] md:px-8 md:py-7"
+              style={{ borderColor: "#e6d9c9" }}
+            >
+              <div className="mx-auto mb-5 flex h-[104px] w-[104px] items-center justify-center rounded-full bg-[#17172f] p-3 shadow-[0_10px_24px_rgba(23,23,47,0.16)] ring-8 ring-white md:h-[128px] md:w-[128px]">
+                <Image
+                  src="/logo with word.webp"
+                  alt="Kalyma"
+                  width={150}
+                  height={72}
+                  priority
+                  className="h-auto w-[78px] object-contain md:w-[96px]"
+                />
+              </div>
+
+              <div className="relative flex items-center justify-center">
+                <h1
+                  className="max-w-[210px] text-[28px] font-bold leading-tight md:max-w-none md:text-[34px]"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
                 >
-                  {user?.full_name
-                    ? user.full_name.charAt(0).toUpperCase()
-                    : "U"}
-                </div>
-                <div className="flex-1">
-                  <div
-                    className="text-xl font-bold text-white mb-0.5"
-                    style={{ fontFamily: "'Outfit', sans-serif" }}
-                  >
-                    {user?.full_name || "Atlas Learner"}
-                  </div>
-                  <div
-                    className="text-sm"
-                    style={{ color: "rgba(255,255,255,0.65)" }}
-                  >
-                    {user?.email || "loading..."}
-                  </div>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <span
-                      className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                      style={{
-                        background: "rgba(201,168,76,0.3)",
-                        color: "#d4b86a",
-                      }}
-                    >
-                      {user?.preferences?.difficulty_pref
-                        ? diffLabelMap[user.preferences.difficulty_pref]
-                        : "Intermediate"}
-                    </span>
-                  </div>
-                </div>
+                  {user?.full_name || "Atlas Learner"}
+                </h1>
+                <button
+                  onClick={() => document.getElementById("profile-name")?.focus()}
+                  aria-label="Edit profile name"
+                  className="absolute right-0 rounded-full p-2 text-[#6d6d80] transition-colors hover:bg-[#f4efe7] hover:text-[#17172f] md:static md:ml-3"
+                >
+                  <Edit3 className="h-5 w-5 md:h-6 md:w-6" />
+                </button>
+              </div>
+              <p className="mt-2 text-[16px] font-medium text-[#6d6d80] md:text-[18px]">
+                {user?.email || "loading..."}
+              </p>
+
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
+                <span className="rounded-full bg-[#ece7fb] px-4 py-2 text-[14px] font-bold text-[#41329c]">
+                  {currentLevelLabel}
+                </span>
+                <span className="rounded-full bg-[#fbf5e8] px-4 py-2 text-[14px] font-bold text-[#f2bd35]">
+                  {totalXp} XP
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full bg-[#fbf5e8] px-4 py-2 text-[14px] font-bold text-[#c9842f]">
+                  <Flame className="h-4 w-4" /> {user?.streak_count || 0}
+                </span>
               </div>
 
-              <div
-                className="grid grid-cols-4 gap-2 pt-4"
-                style={{ borderTop: "1px solid rgba(255,255,255,0.12)" }}
-              >
-                {STATS.map(({ icon: Icon, label, value, color }) => (
-                  <div key={label} className="flex flex-col items-center gap-1">
-                    <div
-                      className="w-9 h-9 rounded-xl flex items-center justify-center"
-                      style={{ background: "rgba(255,255,255,0.12)" }}
-                    >
-                      <Icon size={16} style={{ color: "white" }} />
-                    </div>
-                    <div className="text-sm font-bold text-white">{value}</div>
-                    <div
-                      className="text-[9px] text-center leading-tight"
-                      style={{ color: "rgba(255,255,255,0.55)" }}
-                    >
-                      {label}
-                    </div>
-                  </div>
-                ))}
+              <div className="mt-6 text-left">
+                <div className="mb-2.5 flex items-center justify-between text-[15px] font-medium text-[#6d6d80] md:text-base">
+                  <span>{currentLevel}</span>
+                  <span>{xpInLevel} / 100 XP</span>
+                </div>
+                <div className="h-3 overflow-hidden rounded-full bg-[#f0ebe4]">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#41329c] via-[#c9842f] to-[#f2bd35]"
+                    style={{ width: `${xpPercent}%` }}
+                  />
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.section>
 
-          {/* Badges */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.14 }}
-            className="rounded-2xl p-4"
-            style={{
-              background: "white",
-              border: "1px solid rgba(26,43,94,0.08)",
-              boxShadow: "0 2px 10px rgba(26,43,94,0.06)",
-            }}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-bold" style={{ color: "#1a2b5e" }}>
-                Badges
-              </span>
-              <Award size={16} style={{ color: "#c9a84c" }} />
-            </div>
-            {achievements.length === 0 ? (
-              <div className="text-center text-xs py-4 text-[#9aa5b1] italic">
-                Complete activities to earn badges!
+            <section className="grid grid-cols-2 gap-4">
+              {stats.map(({ icon: Icon, label, value, color }, index) => (
+                <motion.article
+                  key={label}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.05 * index }}
+                  className="min-h-[124px] rounded-[20px] border bg-white p-5 shadow-[0_3px_14px_rgba(31,27,23,0.08)] transition-all hover:border-[#aeb5c9] hover:bg-[#fbf7f1]"
+                  style={{ borderColor: "#e6d9c9" }}
+                >
+                  <Icon size={26} color={color} strokeWidth={2.2} />
+                  <div
+                    className="mt-5 text-[32px] font-bold leading-none"
+                    style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                  >
+                    {value}
+                  </div>
+                  <p className="mt-2 text-[15px] font-medium text-[#6d6d80]">{label}</p>
+                </motion.article>
+              ))}
+            </section>
+          </div>
+
+          <div className="space-y-5">
+            <motion.section
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="rounded-[24px] border bg-white p-5 shadow-[0_3px_14px_rgba(31,27,23,0.08)]"
+              style={{ borderColor: "#e6d9c9" }}
+            >
+              <div className="mb-5 flex items-center justify-between">
+                <h2
+                  className="text-[22px] font-semibold"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                >
+                  Badges
+                </h2>
+                <Award className="text-[#c9842f]" size={25} />
               </div>
-            ) : (
-              <div className="grid grid-cols-4 gap-2">
-                {achievements.map((ach, i) => {
-                  const conf = ACHIEVEMENT_MAP[ach.amount] || {
-                    title: "Secret Badge",
-                    icon: Award,
-                    color: "#1a2b5e",
-                  };
-                  const Icon = conf.icon;
-                  return (
-                    <div
-                      key={i}
-                      className="flex flex-col items-center gap-1 text-center"
-                    >
+              {achievements.length === 0 ? (
+                <p className="rounded-[18px] bg-[#f7f2ea] px-5 py-5 text-center text-sm font-semibold text-[#6d6d80]">
+                  Complete activities to earn badges!
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {achievements.map((achievement, index) => {
+                    const amount = Number(achievement.amount) || 0;
+                    const badge = ACHIEVEMENT_MAP[amount] || {
+                      title: "Secret Badge",
+                      icon: Award,
+                      color: "#41329c",
+                    };
+                    const Icon = badge.icon;
+                    return (
                       <div
-                        className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl"
-                        style={{
-                          background: `${conf.color}15`,
-                          border: `1px solid ${conf.color}30`,
-                        }}
+                        key={`${achievement.amount}-${index}`}
+                        className="rounded-[18px] border bg-[#fbf7f1] p-4 text-center"
+                        style={{ borderColor: `${badge.color}30` }}
                       >
-                        <Icon size={22} style={{ color: conf.color }} />
+                        <Icon className="mx-auto" size={28} color={badge.color} />
+                        <p className="mt-2 text-xs font-bold text-[#6d6d80]">{badge.title}</p>
                       </div>
-                      <span
-                        className="text-[9px] leading-tight"
-                        style={{ color: "#9aa5b1" }}
-                      >
-                        {conf.title}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.14 }}
-            className="rounded-2xl overflow-hidden"
-            style={{
-              background: "linear-gradient(135deg, #1a2b5e 0%, #2d4080 100%)",
-              boxShadow: "0 6px 24px rgba(26,43,94,0.3)",
-            }}
-          >
-            <div className="px-5 pt-5 pb-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <CreditCard size={16} style={{ color: "#c9a84c" }} />
-                  <span className="text-sm font-bold text-white">
-                    Your Plan
-                  </span>
+                    );
+                  })}
                 </div>
-                <span
-                  className="text-[10px] font-bold px-2.5 py-1 rounded-full"
-                  style={{
-                    background: "rgba(201,168,76,0.3)",
-                    color: "#d4b86a",
-                  }}
-                >
+              )}
+            </motion.section>
+
+            <motion.section
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.16 }}
+              className="rounded-[24px] border bg-white p-5 shadow-[0_3px_14px_rgba(31,27,23,0.08)]"
+              style={{ borderColor: "#e6d9c9" }}
+            >
+              <div className="mb-5 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CreditCard size={22} className="text-[#c9842f]" />
+                  <h2
+                    className="text-[22px] font-semibold"
+                    style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                  >
+                    Your Plan
+                  </h2>
+                </div>
+                <span className="rounded-full bg-[#fbf5e8] px-4 py-2 text-xs font-extrabold text-[#c9842f]">
                   FREE
                 </span>
               </div>
-              <div className="space-y-2 mb-4">
-                {PLAN_FEATURES.map((f, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <div
-                      className="w-4 h-4 rounded-full flex items-center justify-center shrink-0"
-                      style={{ background: "rgba(201,168,76,0.3)" }}
-                    >
-                      <Check size={10} style={{ color: "#c9a84c" }} />
-                    </div>
-                    <span
-                      className="text-xs"
-                      style={{ color: "rgba(255,255,255,0.75)" }}
-                    >
-                      {f}
+              <div className="space-y-3">
+                {PLAN_FEATURES.map((feature) => (
+                  <div key={feature} className="flex items-center gap-3 text-sm font-semibold text-[#6d6d80]">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#fbf5e8] text-[#c9842f]">
+                      <Check size={14} />
                     </span>
+                    {feature}
                   </div>
                 ))}
               </div>
-              <button
-                className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
-                style={{
-                  background: "linear-gradient(135deg, #c9a84c, #b8932e)",
-                  color: "white",
-                  boxShadow: "0 4px 14px rgba(201,168,76,0.4)",
-                }}
-              >
-                Upgrade to Premium ✦
+              <button className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#202b67] px-5 py-4 text-sm font-extrabold text-white transition-colors hover:bg-[#121a46]">
+                Upgrade to Premium
+                <ChevronRight size={18} />
               </button>
-            </div>
-          </motion.div>
-        </div>
+            </motion.section>
 
-        {/* Right Column (Preferences & Log Out) */}
-        <div className="space-y-5">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="rounded-2xl overflow-hidden"
-            style={{
-              background: "white",
-              border: "1px solid rgba(26,43,94,0.08)",
-              boxShadow: "0 2px 10px rgba(26,43,94,0.06)",
-            }}
-          >
-            <div
-              className="px-4 py-3 flex items-center justify-between"
-              style={{ borderBottom: "1px solid rgba(26,43,94,0.06)" }}
+            <motion.section
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.22 }}
+              className="rounded-[24px] border bg-white p-5 shadow-[0_3px_14px_rgba(31,27,23,0.08)]"
+              style={{ borderColor: "#e6d9c9" }}
             >
-              <div className="flex items-center gap-2">
-                <Settings size={15} style={{ color: "#9aa5b1" }} />
-                <span
-                  className="text-xs font-bold uppercase tracking-wider"
-                  style={{ color: "#9aa5b1" }}
+              <div className="mb-6 flex items-center gap-2">
+                <Settings size={22} className="text-[#6d6d80]" />
+                <h2
+                  className="text-[22px] font-semibold"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
                 >
                   Preferences
-                </span>
-              </div>
-            </div>
-
-            <div className="px-4 py-5 space-y-5">
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold text-[#1a2b5e] uppercase tracking-wider">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full bg-[#f7f2ea] rounded-xl px-4 py-2.5 text-sm font-semibold text-[#1a2b5e] outline-none border border-transparent focus:border-[#1a2b5e]/20 transition-all"
-                />
+                </h2>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-[#1a2b5e] uppercase tracking-wider">
-                  Proficiency Level
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {PROFICIENCY_LEVELS.filter((l) =>
-                    ["A1", "B1", "B2", "C1"].includes(l.code),
-                  ).map((level) => (
-                    <button
-                      key={level.code}
-                      onClick={() => setSelectedLevel(level.code)}
-                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border ${
-                        selectedLevel === level.code
-                          ? "bg-[#1a2b5e] text-white border-[#1a2b5e]"
-                          : "bg-white text-[#9aa5b1] border-[#1a2b5e]/10 hover:border-[#1a2b5e]/30"
-                      }`}
-                    >
-                      {level.code} - {level.label.split("-")[0]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-[#1a2b5e] uppercase tracking-wider">
-                  Learning Pace
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {DAILY_GOALS.map((goal) => (
-                    <button
-                      key={goal.label}
-                      onClick={() => setSelectedPace(goal.label)}
-                      className={`py-2 px-3 rounded-xl text-xs font-bold transition-all border flex flex-col items-center gap-1 ${
-                        selectedPace === goal.label
-                          ? "bg-[#c9a84c] text-white border-[#c9a84c]"
-                          : "bg-white text-[#9aa5b1] border-[#1a2b5e]/10 hover:border-[#1a2b5e]/30"
-                      }`}
-                    >
-                      <span>
-                        {goal.icon} {goal.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-[11px] font-bold text-[#1a2b5e] uppercase tracking-wider">
-                    Articles / Week Target
-                  </label>
-                  <span className="text-sm font-bold text-[#1a2b5e]">
-                    {articleFrequency}
+              <div className="space-y-5">
+                <label className="block">
+                  <span className="mb-2 block text-xs font-extrabold uppercase tracking-[0.12em] text-[#6d6d80]">
+                    Full Name
                   </span>
+                  <input
+                    id="profile-name"
+                    type="text"
+                    value={fullName}
+                    onChange={(event) => setFullName(event.target.value)}
+                    className="w-full rounded-[18px] border bg-[#fbf7f1] px-4 py-3 text-sm font-semibold text-[#17172f] outline-none transition-colors focus:border-[#aeb5c9]"
+                    style={{ borderColor: "#e6d9c9" }}
+                  />
+                </label>
+
+                <div>
+                  <span className="mb-2 block text-xs font-extrabold uppercase tracking-[0.12em] text-[#6d6d80]">
+                    Proficiency Level
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {PROFICIENCY_LEVELS.filter((level) =>
+                      ["A1", "B1", "B2", "C1"].includes(level.code),
+                    ).map((level) => {
+                      const active = selectedLevel === level.code;
+                      return (
+                        <button
+                          key={level.code}
+                          onClick={() => setSelectedLevel(level.code)}
+                          className="rounded-[16px] border px-3 py-3 text-xs font-extrabold transition-all hover:border-[#aeb5c9] hover:bg-[#f4efe7]"
+                          style={{
+                            borderColor: active ? "#aeb5c9" : "#e6d9c9",
+                            background: active ? "#ece7fb" : "white",
+                            color: active ? "#41329c" : "#6d6d80",
+                          }}
+                        >
+                          {level.code} - {level.label.split("-")[0]}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="5"
-                  step="1"
-                  value={articleFrequency}
-                  onChange={(e) =>
-                    setArticleFrequency(parseInt(e.target.value))
-                  }
-                  className="w-full h-2 bg-[#f7f2ea] rounded-full appearance-none cursor-pointer accent-[#1a2b5e]"
-                />
+
+                <div>
+                  <span className="mb-2 block text-xs font-extrabold uppercase tracking-[0.12em] text-[#6d6d80]">
+                    Learning Pace
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {DAILY_GOALS.map((goal) => {
+                      const active = selectedPace === goal.label;
+                      return (
+                        <button
+                          key={goal.label}
+                          onClick={() => setSelectedPace(goal.label)}
+                          className="rounded-[16px] border px-3 py-3 text-xs font-extrabold transition-all hover:border-[#aeb5c9] hover:bg-[#f4efe7]"
+                          style={{
+                            borderColor: active ? "#aeb5c9" : "#e6d9c9",
+                            background: active ? "#fbf5e8" : "white",
+                            color: active ? "#c9842f" : "#6d6d80",
+                          }}
+                        >
+                          {goal.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <label className="block">
+                  <span className="mb-2 flex items-center justify-between text-xs font-extrabold uppercase tracking-[0.12em] text-[#6d6d80]">
+                    Articles / Week Target
+                    <b className="text-[#17172f]">{articleFrequency}</b>
+                  </span>
+                  <input
+                    type="range"
+                    min="1"
+                    max="5"
+                    step="1"
+                    value={articleFrequency}
+                    onChange={(event) => setArticleFrequency(parseInt(event.target.value))}
+                    className="h-2 w-full cursor-pointer appearance-none rounded-full bg-[#f0ebe4] accent-[#c9842f]"
+                  />
+                </label>
+
+                <button
+                  onClick={handleSavePreferences}
+                  disabled={isSubmitting || !fullName}
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#202b67] px-5 py-4 text-sm font-extrabold text-white transition-colors hover:bg-[#121a46] disabled:opacity-50"
+                >
+                  {isSubmitting ? <Loader2 size={17} className="animate-spin" /> : <Check size={17} />}
+                  Save Changes
+                </button>
               </div>
+            </motion.section>
 
-              <button
-                onClick={handleSavePreferences}
-                disabled={isSubmitting || !fullName}
-                className="w-full py-3 mt-2 rounded-xl text-sm font-bold text-white bg-[#1a2b5e] disabled:opacity-50 transition-all flex justify-center items-center gap-2"
-              >
-                {isSubmitting ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <>
-                    <Check size={16} /> Save Changes
-                  </>
-                )}
-              </button>
-            </div>
-          </motion.div>
-
-          <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            onClick={() => router.push("/auth")}
-            className="w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all"
-            style={{
-              background: "rgba(239,68,68,0.08)",
-              border: "1px solid rgba(239,68,68,0.2)",
-              color: "#ef4444",
-            }}
-          >
-            <LogOut size={15} /> Sign Out
-          </motion.button>
-          <p className="text-center text-xs pb-2" style={{ color: "#9aa5b1" }}>
-            kalyma.ma · v1.0.0
-          </p>
+            <motion.button
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.28 }}
+              onClick={() => router.push("/auth")}
+              className="flex w-full items-center justify-center gap-2 rounded-[22px] border bg-white px-5 py-4 text-sm font-extrabold text-[#ef4444] shadow-[0_3px_14px_rgba(31,27,23,0.08)] transition-all hover:border-[#ef4444]/40 hover:bg-[#fff4f4]"
+              style={{ borderColor: "#e6d9c9" }}
+            >
+              <LogOut size={17} /> Sign Out
+            </motion.button>
+          </div>
         </div>
       </div>
-    </PageShell>
+    </div>
   );
 }
