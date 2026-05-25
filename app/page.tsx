@@ -217,8 +217,16 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer className="relative z-10 px-6 pb-8 text-center text-sm font-medium text-black/70">
-        &copy; 2026 kalyma.ma. All rights reserved. Speak with confidence.
+      <footer className="relative z-10 mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 pb-8 text-center text-sm font-medium text-black/70 sm:flex-row sm:text-left">
+        <p>&copy; 2026 kalyma.ma. All rights reserved. Speak with confidence.</p>
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 font-extrabold text-[#050a2f]">
+          <Link href="/privacy" className="transition-colors hover:text-[#c9842f]">
+            Privacy Policy
+          </Link>
+          <Link href="/terms" className="transition-colors hover:text-[#c9842f]">
+            Terms and Conditions
+          </Link>
+        </div>
       </footer>
 
       <style jsx>{`
