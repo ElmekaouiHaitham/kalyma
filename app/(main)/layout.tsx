@@ -23,6 +23,10 @@ const NAV_ITEMS = [
   { label: "Profile Settings", icon: Settings, href: "/profile" },
 ];
 
+const MOBILE_NAV_ITEMS = NAV_ITEMS.filter(
+  ({ href }) => href !== "/articles" && href !== "/profile",
+);
+
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -120,7 +124,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               boxShadow: "0 14px 32px rgba(31,27,23,0.12)",
             }}
           >
-            {NAV_ITEMS.map(({ label, icon: Icon, href, atlas }) => {
+            {MOBILE_NAV_ITEMS.map(({ label, icon: Icon, href, atlas }) => {
               const isActive = active(href);
               return (
                 <button
