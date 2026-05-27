@@ -40,7 +40,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   return (
     <div
       className="flex h-screen overflow-hidden"
-      style={{ background: pathname === "/home" ? "#f3f4fb" : "#f7f2ea", colorScheme: "light" }}
+      style={{
+        background: pathname === "/home" ? "#f3f4fb" : pathname === "/chat" ? "#ffffff" : "#f7f2ea",
+        colorScheme: "light",
+      }}
     >
       {/* ── SIDEBAR (md+) ─────────────────────────────── */}
       <aside className="hidden md:flex flex-col shrink-0 h-screen w-72 border-r border-[rgba(26,43,94,0.08)] bg-white/80 backdrop-blur-xl z-30 px-5 py-6">
@@ -97,14 +100,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             // Chat manages its own scroll; other pages get pb for bottom nav
             overflowY: pathname === "/chat" ? "hidden" : "auto",
             paddingBottom: pathname === "/chat" ? 0 : undefined,
-            background: pathname === "/home" ? "#f3f4fb" : undefined,
+            background: pathname === "/home" ? "#f3f4fb" : pathname === "/chat" ? "#ffffff" : undefined,
           }}
         >
           <div
             style={{
               height: pathname === "/chat" ? "100%" : "auto",
               paddingBottom: pathname === "/chat" ? 0 : "5rem",
-              background: pathname === "/home" ? "#f3f4fb" : undefined,
+              background: pathname === "/home" ? "#f3f4fb" : pathname === "/chat" ? "#ffffff" : undefined,
             }}
             className={pathname !== "/chat" ? "md:pb-6" : ""}
           >

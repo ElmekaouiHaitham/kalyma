@@ -1,8 +1,24 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Send, Mic, BookMarked, Plus, Loader2, CheckCircle2 } from "lucide-react";
+
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  BookMarked,
+  CheckCircle2,
+  Copy,
+  Loader2,
+  Menu,
+  Mic,
+  MoreVertical,
+  Plus,
+  Send,
+  Share2,
+  SquarePen,
+  ThumbsDown,
+  ThumbsUp,
+  Volume2,
+} from "lucide-react";
 import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { useAtlasChat } from "@/hooks/useAtlasChat";
 
@@ -21,24 +37,25 @@ export default function ChatPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleAutoSave = async (aiMsgId: string, aiText: string) => {
-    const msgIndex = messages.findIndex(m => m.id === aiMsgId);
+    const msgIndex = messages.findIndex((message) => message.id === aiMsgId);
     let question = "General chat";
-    for(let i = msgIndex - 1; i >= 0; i--){
-      if(messages[i].role === "user"){
-        question = messages[i].content;
+    for (let index = msgIndex - 1; index >= 0; index--) {
+      if (messages[index].role === "user") {
+        question = messages[index].content;
         break;
       }
     }
+
     setSavingId(aiMsgId);
     const success = await autoSaveToDeck(question, aiText);
     setSavingId(null);
-    if(success) {
-       setSavedId(aiMsgId);
-       setTimeout(() => setSavedId(null), 2000);
+
+    if (success) {
+      setSavedId(aiMsgId);
+      setTimeout(() => setSavedId(null), 2000);
     }
   };
 
-  // Initial welcome message when started
   useEffect(() => {
     if (started && messages.length === 0 && !isTyping) {
       addMessage("ai", "Hello! I'm Atlas. How can I help you practice your English today?");
@@ -49,517 +66,587 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
-    const el = textareaRef.current;
-    if (el) {
-      el.style.height = "auto";
-      el.style.height = Math.min(el.scrollHeight, 180) + "px";
+  const resetTextareaHeight = () => {
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
+  };
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(event.target.value);
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 180)}px`;
     }
   };
 
   const handleSend = () => {
-    const txt = input.trim();
-    if (!txt) return;
+    const text = input.trim();
+    if (!text) return;
+
     setInput("");
-    if (textareaRef.current) textareaRef.current.style.height = "auto";
+    resetTextareaHeight();
     setStarted(true);
-    sendMessage(txt);
+    sendMessage(text);
   };
 
+  const handleNewConversation = () => {
+    clearMessages();
+    setStarted(false);
+    setInput("");
+    resetTextareaHeight();
+  };
 
   return (
     <div className="atlas-chat-root">
       <style>{`
         .atlas-chat-root {
+          position: relative;
           display: flex;
-          flex-direction: column;
           height: 100%;
+          flex-direction: column;
+          overflow: hidden;
           background: #ffffff;
-          color: #1a2b5e;
-          font-family: 'Inter', system-ui, sans-serif;
+          color: #111111;
+          font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .atlas-chat-topbar {
+          pointer-events: none;
+          position: absolute;
+          left: 0;
+          right: 0;
+          top: 0;
+          z-index: 20;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 24px 24px 12px;
+        }
+
+        .atlas-top-group {
+          pointer-events: auto;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.92);
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+          backdrop-filter: blur(16px);
+        }
+
+        .atlas-icon-button {
+          display: grid;
+          width: 54px;
+          height: 54px;
+          place-items: center;
+          border: 0;
+          border-radius: 999px;
+          background: #ffffff;
+          color: #111111;
+          cursor: pointer;
+          transition: background 160ms ease, transform 160ms ease;
+        }
+
+        .atlas-icon-button:hover {
+          background: #f2f2f2;
+          transform: translateY(-1px);
         }
 
         .atlas-messages {
           flex: 1;
           overflow-y: auto;
-          padding: 0;
+          padding: 96px 24px 132px;
           scrollbar-width: thin;
-          scrollbar-color: rgba(26,43,94,0.1) transparent;
-          display: flex;
-          flex-direction: column;
+          scrollbar-color: rgba(0, 0, 0, 0.16) transparent;
         }
-        .atlas-messages::-webkit-scrollbar { width: 6px; }
+
+        .atlas-messages::-webkit-scrollbar { width: 7px; }
         .atlas-messages::-webkit-scrollbar-thumb {
-          background: rgba(26,43,94,0.15);
-          border-radius: 3px;
+          border-radius: 999px;
+          background: rgba(0, 0, 0, 0.16);
         }
 
-        .atlas-msg-row {
-          padding: 24px 16px;
-          display: flex;
-          flex-direction: column;
-        }
-        .atlas-msg-row.ai-row {
-          background: transparent;
-        }
-        .atlas-msg-row.user-row {
-          background: transparent;
-          align-items: flex-end;
-        }
-
-        .atlas-msg-inner {
-          max-width: 720px;
-          width: 100%;
+        .atlas-thread {
+          width: min(100%, 780px);
           margin: 0 auto;
         }
 
-        .atlas-ai-header {
+        .atlas-memory-pill {
           display: flex;
+          width: max-content;
+          max-width: 100%;
           align-items: center;
-          gap: 12px;
-          margin-bottom: 12px;
-        }
-
-        .atlas-avatar {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          overflow: hidden;
-          flex-shrink: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .atlas-sender-name {
-          font-size: 14px;
-          font-weight: 700;
-          color: #1a2b5e;
-        }
-
-        .atlas-bubble-ai {
+          gap: 8px;
+          margin: 0 auto 24px;
+          border-radius: 999px;
+          background: #eeeeee;
+          padding: 9px 16px;
+          color: #7c7c7c;
           font-size: 15px;
-          line-height: 1.75;
-          color: #1a2b5e;
-          padding: 0;
-          white-space: pre-wrap;
+          font-weight: 600;
+        }
+
+        .atlas-empty {
+          display: grid;
+          min-height: calc(100vh - 260px);
+          place-items: center;
+          text-align: center;
+        }
+
+        .atlas-empty-icon {
+          display: grid;
+          width: 92px;
+          height: 92px;
+          place-items: center;
+          overflow: hidden;
+          border-radius: 999px;
+          background: #ffffff;
+          box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .atlas-empty h1 {
+          margin: 22px 0 8px;
+          font-size: 34px;
+          font-weight: 760;
+          letter-spacing: -0.02em;
+          color: #111111;
+        }
+
+        .atlas-empty p {
+          margin: 0;
+          font-size: 17px;
+          color: #666666;
+        }
+
+        .atlas-msg-row {
+          display: flex;
+          flex-direction: column;
+          margin: 0 0 34px;
+        }
+
+        .atlas-msg-row.user-row {
+          align-items: flex-end;
         }
 
         .atlas-bubble-user {
-          background: #f7f2ea;
-          color: #1a2b5e;
-          border-radius: 20px 20px 4px 20px;
-          padding: 14px 20px;
-          font-size: 15px;
-          line-height: 1.65;
-          max-width: 600px;
+          max-width: min(72%, 520px);
+          border-radius: 28px;
+          background: #f1f1f1;
+          padding: 15px 22px;
+          color: #111111;
+          font-size: 18px;
+          line-height: 1.45;
           white-space: pre-wrap;
-          border: 1px solid rgba(26,43,94,0.08);
+        }
+
+        .atlas-bubble-ai {
+          max-width: 760px;
+          color: #111111;
+          font-size: 19px;
+          line-height: 1.62;
+        }
+
+        .atlas-bubble-ai p {
+          margin: 0 0 18px;
+        }
+
+        .atlas-bubble-ai ul,
+        .atlas-bubble-ai ol {
+          margin: 0 0 18px 24px;
+          padding: 0;
+        }
+
+        .atlas-bubble-ai li {
+          margin: 8px 0;
         }
 
         .atlas-msg-actions {
           display: flex;
           align-items: center;
-          gap: 6px;
-          margin-top: 12px;
+          gap: 18px;
+          margin-top: 16px;
+          color: #5f5f5f;
           opacity: 0;
-          transition: opacity 0.2s ease;
+          transition: opacity 160ms ease;
         }
+
         .atlas-msg-row:hover .atlas-msg-actions,
         .atlas-msg-actions.visible {
           opacity: 1;
         }
 
-        .atlas-action-btn {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          padding: 6px 12px;
-          border-radius: 10px;
+        .atlas-action-icon {
+          display: grid;
+          width: 28px;
+          height: 28px;
+          place-items: center;
+          border: 0;
           background: transparent;
-          border: 1px solid rgba(26,43,94,0.12);
-          color: #4a5568;
-          font-size: 12px;
-          font-weight: 600;
+          color: inherit;
           cursor: pointer;
-          transition: all 0.15s ease;
-        }
-        .atlas-action-btn:hover {
-          background: rgba(26,43,94,0.04);
-          color: #1a2b5e;
-          border-color: rgba(26,43,94,0.2);
+          transition: color 160ms ease, transform 160ms ease;
         }
 
-        .atlas-welcome-wrapper {
-          display: flex;
-          flex-direction: column;
+        .atlas-action-icon:hover {
+          color: #111111;
+          transform: translateY(-1px);
+        }
+
+        .atlas-typing {
+          display: inline-flex;
           align-items: center;
-          justify-content: center;
-          padding: 0 24px;
-          width: 100%;
-        }
-
-        .atlas-welcome-logo {
-          border-radius: 50%;
-          overflow: hidden;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 4px 20px rgba(26,43,94,0.06);
-        }
-
-        .atlas-welcome-title {
-          font-weight: 800;
-          color: #1a2b5e;
-          letter-spacing: -0.5px;
-        }
-
-        .atlas-welcome-sub {
-          color: #4a5568;
-          text-align: center;
-          font-weight: 500;
+          gap: 8px;
+          color: #666666;
+          font-size: 16px;
         }
 
         .atlas-typing-dot {
-          width: 8px;
-          height: 8px;
+          width: 7px;
+          height: 7px;
           border-radius: 50%;
-          background: #9aa5b1;
-          display: inline-block;
+          background: #777777;
         }
 
         .atlas-input-area {
-          flex-shrink: 0;
-          padding: 12px 20px 24px;
-          background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, #ffffff 20%);
+          pointer-events: none;
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          z-index: 25;
+          padding: 18px 24px 28px;
+          background: linear-gradient(to top, #ffffff 72%, rgba(255, 255, 255, 0));
         }
 
         .atlas-input-wrap {
-          max-width: 760px;
-          margin: 0 auto;
-          background: #ffffff;
-          border: 1.5px solid rgba(26,43,94,0.15);
-          border-radius: 20px;
+          pointer-events: auto;
           display: flex;
-          flex-direction: column;
-          transition: border-color 0.2s, box-shadow 0.2s;
-          box-shadow: 0 2px 12px rgba(26,43,94,0.04);
+          width: min(100%, 760px);
+          align-items: flex-end;
+          gap: 10px;
+          margin: 0 auto;
+          border-radius: 999px;
+          background: #ffffff;
+          padding: 8px 8px 8px 14px;
+          box-shadow: 0 12px 40px rgba(0, 0, 0, 0.14);
         }
-        .atlas-input-wrap:focus-within {
-          border-color: #1a2b5e;
-          box-shadow: 0 4px 20px rgba(26,43,94,0.08);
+
+        .atlas-composer-button {
+          display: grid;
+          width: 42px;
+          height: 42px;
+          flex: 0 0 42px;
+          place-items: center;
+          border: 0;
+          border-radius: 999px;
+          background: transparent;
+          color: #111111;
+          cursor: pointer;
+          transition: background 160ms ease;
+        }
+
+        .atlas-composer-button:hover {
+          background: #f1f1f1;
         }
 
         .atlas-textarea {
+          min-height: 42px;
+          max-height: 180px;
           flex: 1;
-          background: transparent;
-          border: none;
-          outline: none;
-          padding: 18px 20px 8px;
-          font-size: 15px;
-          color: #1a2b5e;
           resize: none;
-          font-family: inherit;
-          line-height: 1.6;
-          min-height: 52px;
-          max-height: 200px;
-        }
-        .atlas-textarea::placeholder { color: #9aa5b1; }
-
-        .atlas-input-toolbar {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 8px 12px 12px;
-        }
-
-        .atlas-toolbar-left {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-
-        .atlas-tool-btn {
-          width: 36px;
-          height: 36px;
-          border-radius: 10px;
+          border: 0;
           background: transparent;
-          border: none;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: #64748b;
-          transition: all 0.15s;
+          padding: 10px 2px 9px;
+          color: #111111;
+          font: inherit;
+          font-size: 18px;
+          line-height: 1.35;
+          outline: none;
         }
-        .atlas-tool-btn:hover {
-          background: #f7f2ea;
-          color: #1a2b5e;
+
+        .atlas-textarea::placeholder {
+          color: #8a8a8a;
+        }
+
+        .atlas-voice-button,
+        .atlas-send-btn {
+          display: grid;
+          width: 48px;
+          height: 48px;
+          flex: 0 0 48px;
+          place-items: center;
+          border: 0;
+          border-radius: 999px;
+          cursor: pointer;
+          transition: transform 160ms ease, background 160ms ease, opacity 160ms ease;
+        }
+
+        .atlas-voice-button {
+          background: #111111;
+          color: #ffffff;
         }
 
         .atlas-send-btn {
-          width: 36px;
-          height: 36px;
-          border-radius: 10px;
-          background: #1a2b5e;
-          border: none;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          transition: all 0.15s;
-          flex-shrink: 0;
+          background: #111111;
+          color: #ffffff;
         }
+
+        .atlas-voice-button:hover,
         .atlas-send-btn:hover:not(:disabled) {
-          transform: scale(1.05);
-          background: #2d4080;
+          transform: translateY(-1px);
+          background: #000000;
         }
+
         .atlas-send-btn:disabled {
-          background: #f0e7db;
-          color: #94a3b8;
           cursor: default;
+          opacity: 0.35;
         }
 
-        .atlas-hint {
-          text-align: center;
-          font-size: 11px;
-          color: #9aa5b1;
-          margin-top: 12px;
-        }
+        @media (min-width: 768px) {
+          .atlas-chat-topbar {
+            padding: 26px 34px 12px;
+          }
 
-        @media (max-width: 767px) {
-          .atlas-input-area {
-            padding: 12px 14px calc(104px + env(safe-area-inset-bottom));
+          .atlas-messages {
+            padding-top: 108px;
+            padding-bottom: 150px;
+          }
+
+          .atlas-icon-button {
+            width: 50px;
+            height: 50px;
           }
 
           .atlas-input-wrap {
-            border-radius: 18px;
+            border-radius: 28px;
+            padding: 12px;
+          }
+        }
+
+        @media (max-width: 767px) {
+          .atlas-chat-topbar {
+            padding: 18px 22px 10px;
           }
 
-          .atlas-hint {
-            display: none;
+          .atlas-messages {
+            padding: 104px 31px calc(170px + env(safe-area-inset-bottom));
+          }
+
+          .atlas-memory-pill {
+            margin-bottom: 28px;
+            font-size: 14px;
+          }
+
+          .atlas-bubble-user {
+            max-width: 86%;
+            border-radius: 26px;
+            padding: 14px 18px;
+            font-size: 18px;
+          }
+
+          .atlas-bubble-ai {
+            font-size: 18px;
+            line-height: 1.58;
+          }
+
+          .atlas-msg-actions {
+            opacity: 1;
+            gap: 17px;
+          }
+
+          .atlas-empty {
+            min-height: calc(100vh - 280px);
+          }
+
+          .atlas-empty-icon {
+            width: 84px;
+            height: 84px;
+          }
+
+          .atlas-empty h1 {
+            font-size: 31px;
+          }
+
+          .atlas-empty p {
+            font-size: 15px;
+          }
+
+          .atlas-input-area {
+            padding: 12px 30px calc(88px + env(safe-area-inset-bottom));
+          }
+
+          .atlas-input-wrap {
+            border-radius: 999px;
+            padding: 7px 7px 7px 10px;
+          }
+
+          .atlas-textarea {
+            font-size: 17px;
           }
         }
       `}</style>
 
-      {/* ── Messages Area ── */}
-      <div className="atlas-messages">
-        {/* Animated Welcome / Header Area */}
-        <motion.div
-          layout
-          initial={false}
-          animate={{
-            flex: started ? 0 : 1,
-            paddingTop: started ? 32 : 0,
-            paddingBottom: started ? 16 : 0,
-          }}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "100%",
-            borderBottom: started ? "1px solid rgba(26,43,94,0.08)" : "none",
-          }}
-        >
-          <motion.div
-            layout
-            className="atlas-welcome-wrapper"
-            animate={{
-              flexDirection: started ? "row" : "column",
-              gap: started ? 16 : 0,
-            }}
+      <div className="atlas-chat-topbar">
+        <button className="atlas-icon-button" type="button" aria-label="Open chat menu">
+          <Menu size={30} strokeWidth={2.5} />
+        </button>
+        <div className="atlas-top-group">
+          <button
+            className="atlas-icon-button"
+            type="button"
+            aria-label="New conversation"
+            onClick={handleNewConversation}
           >
-            <motion.div
-              layout
-              className="atlas-welcome-logo"
-              animate={{
-                width: started ? 42 : 80,
-                height: started ? 42 : 80,
-                marginBottom: started ? 0 : 24,
-              }}
-            >
-              <Image
-                src="/atlas-logo.png"
-                alt="Atlas AI"
-                width={80}
-                height={80}
-                className="object-cover"
-                style={{ width: "100%", height: "100%" }}
-              />
-            </motion.div>
-            
-            <motion.div layout style={{ textAlign: started ? "left" : "center" }}>
-              <motion.h1
-                layout
-                className="atlas-welcome-title"
-                animate={{
-                  fontSize: started ? 20 : 32,
-                  marginBottom: started ? 2 : 8,
-                }}
-              >
-                Atlas AI
-              </motion.h1>
-              <motion.p
-                layout
-                className="atlas-welcome-sub"
-                animate={{
-                  fontSize: started ? 13 : 15,
-                  opacity: started ? 0.7 : 1,
-                  marginBottom: started ? 0 : 0,
-                }}
-                style={{ textAlign: started ? "left" : "center" }}
-              >
-                Speak. Make mistakes. Grow.
-              </motion.p>
-            </motion.div>
-          </motion.div>
-        </motion.div>
+            <SquarePen size={27} strokeWidth={2.4} />
+          </button>
+          <button className="atlas-icon-button" type="button" aria-label="More options">
+            <MoreVertical size={28} strokeWidth={2.6} />
+          </button>
+        </div>
+      </div>
 
-        {/* Message List */}
-        {started && (
-          <div style={{ flex: 1, paddingBottom: 20, paddingTop: 10 }}>
-            {messages.map((msg) => (
-              <motion.div
-                key={msg.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25 }}
-                className={`atlas-msg-row ${msg.role === "ai" ? "ai-row" : "user-row"}`}
-                onMouseEnter={() => setHoveredMsg(msg.id)}
-                onMouseLeave={() => setHoveredMsg(null)}
-              >
-                <div className="atlas-msg-inner">
-                  {msg.role === "ai" && (
+      <div className="atlas-messages">
+        <div className="atlas-thread">
+          {started && (
+            <div className="atlas-memory-pill">
+              <Image src="/atlas-logo.png" alt="" width={24} height={24} className="h-6 w-6 object-contain" />
+              Atlas AI
+            </div>
+          )}
+
+          {!started && (
+            <div className="atlas-empty">
+              <div>
+                <div className="atlas-empty-icon mx-auto">
+                  <Image
+                    src="/atlas-logo.png"
+                    alt="Atlas AI"
+                    width={92}
+                    height={92}
+                    className="h-full w-full object-contain"
+                    priority
+                  />
+                </div>
+                <h1>Atlas AI</h1>
+                <p>Speak. Make mistakes. Grow.</p>
+              </div>
+            </div>
+          )}
+
+          {started && (
+            <>
+              {messages.map((message) => (
+                <motion.div
+                  key={message.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.22 }}
+                  className={`atlas-msg-row ${message.role === "ai" ? "ai-row" : "user-row"}`}
+                  onMouseEnter={() => setHoveredMsg(message.id)}
+                  onMouseLeave={() => setHoveredMsg(null)}
+                >
+                  {message.role === "user" ? (
+                    <div className="atlas-bubble-user">{message.content}</div>
+                  ) : (
                     <>
-                      <div className="atlas-ai-header">
-                        <div className="atlas-avatar">
-                          <Image
-                            src="/atlas-logo.png"
-                            alt="Atlas AI"
-                            width={36}
-                            height={36}
-                            className="object-cover"
-                            style={{ width: "100%", height: "100%" }}
-                          />
-                        </div>
-                        <span className="atlas-sender-name">Atlas</span>
-                      </div>
                       <div className="atlas-bubble-ai overflow-hidden">
-                        <ReactMarkdown>
-                          {msg.content}
-                        </ReactMarkdown>
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
                       </div>
-
-                      <div className={`atlas-msg-actions ${hoveredMsg === msg.id ? "visible" : ""}`}>
+                      <div className={`atlas-msg-actions ${hoveredMsg === message.id ? "visible" : ""}`}>
+                        <button className="atlas-action-icon" type="button" aria-label="Copy response">
+                          <Copy size={22} strokeWidth={2} />
+                        </button>
+                        <button className="atlas-action-icon" type="button" aria-label="Good response">
+                          <ThumbsUp size={22} strokeWidth={2} />
+                        </button>
+                        <button className="atlas-action-icon" type="button" aria-label="Bad response">
+                          <ThumbsDown size={22} strokeWidth={2} />
+                        </button>
+                        <button className="atlas-action-icon" type="button" aria-label="Read aloud">
+                          <Volume2 size={23} strokeWidth={2} />
+                        </button>
+                        <button className="atlas-action-icon" type="button" aria-label="Share response">
+                          <Share2 size={21} strokeWidth={2} />
+                        </button>
                         <button
-                          className="atlas-action-btn disabled:opacity-50"
-                          onClick={() => handleAutoSave(msg.id, msg.content)}
-                          disabled={savingId === msg.id || savedId === msg.id}
-                          title="Save this explanation to your Practice Deck"
+                          className="atlas-action-icon disabled:cursor-wait disabled:opacity-50"
+                          type="button"
+                          aria-label="Save to practice deck"
+                          title="Save to Practice Deck"
+                          onClick={() => handleAutoSave(message.id, message.content)}
+                          disabled={savingId === message.id || savedId === message.id}
                         >
-                          {savingId === msg.id ? (
-                            <Loader2 size={14} className="animate-spin" />
-                          ) : savedId === msg.id ? (
-                            <CheckCircle2 size={14} className="text-green-500" />
+                          {savingId === message.id ? (
+                            <Loader2 size={22} className="animate-spin" />
+                          ) : savedId === message.id ? (
+                            <CheckCircle2 size={22} />
                           ) : (
-                            <BookMarked size={14} />
+                            <BookMarked size={22} strokeWidth={2} />
                           )}
-                          {savingId === msg.id ? "Saving..." : savedId === msg.id ? "Saved to Deck" : "Save to Deck"}
                         </button>
                       </div>
                     </>
                   )}
+                </motion.div>
+              ))}
 
-                  {msg.role === "user" && (
-                    <div className="atlas-bubble-user">{msg.content}</div>
-                  )}
-                </div>
-              </motion.div>
-            ))}
-
-            <AnimatePresence>
-              {isTyping && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -4 }}
-                  className="atlas-msg-row ai-row"
-                >
-                  <div className="atlas-msg-inner">
-                    <div className="atlas-ai-header">
-                      <div className="atlas-avatar">
-                        <Image
-                          src="/atlas-logo.png"
-                          alt="Atlas AI"
-                          width={36}
-                          height={36}
-                          className="object-cover"
-                          style={{ width: "100%", height: "100%" }}
-                        />
-                      </div>
-                      <span className="atlas-sender-name">Atlas</span>
-                    </div>
-                    <div style={{ display: "flex", gap: 5, alignItems: "center", paddingTop: 4 }}>
-                      {[0, 1, 2].map((i) => (
+              <AnimatePresence>
+                {isTyping && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    className="atlas-msg-row ai-row"
+                  >
+                    <div className="atlas-typing">
+                      {[0, 1, 2].map((index) => (
                         <motion.span
-                          key={i}
+                          key={index}
                           className="atlas-typing-dot"
-                          animate={{ opacity: [0.3, 1, 0.3] }}
-                          transition={{ duration: 1.2, delay: i * 0.2, repeat: Infinity }}
+                          animate={{ opacity: [0.25, 1, 0.25] }}
+                          transition={{ duration: 1.1, delay: index * 0.18, repeat: Infinity }}
                         />
                       ))}
                     </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-            <div ref={messagesEndRef} style={{ height: 8 }} />
-          </div>
-        )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <div ref={messagesEndRef} style={{ height: 8 }} />
+            </>
+          )}
+        </div>
       </div>
 
-      {/* ── Input Area ── */}
       <div className="atlas-input-area">
         <div className="atlas-input-wrap">
+          <button className="atlas-composer-button" type="button" aria-label="New conversation" onClick={handleNewConversation}>
+            <Plus size={31} strokeWidth={2.3} />
+          </button>
           <textarea
             ref={textareaRef}
             className="atlas-textarea"
             placeholder="Message Atlas..."
             value={input}
+            rows={1}
             onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
                 handleSend();
               }
             }}
-
-            rows={1}
           />
-          <div className="atlas-input-toolbar">
-            <div className="atlas-toolbar-left">
-              <button className="atlas-tool-btn" title="New conversation" onClick={() => { clearMessages(); setStarted(false); setInput(""); }}>
-                <Plus size={18} />
-              </button>
-              <button className="atlas-tool-btn" title="Voice input">
-                <Mic size={18} />
-              </button>
-            </div>
-            <button
-              className="atlas-send-btn"
-              onClick={handleSend}
-              disabled={!input.trim()}
-              title="Send message"
-            >
-              <Send size={16} style={{ marginLeft: -2 }} />
+          {input.trim() ? (
+            <button className="atlas-send-btn" type="button" onClick={handleSend} aria-label="Send message">
+              <Send size={21} strokeWidth={2.4} />
             </button>
-          </div>
+          ) : (
+            <button className="atlas-voice-button" type="button" aria-label="Voice input">
+              <Mic size={24} strokeWidth={2.4} />
+            </button>
+          )}
         </div>
-        <p className="atlas-hint">Atlas AI can make mistakes. Practice for learning purposes.</p>
       </div>
-
     </div>
   );
 }
