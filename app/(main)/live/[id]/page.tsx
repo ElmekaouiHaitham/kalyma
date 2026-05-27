@@ -6,7 +6,6 @@ import {
   ChevronLeft, 
   Users, 
   Star, 
-  MessageSquare, 
   Info, 
   Calendar, 
   Clock, 
@@ -77,8 +76,8 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
               }
            }
         }
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to load session details");
       } finally {
         setIsLoading(false);
       }
@@ -254,7 +253,7 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
                      <CheckCircle2 size={14} className="text-[#34d399]" /> Learning Summary
                    </h4>
                    <p className="text-xs text-[#4a5568] leading-relaxed italic">
-                      "{session.ai_summary}"
+                      &quot;{session.ai_summary}&quot;
                    </p>
                 </div>
              )}

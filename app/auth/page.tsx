@@ -2,12 +2,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, ArrowRight, Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 
 export default function AuthPage() {
-  const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,12 +14,6 @@ export default function AuthPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [lastSignedUpEmail, setLastSignedUpEmail] = useState<string | null>(null);
   const [resendLoading, setResendLoading] = useState(false);
-
-  const features = [
-    "Personalized Learning Path",
-    "AI-Powered Conversations",
-    "Progress Analytics",
-  ];
 
   const formatAuthError = (errMsg: string) => {
     const msg = errMsg.toLowerCase();
@@ -64,8 +56,8 @@ export default function AuthPage() {
           setIsLogin(true);
         }
       }
-    } catch (err: any) {
-      setError(formatAuthError(err.message || "An unexpected error occurred"));
+    } catch (err: unknown) {
+      setError(formatAuthError(err instanceof Error ? err.message : "An unexpected error occurred"));
     } finally {
       setLoading(false);
     }
@@ -84,8 +76,8 @@ export default function AuthPage() {
       else {
         setSuccessMessage('Verification email sent again! Please check your inbox and spam folder.');
       }
-    } catch (err: any) {
-      setError(formatAuthError(err.message || 'Failed to resend email'));
+    } catch (err: unknown) {
+      setError(formatAuthError(err instanceof Error ? err.message : "Failed to resend email"));
     } finally {
       setResendLoading(false);
     }
@@ -102,8 +94,8 @@ export default function AuthPage() {
         }
       });
       if (error) throw error;
-    } catch (err: any) {
-      setError(formatAuthError(err.message || "Could not connect to Google"));
+    } catch (err: unknown) {
+      setError(formatAuthError(err instanceof Error ? err.message : "Could not connect to Google"));
       setLoading(false);
     }
   };
