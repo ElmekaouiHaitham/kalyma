@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
   Crown,
   Flame,
   Medal,
@@ -35,7 +37,7 @@ type LeaderboardResponse = {
   period: LeaderboardPeriod;
 };
 
-const LIMIT = 100;
+const LIMIT = 10;
 
 function displayName(player: LeaderboardUser) {
   return player.full_name?.trim() || "Anonymous";
@@ -133,6 +135,8 @@ export default function LeaderboardPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [rows, setRows] = useState<LeaderboardUser[]>([]);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState<Omit<LeaderboardResponse, "data"> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -145,7 +149,7 @@ export default function LeaderboardPage() {
 
       try {
         const params = new URLSearchParams({
-          page: "1",
+          page: String(page),
           limit: String(LIMIT),
           period: "all_time",
         });
@@ -156,7 +160,18 @@ export default function LeaderboardPage() {
         if (!res.ok) throw new Error("Could not load leaderboard.");
 
         const data = (await res.json()) as LeaderboardResponse;
-        if (isActive) setRows(data.data || []);
+        if (isActive) {
+          setRows(data.data || []);
+          setPagination({
+            page: data.page,
+            limit: data.limit,
+            total_pages: data.total_pages,
+            total_count: data.total_count,
+            has_next: data.has_next,
+            has_prev: data.has_prev,
+            period: data.period,
+          });
+        }
       } catch (err) {
         console.error("Failed to fetch leaderboard", err);
         if (isActive) setError("Could not load leaderboard.");
@@ -170,7 +185,7 @@ export default function LeaderboardPage() {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [page]);
 
   const myRank = useMemo(() => {
     const found = rows.find((row) => row.id === user?.id);
@@ -249,68 +264,105 @@ export default function LeaderboardPage() {
               )}
             </aside>
 
-            <ul className="space-y-2 md:col-span-2">
-              {rows.map((row, index) => {
-                const rank = row.rank || index + 1;
-                const name = displayName(row);
-                const isMe = row.id === user?.id;
-                const level = Math.max(1, Math.floor((row.xp || 0) / 100) + 1);
+            <div className="space-y-4 md:col-span-2">
+              <ul className="space-y-2">
+                {rows.map((row, index) => {
+                  const rank = row.rank || (page - 1) * LIMIT + index + 1;
+                  const name = displayName(row);
+                  const isMe = row.id === user?.id;
+                  const level = Math.max(1, Math.floor((row.xp || 0) / 100) + 1);
 
-                return (
-                  <li
-                    key={row.id}
-                    className={cn(
-                      "flex items-center gap-3 rounded-2xl border px-3 py-3 transition-colors",
-                      isMe ? "bg-[#f4efe7]/70" : "bg-white",
-                    )}
+                  return (
+                    <li
+                      key={row.id}
+                      className={cn(
+                        "flex items-center gap-3 rounded-2xl border px-3 py-3 transition-colors",
+                        isMe ? "bg-[#f4efe7]/70" : "bg-white",
+                      )}
+                      style={{ borderColor: "#e6d9c9" }}
+                    >
+                      <span className="grid w-10 shrink-0 place-items-center">
+                        {rank === 1 ? (
+                          <Crown className="h-6 w-6 text-[#c9842f]" strokeWidth={2.2} />
+                        ) : rank === 2 ? (
+                          <Trophy className="h-6 w-6 text-[#667084]" strokeWidth={2} />
+                        ) : rank === 3 ? (
+                          <Medal className="h-6 w-6 text-[#c9842f]" strokeWidth={2} />
+                        ) : (
+                          <span className="text-xs font-semibold tabular-nums text-[#667084]">
+                            #{rank}
+                          </span>
+                        )}
+                      </span>
+
+                      <Avatar name={name} url={row.avatar_url} size={40} />
+
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-[#17172f]">
+                          {name}
+                          {isMe && <span className="ml-1 font-normal text-[#202b67]">(You)</span>}
+                        </p>
+                        <p className="mt-0.5 inline-flex items-center gap-2 text-[11px] text-[#667084]">
+                          <span className="inline-flex items-center gap-0.5">
+                            <Star className="h-3 w-3" strokeWidth={1.8} />
+                            Lv.{level}
+                          </span>
+                          <span className="inline-flex items-center gap-0.5">
+                            <Flame className="h-3 w-3" strokeWidth={1.8} />
+                            {row.streak_count || 0}d
+                          </span>
+                        </p>
+                      </div>
+
+                      <div className="shrink-0 text-right">
+                        <p
+                          className="text-base font-semibold leading-none tabular-nums text-[#c9842f]"
+                          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                        >
+                          {(row.xp || 0).toLocaleString()}
+                        </p>
+                        <p className="mt-0.5 text-[10px] text-[#667084]">XP</p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {pagination && pagination.total_pages > 1 && (
+                <nav
+                  className="flex items-center justify-between rounded-2xl border bg-white px-3 py-3 shadow-[0_3px_14px_rgba(31,27,23,0.06)]"
+                  style={{ borderColor: "#e6d9c9" }}
+                  aria-label="Leaderboard pagination"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setPage((current) => Math.max(1, current - 1))}
+                    disabled={!pagination.has_prev || loading}
+                    className="inline-flex h-10 items-center gap-1 rounded-full border px-3 text-sm font-semibold text-[#17172f] transition-colors hover:border-[#17172f] hover:bg-[#f4efe7] disabled:cursor-not-allowed disabled:opacity-45"
                     style={{ borderColor: "#e6d9c9" }}
                   >
-                    <span className="grid w-10 shrink-0 place-items-center">
-                      {rank === 1 ? (
-                        <Crown className="h-6 w-6 text-[#c9842f]" strokeWidth={2.2} />
-                      ) : rank === 2 ? (
-                        <Trophy className="h-6 w-6 text-[#667084]" strokeWidth={2} />
-                      ) : rank === 3 ? (
-                        <Medal className="h-6 w-6 text-[#c9842f]" strokeWidth={2} />
-                      ) : (
-                        <span className="text-xs font-semibold tabular-nums text-[#667084]">
-                          #{rank}
-                        </span>
-                      )}
-                    </span>
+                    <ChevronLeft className="h-4 w-4" />
+                    Prev
+                  </button>
 
-                    <Avatar name={name} url={row.avatar_url} size={40} />
+                  <div className="text-center text-xs font-semibold text-[#667084]">
+                    Page <span className="text-[#17172f]">{pagination.page}</span> of{" "}
+                    <span className="text-[#17172f]">{pagination.total_pages}</span>
+                  </div>
 
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-[#17172f]">
-                        {name}
-                        {isMe && <span className="ml-1 font-normal text-[#202b67]">(You)</span>}
-                      </p>
-                      <p className="mt-0.5 inline-flex items-center gap-2 text-[11px] text-[#667084]">
-                        <span className="inline-flex items-center gap-0.5">
-                          <Star className="h-3 w-3" strokeWidth={1.8} />
-                          Lv.{level}
-                        </span>
-                        <span className="inline-flex items-center gap-0.5">
-                          <Flame className="h-3 w-3" strokeWidth={1.8} />
-                          {row.streak_count || 0}d
-                        </span>
-                      </p>
-                    </div>
-
-                    <div className="shrink-0 text-right">
-                      <p
-                        className="text-base font-semibold leading-none tabular-nums text-[#c9842f]"
-                        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-                      >
-                        {(row.xp || 0).toLocaleString()}
-                      </p>
-                      <p className="mt-0.5 text-[10px] text-[#667084]">XP</p>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+                  <button
+                    type="button"
+                    onClick={() => setPage((current) => current + 1)}
+                    disabled={!pagination.has_next || loading}
+                    className="inline-flex h-10 items-center gap-1 rounded-full border px-3 text-sm font-semibold text-[#17172f] transition-colors hover:border-[#17172f] hover:bg-[#f4efe7] disabled:cursor-not-allowed disabled:opacity-45"
+                    style={{ borderColor: "#e6d9c9" }}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </nav>
+              )}
+            </div>
           </>
         )}
       </main>
