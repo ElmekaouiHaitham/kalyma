@@ -9,6 +9,7 @@ import {
   Settings,
   FileText,
   GraduationCap,
+  Trophy,
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -20,11 +21,12 @@ const NAV_ITEMS = [
   { label: "Atlas AI", icon: Sparkles, href: "/chat", atlas: true },
   { label: "Live Sessions", icon: Radio, href: "/live" },
   { label: "News", icon: Newspaper, href: "/news" },
+  { label: "Leaderboard", icon: Trophy, href: "/leaderboard" },
   { label: "Profile Settings", icon: Settings, href: "/profile" },
 ];
 
 const MOBILE_NAV_ITEMS = NAV_ITEMS.filter(
-  ({ href }) => href !== "/articles" && href !== "/profile",
+  ({ href }) => href !== "/articles" && href !== "/leaderboard" && href !== "/profile",
 );
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {

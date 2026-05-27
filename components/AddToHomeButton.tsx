@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Share } from "lucide-react";
+import { Download, Loader2, Share } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type BeforeInstallPromptEvent = Event & {
@@ -33,6 +33,7 @@ export default function AddToHomeButton({
   const [showIosHelp, setShowIosHelp] = useState(false);
   const [isAppleDevice, setIsAppleDevice] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isInstalling, setIsInstalling] = useState(false);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -67,11 +68,17 @@ export default function AddToHomeButton({
   const isDark = variant === "dark";
 
   const install = async () => {
+    if (isInstalling) return;
     if (installPrompt) {
-      await installPrompt.prompt();
-      const choice = await installPrompt.userChoice;
-      if (choice.outcome === "accepted") {
-        setInstallPrompt(null);
+      setIsInstalling(true);
+      try {
+        await installPrompt.prompt();
+        const choice = await installPrompt.userChoice;
+        if (choice.outcome === "accepted") {
+          setInstallPrompt(null);
+        }
+      } finally {
+        setIsInstalling(false);
       }
       return;
     }
@@ -86,7 +93,8 @@ export default function AddToHomeButton({
       <button
         type="button"
         onClick={install}
-        className={`inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-extrabold transition-all sm:px-6 ${className}`}
+        disabled={isInstalling}
+        className={`inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-extrabold transition-all disabled:cursor-wait disabled:opacity-75 sm:px-6 ${className}`}
         style={{
           background: isDark ? "#ffffff" : "rgba(255,255,255,0.58)",
           border: isDark ? "1px solid rgba(255,255,255,0.35)" : "2px solid #050a2f",
@@ -94,8 +102,8 @@ export default function AddToHomeButton({
           boxShadow: isDark ? "0 16px 30px rgba(0,0,0,0.16)" : "none",
         }}
       >
-        <Download size={17} />
-        Add to Home
+        {isInstalling ? <Loader2 size={17} className="animate-spin" /> : <Download size={17} />}
+        {isInstalling ? "Preparing..." : "Add to Home"}
       </button>
 
       {showIosHelp && (

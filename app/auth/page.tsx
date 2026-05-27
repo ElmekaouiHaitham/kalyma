@@ -227,7 +227,10 @@ export default function AuthPage() {
               className="group w-full py-4 rounded-2xl bg-[#1a2b5e] text-white font-bold text-lg shadow-xl shadow-[#1a2b5e]/20 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:hover:scale-100"
             >
               {loading ? (
-                <Loader2 size={20} className="animate-spin" />
+                <>
+                  <Loader2 size={20} className="animate-spin" />
+                  {isLogin ? "Logging in..." : "Creating account..."}
+                </>
               ) : isLogin ? (
                 "Log In"
               ) : (
@@ -255,7 +258,14 @@ export default function AuthPage() {
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
               </svg>
-              Continue with Google
+              {loading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                "Continue with Google"
+              )}
           </button>
 
           <p className="text-center mt-6 text-sm text-[#4a5568] font-medium">

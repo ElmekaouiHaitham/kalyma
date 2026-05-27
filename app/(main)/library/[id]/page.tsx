@@ -5,12 +5,9 @@ import {
   ArrowLeft,
   Clock,
   X,
-  Bot,
   Send,
   Tag,
   BookMarked,
-  Sparkles,
-  ArrowRight,
   CheckCircle,
   Loader2,
   CheckCircle2,
@@ -41,6 +38,7 @@ export default function ReaderPage() {
   const [article, setArticle] = useState<ArticleDetail | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isCompleting, setIsCompleting] = useState(false);
 
   // Chat & Selection
   const [panelOpen, setPanelOpen] = useState(false);
@@ -104,7 +102,8 @@ export default function ReaderPage() {
   }, [id, session]);
 
   const handleMarkCompleted = async () => {
-    if (!session?.access_token || !id) return;
+    if (!session?.access_token || !id || isCompleting) return;
+    setIsCompleting(true);
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/articles/${id}/complete`,
@@ -118,6 +117,8 @@ export default function ReaderPage() {
       }
     } catch (err) {
       console.error("Error completing article", err);
+    } finally {
+      setIsCompleting(false);
     }
   };
 
@@ -190,53 +191,51 @@ export default function ReaderPage() {
   const paragraphs = article.body?.split("\n\n").filter(Boolean) ?? [];
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--bg-base)" }}>
+    <div className="min-h-screen bg-[#f7f2ea] text-[#17172f]">
       {/* Header */}
-      <div className="sticky top-0 z-30 glass-strong px-4 py-3 flex items-center gap-3">
+      <div className="sticky top-0 z-30 border-b border-[#e6d9c9] bg-[#f7f2ea]/92 px-4 py-3 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-[760px] items-center gap-3">
         <button
           onClick={() => router.back()}
-          className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#667084] transition-colors hover:bg-[#f4efe7] hover:text-[#17172f]"
           style={{
-            background: "var(--bg-card)",
-            border: "1px solid var(--border-subtle)",
+            border: "1px solid #e6d9c9",
           }}
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium truncate uppercase">
+          <div className="truncate text-xs font-extrabold uppercase tracking-[0.16em] text-[#c9842f]">
             {article.topic}
           </div>
         </div>
         <div
-          className="flex items-center gap-1.5 text-xs"
-          style={{ color: "var(--text-muted)" }}
+          className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-[#667084]"
+          style={{ border: "1px solid #e6d9c9" }}
         >
           <Clock className="w-3 h-3" />
           {article.reading_time_mins} min
         </div>
+        </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-2xl mx-auto px-5 py-6 pb-32">
+      <div className="mx-auto max-w-[760px] px-5 py-8 pb-32 sm:px-8 sm:py-12">
         {/* Meta */}
-        <div className="flex flex-wrap items-center gap-2 mb-4">
+        <div className="mb-5 flex flex-wrap items-center gap-2">
           <span
-            className="text-xs font-semibold px-2.5 py-1 rounded-full capitalize"
+            className="rounded-full px-3 py-1.5 text-xs font-extrabold capitalize"
             style={{
-              background: "rgba(34,197,94,0.15)",
-              color: "var(--green-primary)",
-              border: "1px solid rgba(34,197,94,0.3)",
+              background: "#edf8f0",
+              color: "#168244",
+              border: "1px solid #cfead7",
             }}
           >
             {article.difficulty}
           </span>
           <span
-            className="text-xs px-2 py-1 rounded-full flex items-center gap-1 uppercase"
-            style={{
-              background: "rgba(255,255,255,0.05)",
-              color: "var(--text-muted)",
-            }}
+            className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-semibold uppercase text-[#667084]"
+            style={{ border: "1px solid #e6d9c9" }}
           >
             <Tag className="w-3 h-3" />
             {article.topic}
@@ -244,15 +243,14 @@ export default function ReaderPage() {
         </div>
 
         <h1
-          className="text-2xl font-bold leading-tight mb-4"
-          style={{ fontFamily: "'Outfit', sans-serif" }}
+          className="mb-5 text-[32px] font-semibold leading-[1.12] text-[#17172f] sm:text-[44px]"
+          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
         >
           {article.title}
         </h1>
         {article.summary && (
           <p
-            className="text-sm mb-6 italic"
-            style={{ color: "var(--text-secondary)" }}
+            className="mb-8 max-w-[64ch] border-l-4 border-[#c9842f] pl-4 text-[17px] font-medium leading-[1.65] text-[#667084] sm:text-[19px]"
           >
             {article.summary}
           </p>
@@ -260,17 +258,16 @@ export default function ReaderPage() {
 
         {/* Tip */}
         <div
-          className="flex items-start gap-2 p-3 rounded-xl mb-6 text-sm"
+          className="mb-8 flex items-start gap-3 rounded-[18px] bg-white p-4 text-sm shadow-sm"
           style={{
-            background: "rgba(34,197,94,0.07)",
-            border: "1px solid rgba(34,197,94,0.2)",
+            border: "1px solid #e6d9c9",
           }}
         >
           <span className="text-base">💡</span>
-          <p style={{ color: "var(--text-secondary)" }}>
+          <p className="leading-relaxed text-[#667084]">
             <strong
               className="font-semibold"
-              style={{ color: "var(--green-primary)" }}
+              style={{ color: "#c9842f" }}
             >
               Tip:
             </strong>{" "}
@@ -280,19 +277,19 @@ export default function ReaderPage() {
 
         {/* Article text */}
         <div
-          className="prose-reader relative"
+          className="readable-reader relative"
           onMouseUp={handleTextSelection}
           onTouchEnd={handleTextSelection}
         >
           {paragraphs.map((para, pIdx) => (
-            <p key={pIdx} className="mb-6">
+            <p key={pIdx}>
               {para}
             </p>
           ))}
         </div>
 
         {/* Completion Area */}
-        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800 text-center flex flex-col items-center">
+        <div className="mt-12 flex flex-col items-center border-t border-[#e6d9c9] pt-8 text-center">
           {isCompleted ? (
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -306,12 +303,20 @@ export default function ReaderPage() {
           ) : (
             <button
               onClick={handleMarkCompleted}
-              className="px-8 py-3 rounded-2xl font-bold text-white shadow-lg card-hover"
+              disabled={isCompleting}
+              className="rounded-full px-8 py-3.5 font-extrabold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:bg-[#121a46] disabled:cursor-wait disabled:opacity-75 disabled:hover:translate-y-0"
               style={{
-                background: "linear-gradient(135deg, #1a2b5e, #2d4080)",
+                background: "#202b67",
               }}
             >
-              Mark as Completed
+              {isCompleting ? (
+                <span className="inline-flex items-center gap-2">
+                  <Loader2 size={18} className="animate-spin" />
+                  Saving progress...
+                </span>
+              ) : (
+                "Mark as Completed"
+              )}
             </button>
           )}
         </div>

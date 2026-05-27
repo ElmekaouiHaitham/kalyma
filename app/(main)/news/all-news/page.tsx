@@ -91,7 +91,23 @@ export default function AllNewsPage() {
 
       {/* List */}
       {isLoading ? (
-        <div className="text-center py-20 text-[#9aa5b1]">Loading news feed...</div>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2" aria-busy="true" aria-label="Loading news feed">
+          {[1, 2, 3, 4, 5, 6].map((item) => (
+            <div
+              key={item}
+              className="flex animate-pulse items-center gap-4 rounded-[2rem] bg-white p-4"
+              style={{ border: "1px solid rgba(26,43,94,0.08)" }}
+            >
+              <div className="h-24 w-24 shrink-0 rounded-2xl bg-[#f0ebe4] sm:h-32 sm:w-32" />
+              <div className="min-w-0 flex-1 space-y-3">
+                <div className="h-3 w-24 rounded-full bg-[#f0ebe4]" />
+                <div className="h-4 w-full rounded-full bg-[#f0ebe4]" />
+                <div className="h-4 w-3/4 rounded-full bg-[#f0ebe4]" />
+                <div className="h-3 w-5/6 rounded-full bg-[#f0ebe4]" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : news.length === 0 ? (
         <div className="bg-white rounded-[2rem] p-20 text-center border border-[#1a2b5e]/10">
           <p className="text-[#64748b]">No news found in the last 30 hours.</p>

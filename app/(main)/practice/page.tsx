@@ -8,6 +8,7 @@ import {
   Info,
   BrainCircuit,
   Plus,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/app/providers";
@@ -36,6 +37,7 @@ export default function PracticePage() {
   const [sessionComplete, setSessionComplete] = useState(false);
   const [scores, setScores] = useState({ again: 0, hard: 0, good: 0, easy: 0 });
   const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [answeringType, setAnsweringType] = useState<keyof typeof scores | null>(null);
 
   const fetchDueCards = async () => {
     if (!session?.access_token) {
@@ -67,8 +69,9 @@ export default function PracticePage() {
   const progress = deck.length > 0 ? (currentIndex / deck.length) * 100 : 0;
 
   const handleResponse = async (type: keyof typeof scores, rating: number) => {
+    if (answeringType) return;
+    setAnsweringType(type);
     setScores((prev) => ({ ...prev, [type]: prev[type] + 1 }));
-    setIsFlipped(false);
 
     // Submit rating to backend
     if (session?.access_token && currentCard) {
@@ -86,12 +89,14 @@ export default function PracticePage() {
       }
     }
 
+    setIsFlipped(false);
     if (currentIndex < deck.length - 1) {
       setTimeout(() => setCurrentIndex((prev) => prev + 1), 150);
     } else {
       setSessionComplete(true);
       fetchDueCards(); // Refresh stats for the completion screen
     }
+    setAnsweringType(null);
   };
 
   if (loading) {
@@ -398,6 +403,7 @@ export default function PracticePage() {
                 <button
                   key={btn.type}
                   onClick={() => handleResponse(btn.type as keyof typeof scores, btn.rating)}
+                  disabled={answeringType !== null}
                   className="flex flex-col items-center gap-2 group/btn"
                 >
                   <div
@@ -406,7 +412,9 @@ export default function PracticePage() {
                       btn.color,
                     )}
                   >
-                    {btn.type === "again" ? (
+                    {answeringType === btn.type ? (
+                      <Loader2 size={20} className="animate-spin" />
+                    ) : btn.type === "again" ? (
                       <RotateCcw size={20} />
                     ) : (
                       <Check size={20} />

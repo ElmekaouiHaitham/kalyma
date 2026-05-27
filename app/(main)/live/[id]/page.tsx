@@ -12,7 +12,8 @@ import {
   Clock, 
   AlertCircle,
   X,
-  CheckCircle2
+  CheckCircle2,
+  Loader2
 } from "lucide-react";
 import { useAuth } from "@/app/providers";
 
@@ -336,7 +337,14 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
                       disabled={rating === 0 || isSubmitting}
                       className="w-full py-4 bg-[#1a2b5e] text-white rounded-2xl font-bold shadow-lg shadow-[#1a2b5e]/20 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
                     >
-                      {isSubmitting ? "Submitting..." : "Submit Review"}
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        "Submit Review"
+                      )}
                     </button>
                   </>
                 )}

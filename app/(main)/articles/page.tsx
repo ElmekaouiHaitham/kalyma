@@ -169,11 +169,29 @@ export default function ArticlesPage() {
 
   if (isLoading) {
     return (
-      <div
-        className="flex min-h-full items-center justify-center text-[17px]"
-        style={{ background: surface, color: muted }}
-      >
-        Loading articles...
+      <div className="min-h-full px-6 py-10 lg:px-8" style={{ background: surface }} aria-busy="true">
+        <div className="mx-auto max-w-[1464px]">
+          <div className="mb-10 border-b pb-9" style={{ borderColor: border }}>
+            <div className="h-11 w-64 animate-pulse rounded-full bg-[#f0ebe4]" />
+          </div>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5].map((item) => (
+              <div
+                key={item}
+                className="min-h-[232px] animate-pulse rounded-[22px] bg-white p-6"
+                style={{ border: "1px solid #e6d9c9" }}
+              >
+                <div className="mb-5 h-16 w-16 rounded-2xl bg-[#f0ebe4]" />
+                <div className="space-y-3">
+                  <div className="h-5 w-4/5 rounded-full bg-[#f0ebe4]" />
+                  <div className="h-5 w-2/3 rounded-full bg-[#f0ebe4]" />
+                  <div className="h-4 w-full rounded-full bg-[#f0ebe4]" />
+                  <div className="h-4 w-3/4 rounded-full bg-[#f0ebe4]" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

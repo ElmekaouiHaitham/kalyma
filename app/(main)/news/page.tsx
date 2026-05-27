@@ -65,8 +65,22 @@ export default function NewsPage() {
   if (isLoading) {
     return (
       <PageShell title="News Feed" subtitle="Stay updated with the latest happenings around the world.">
-        <div className="p-8 text-center" style={{ color: "#6f6b66" }}>
-          Loading your news...
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2" aria-busy="true" aria-label="Loading your news">
+          {[1, 2, 3, 4].map((item) => (
+            <div
+              key={item}
+              className="flex animate-pulse items-center gap-4 rounded-[2rem] bg-white p-4"
+              style={{ border: "1px solid #e6d9c9" }}
+            >
+              <div className="h-24 w-24 shrink-0 rounded-2xl bg-[#f0ebe4]" />
+              <div className="min-w-0 flex-1 space-y-3">
+                <div className="h-3 w-20 rounded-full bg-[#f0ebe4]" />
+                <div className="h-4 w-full rounded-full bg-[#f0ebe4]" />
+                <div className="h-4 w-4/5 rounded-full bg-[#f0ebe4]" />
+                <div className="h-3 w-3/4 rounded-full bg-[#f0ebe4]" />
+              </div>
+            </div>
+          ))}
         </div>
       </PageShell>
     );

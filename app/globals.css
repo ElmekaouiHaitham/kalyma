@@ -186,6 +186,45 @@ body {
   margin-bottom: 1.5rem;
 }
 
+.readable-reader {
+  max-width: 66ch;
+  color: #2f3446;
+  font-family: "Inter", "Outfit", system-ui, sans-serif;
+  font-size: clamp(1.0625rem, 0.5vw + 0.95rem, 1.1875rem);
+  font-weight: 450;
+  line-height: 1.82;
+  letter-spacing: 0;
+  overflow-wrap: break-word;
+  text-rendering: optimizeLegibility;
+}
+
+.readable-reader p {
+  margin: 0 0 1.45em;
+}
+
+.readable-reader p:first-of-type::first-letter {
+  color: #17172f;
+  float: left;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 3.3em;
+  font-weight: 600;
+  line-height: 0.82;
+  margin: 0.12em 0.12em 0 0;
+}
+
+.readable-reader ::selection {
+  background: rgba(201, 132, 47, 0.22);
+  color: #17172f;
+}
+
+@media (max-width: 640px) {
+  .readable-reader {
+    max-width: 100%;
+    font-size: 1.0625rem;
+    line-height: 1.78;
+  }
+}
+
 /* Input styles */
 .input-field {
   background: #f7f2ea;

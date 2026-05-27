@@ -5,17 +5,15 @@ import {
   ArrowLeft,
   Clock,
   X,
-  Bot,
   Send,
   BookMarked,
-  Sparkles,
   Tag,
   Bookmark,
   Share2,
   CheckCircle,
-  ArrowRight,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  Newspaper,
 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
@@ -44,6 +42,7 @@ export default function NewsDetailPage() {
   const [news, setNews] = useState<NewsDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -96,7 +95,8 @@ export default function NewsDetailPage() {
   }, [id, session]);
 
   const handleMarkCompleted = async () => {
-    if (!session?.access_token || !id) return;
+    if (!session?.access_token || !id || isCompleting) return;
+    setIsCompleting(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/news/${id}/read`, {
         method: "POST",
@@ -107,6 +107,8 @@ export default function NewsDetailPage() {
       }
     } catch (err) {
       console.error("Error completing news article", err);
+    } finally {
+      setIsCompleting(false);
     }
   };
 
@@ -172,14 +174,15 @@ export default function NewsDetailPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#f7f2ea]" style={{ colorScheme: 'light' }}>
       {/* Premium Header */}
-      <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-[#1a2b5e]/10 px-4 py-3 sm:px-6">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+      <header className="sticky top-0 z-30 border-b border-[#e6d9c9] bg-[#f7f2ea]/92 px-4 py-3 backdrop-blur-xl sm:px-6">
+        <div className="mx-auto flex max-w-[760px] items-center justify-between">
             <div className="flex items-center gap-3">
                 <button
                 onClick={() => router.back()}
-                className="w-10 h-10 rounded-xl bg-[#f7f2ea] flex items-center justify-center hover:bg-[#fbf7f1] transition-colors"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#667084] transition-colors hover:bg-[#f4efe7] hover:text-[#17172f]"
+                style={{ border: "1px solid #e6d9c9" }}
                 >
-                <ArrowLeft className="w-5 h-5 text-[#1a2b5e]" />
+                <ArrowLeft className="w-4 h-4" />
                 </button>
                 <div className="flex flex-col">
                     <span className="text-[10px] font-bold text-[#c9a84c] uppercase tracking-widest">{news.topic}</span>
@@ -189,49 +192,49 @@ export default function NewsDetailPage() {
             <div className="flex items-center gap-2">
                 <button
                 onClick={() => setBookmarked(!bookmarked)}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${bookmarked ? 'bg-[#c9a84c]/10 text-[#c9a84c]' : 'bg-white text-[#9aa5b1] hover:text-[#1a2b5e]'}`}
-                style={{ border: "1px solid rgba(26,43,94,0.08)" }}
+                className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${bookmarked ? 'bg-[#fbf5e8] text-[#c9842f]' : 'bg-white text-[#9aa5b1] hover:bg-[#f4efe7] hover:text-[#17172f]'}`}
+                style={{ border: "1px solid #e6d9c9" }}
                 >
-                <Bookmark className="w-5 h-5" fill={bookmarked ? "currentColor" : "none"} />
+                <Bookmark className="w-4 h-4" fill={bookmarked ? "currentColor" : "none"} />
                 </button>
                 <button
-                className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#9aa5b1] hover:text-[#1a2b5e] transition-colors"
-                style={{ border: "1px solid rgba(26,43,94,0.08)" }}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#9aa5b1] transition-colors hover:bg-[#f4efe7] hover:text-[#17172f]"
+                style={{ border: "1px solid #e6d9c9" }}
                 >
-                <Share2 className="w-5 h-5" />
+                <Share2 className="w-4 h-4" />
                 </button>
             </div>
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-8 sm:px-8">
+      <main className="mx-auto w-full max-w-[760px] flex-1 px-5 py-8 pb-32 sm:px-8 sm:py-12">
         {/* Article Intro */}
-        <div className="space-y-6 mb-10 text-center sm:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white border border-[#1a2b5e]/10 rounded-full">
+        <div className="mb-8 space-y-5 text-left">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5" style={{ border: "1px solid #e6d9c9" }}>
                 <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-[10px] font-bold text-[#1a2b5e] uppercase tracking-widest">Live News</span>
-                <span className="text-[10px] text-[#64748b]">·</span>
+                <span className="text-[10px] font-bold text-[#17172f] uppercase tracking-widest">Live News</span>
+                <span className="text-[10px] text-[#64748b]">-</span>
                 <span className="text-[10px] text-[#64748b] font-medium">
                     {new Date(news.published_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
                 </span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-[#1a2b5e] leading-tight font-outfit">
+            <h1 className="text-[32px] font-semibold leading-[1.12] text-[#17172f] sm:text-[44px]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
                 {news.title}
             </h1>
 
-            <p className="text-lg text-[#64748b] leading-relaxed italic border-l-4 border-[#c9a84c] pl-4">
+            <p className="max-w-[64ch] border-l-4 border-[#c9842f] pl-4 text-[17px] font-medium leading-[1.65] text-[#667084] sm:text-[19px]">
                 {news.summary}
             </p>
         </div>
 
         {/* Hero Image Section */}
-        <div className="relative aspect-[16/9] w-full mb-10 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-[#1a2b5e]/10 ring-8 ring-white">
+        <div className="relative mb-10 aspect-[16/9] w-full overflow-hidden rounded-[24px] bg-white shadow-[0_12px_34px_rgba(31,27,23,0.08)]" style={{ border: "1px solid #e6d9c9" }}>
             {news.thumbnail_url ? (
                 <img src={news.thumbnail_url} alt="" className="w-full h-full object-cover" />
             ) : (
-                <div className="w-full h-full bg-gradient-to-br from-[#1a2b5e] to-[#2d4080] flex items-center justify-center">
-                    <Newspaper className="w-24 h-24 text-white/20" />
+                <div className="flex h-full w-full items-center justify-center bg-[#f4efe7]">
+                    <Newspaper className="h-20 w-20 text-[#c9842f]/35" />
                 </div>
             )}
             <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/20 to-transparent" />
@@ -239,7 +242,7 @@ export default function NewsDetailPage() {
 
         {/* Article content */}
         <article 
-          className="prose-news space-y-6 text-[#1a2b5e]/80 text-lg leading-relaxed select-text" 
+          className="readable-reader select-text" 
           onMouseUp={handleTextSelection} 
           onTouchEnd={handleTextSelection}
         >
@@ -249,10 +252,10 @@ export default function NewsDetailPage() {
         </article>
 
         {/* Completion Area */}
-        <div className="mt-16 pt-12 border-t border-[#1a2b5e]/5 text-center flex flex-col items-center">
+        <div className="mt-12 flex flex-col items-center border-t border-[#e6d9c9] pt-8 text-center">
             {isCompleted ? (
                 <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-3">
-                    <div className="w-16 h-16 bg-[#22c55e] rounded-2xl flex items-center justify-center text-white shadow-xl shadow-green-200">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-[18px] bg-[#22c55e] text-white shadow-xl shadow-green-200">
                         <CheckCircle size={32} />
                     </div>
                     <div>
@@ -263,21 +266,30 @@ export default function NewsDetailPage() {
             ) : (
                 <button 
                   onClick={handleMarkCompleted}
-                  className="group relative flex items-center gap-2 px-10 py-4 rounded-[1.5rem] font-bold text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
-                  style={{ background: "linear-gradient(135deg, #1a2b5e, #2d4080)" }}
+                  disabled={isCompleting}
+                  className="group flex items-center gap-2 rounded-full px-8 py-3.5 font-extrabold text-white shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#121a46]"
+                  style={{ background: "#202b67" }}
                 >
-                    <CheckCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                    Mark as Completed
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-[#f7f2ea]" />
+                    {isCompleting ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Saving progress...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        Mark as Completed
+                      </>
+                    )}
                 </button>
             )}
         </div>
 
         {/* Footer Meta */}
-        <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 py-8 border-t border-[#1a2b5e]/5 text-[10px] sm:text-xs font-bold text-[#9aa5b1] uppercase tracking-[0.2em]">
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-[#e6d9c9] py-8 text-[10px] font-bold uppercase tracking-[0.2em] text-[#9aa5b1] sm:flex-row sm:text-xs">
             <div className="flex items-center gap-2">
                 <Tag className="w-4 h-4" />
-                <span>{news.topic} · World News</span>
+                <span>{news.topic} - World News</span>
             </div>
             <span>© 2026 kalyma.ma Press</span>
         </div>
@@ -494,13 +506,3 @@ export default function NewsDetailPage() {
     </div>
   );
 }
-
-// Global styles for news prose
-const NewspaperIcon = () => (
-    <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-    </svg>
-);
-
-function Newspaper(props: any) { return <NewspaperIcon /> }
-
