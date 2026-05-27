@@ -1,17 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
-  ChevronLeft,
-  ChevronRight,
+  ArrowLeft,
   Crown,
+  Flame,
   Medal,
-  RefreshCcw,
+  Star,
   Trophy,
-  Users,
 } from "lucide-react";
 import { useAuth } from "@/app/providers";
-import PageShell from "@/components/PageShell";
 import { cn } from "@/lib/utils";
 
 type LeaderboardPeriod = "all_time" | "weekly" | "monthly";
@@ -36,84 +35,133 @@ type LeaderboardResponse = {
   period: LeaderboardPeriod;
 };
 
-const PERIODS: { value: LeaderboardPeriod; label: string }[] = [
-  { value: "all_time", label: "All time" },
-  { value: "weekly", label: "Weekly" },
-  { value: "monthly", label: "Monthly" },
-];
-
-const LIMIT = 10;
+const LIMIT = 100;
 
 function displayName(player: LeaderboardUser) {
-  return player.full_name?.trim() || "Kalyma learner";
+  return player.full_name?.trim() || "Anonymous";
 }
 
-function initialsFor(name: string) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("") || "KL";
-}
+function Avatar({
+  name,
+  url,
+  size = 40,
+}: {
+  name: string;
+  url?: string | null;
+  size?: number;
+}) {
+  const initial = (name || "?").trim().charAt(0).toUpperCase() || "?";
 
-function rankStyles(rank: number) {
-  if (rank === 1) return "border-[#c9a84c] bg-[#c9a84c]/10 text-[#8a6a18]";
-  if (rank === 2) return "border-[#aeb5c9] bg-[#eef2fc] text-[#526078]";
-  if (rank === 3) return "border-[#c9842f] bg-[#c9842f]/10 text-[#9a5c1f]";
-  return "border-[#1a2b5e]/10 bg-white text-[#667084]";
-}
-
-function RankBadge({ rank }: { rank: number }) {
-  const Icon = rank === 1 ? Crown : rank <= 3 ? Medal : Trophy;
+  if (url) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={url}
+        alt={name}
+        className="shrink-0 rounded-full object-cover"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
 
   return (
     <div
-      className={cn(
-        "grid h-12 w-12 shrink-0 place-items-center rounded-2xl border text-sm font-extrabold",
-        rankStyles(rank),
-      )}
-      aria-label={`Rank ${rank}`}
+      className="grid shrink-0 place-items-center rounded-full bg-[#f4efe7] font-semibold text-[#17172f]"
+      style={{ width: size, height: size, fontSize: size * 0.4 }}
     >
-      {rank <= 3 ? <Icon className="h-5 w-5" /> : rank}
+      {initial}
+    </div>
+  );
+}
+
+function RewardTile({
+  rank,
+  reward,
+  Icon,
+  tone,
+}: {
+  rank: string;
+  reward: string;
+  Icon: typeof Trophy;
+  tone: "gold" | "soft" | "accent";
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-xl p-3 text-center",
+        tone === "gold" && "bg-[#fbf5e8]",
+        tone === "soft" && "bg-[#f4efe7]",
+        tone === "accent" && "bg-[#c9842f]/10",
+      )}
+    >
+      <Icon
+        className={cn(
+          "mx-auto h-6 w-6",
+          tone === "soft" ? "text-[#667084]" : "text-[#c9842f]",
+        )}
+        strokeWidth={2}
+      />
+      <p className="mt-1 text-sm font-semibold text-[#17172f]">{rank}</p>
+      <p className="mt-0.5 text-[10px] leading-tight text-[#667084]">{reward}</p>
+    </div>
+  );
+}
+
+function RowListSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <div className="space-y-2" aria-busy="true" aria-label="Loading leaderboard">
+      {Array.from({ length: count }).map((_, index) => (
+        <div
+          key={index}
+          className="flex animate-pulse items-center gap-3 rounded-2xl border bg-white px-3 py-3"
+          style={{ borderColor: "#e6d9c9" }}
+        >
+          <div className="h-10 w-10 rounded-full bg-[#f0ebe4]" />
+          <div className="h-10 w-10 rounded-full bg-[#f0ebe4]" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="h-4 w-40 rounded-full bg-[#f0ebe4]" />
+            <div className="h-3 w-28 rounded-full bg-[#f0ebe4]" />
+          </div>
+          <div className="h-7 w-14 rounded-full bg-[#f0ebe4]" />
+        </div>
+      ))}
     </div>
   );
 }
 
 export default function LeaderboardPage() {
+  const router = useRouter();
   const { user } = useAuth();
-  const [period, setPeriod] = useState<LeaderboardPeriod>("all_time");
-  const [page, setPage] = useState(1);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [rows, setRows] = useState<LeaderboardUser[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isActive = true;
 
     const fetchLeaderboard = async () => {
-      setIsLoading(true);
+      setLoading(true);
       setError(null);
 
       try {
         const params = new URLSearchParams({
-          page: String(page),
+          page: "1",
           limit: String(LIMIT),
-          period,
+          period: "all_time",
         });
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/gamification/leaderboard?${params.toString()}`);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/gamification/leaderboard?${params.toString()}`,
+        );
 
-        if (!res.ok) {
-          throw new Error("Could not load leaderboard.");
-        }
+        if (!res.ok) throw new Error("Could not load leaderboard.");
 
-        const data = await res.json();
-        if (isActive) setLeaderboard(data);
+        const data = (await res.json()) as LeaderboardResponse;
+        if (isActive) setRows(data.data || []);
       } catch (err) {
         console.error("Failed to fetch leaderboard", err);
         if (isActive) setError("Could not load leaderboard.");
       } finally {
-        if (isActive) setIsLoading(false);
+        if (isActive) setLoading(false);
       }
     };
 
@@ -122,185 +170,150 @@ export default function LeaderboardPage() {
     return () => {
       isActive = false;
     };
-  }, [page, period]);
+  }, []);
 
-  const topThree = useMemo(() => leaderboard?.data.filter((player) => player.rank <= 3) ?? [], [leaderboard]);
-
-  const changePeriod = (nextPeriod: LeaderboardPeriod) => {
-    setPeriod(nextPeriod);
-    setPage(1);
-  };
+  const myRank = useMemo(() => {
+    const found = rows.find((row) => row.id === user?.id);
+    return found?.rank || 0;
+  }, [rows, user?.id]);
 
   return (
-    <PageShell
-      title="Leaderboard"
-      subtitle="See how learners rank by XP."
-      maxWidth="max-w-6xl"
-      action={
-        <button
-          onClick={() => setPage(1)}
-          className="inline-flex items-center gap-2 rounded-full border bg-white px-4 py-2 text-sm font-semibold transition-all hover:border-[#1a2b5e] hover:bg-[#fbf7f1] active:scale-[0.98]"
-          style={{ borderColor: "#e6d9c9", color: "#1f1b17" }}
-        >
-          <RefreshCcw className="h-4 w-4" />
-          Refresh
-        </button>
-      }
-    >
-      <div className="space-y-6">
-        <section className="grid gap-4 lg:grid-cols-[1fr_320px]">
-          <div className="rounded-[28px] border bg-white p-4 sm:p-5" style={{ borderColor: "#e6d9c9" }}>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#1a2b5e] text-white">
-                  <Trophy className="h-6 w-6" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-[#1a2b5e]">Rankings</h2>
-                  <p className="text-sm text-[#667084]">
-                    {leaderboard ? `${leaderboard.total_count} learners` : "Loading learners"}
-                  </p>
-                </div>
-              </div>
+    <div className="min-h-screen bg-[#f7f2ea] pb-28 text-[#17172f] md:pb-10">
+      <header className="sticky top-0 z-30 border-b border-[#e6d9c9] bg-[#f7f2ea]/85 backdrop-blur">
+        <div className="mx-auto flex max-w-md items-center gap-3 px-4 py-3 md:max-w-6xl md:px-8 md:py-5">
+          <button
+            onClick={() => router.back()}
+            aria-label="Back"
+            className="grid h-9 w-9 place-items-center rounded-full text-[#667084] transition-colors hover:bg-[#f4efe7] hover:text-[#17172f] md:hidden"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1
+            className="text-2xl text-[#17172f] md:text-3xl"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            Leaderboard
+          </h1>
+        </div>
+      </header>
 
-              <div className="inline-flex rounded-full border bg-[#fbf7f1] p-1" style={{ borderColor: "#e6d9c9" }}>
-                {PERIODS.map((item) => {
-                  const isActive = period === item.value;
-                  return (
-                    <button
-                      key={item.value}
-                      onClick={() => changePeriod(item.value)}
-                      className={cn(
-                        "h-9 rounded-full px-4 text-sm font-semibold transition-all active:scale-[0.98]",
-                        isActive ? "bg-[#1a2b5e] text-white shadow-sm" : "text-[#667084] hover:text-[#1a2b5e]",
-                      )}
-                    >
-                      {item.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {error ? (
-              <div className="mt-6 rounded-2xl border border-[#ef4444]/20 bg-[#ef4444]/5 p-6 text-center text-sm font-medium text-[#991b1b]">
-                {error}
-              </div>
-            ) : isLoading ? (
-              <div className="mt-6 space-y-3">
-                {Array.from({ length: 6 }).map((_, index) => (
-                  <div key={index} className="h-[82px] animate-pulse rounded-3xl bg-[#f7f2ea]" />
-                ))}
-              </div>
-            ) : leaderboard?.data.length ? (
-              <div className="mt-6 overflow-hidden rounded-[24px] border" style={{ borderColor: "#e6d9c9" }}>
-                <div className="divide-y divide-[#e6d9c9]">
-                  {leaderboard.data.map((player) => {
-                    const name = displayName(player);
-                    const isCurrentUser = player.id === user?.id;
-
-                    return (
-                      <div
-                        key={player.id}
-                        className={cn(
-                          "grid grid-cols-[auto_1fr_auto] items-center gap-4 bg-white p-4 transition-colors sm:p-5",
-                          isCurrentUser ? "bg-[#eef2fc]" : "hover:bg-[#fbf7f1]",
-                        )}
-                      >
-                        <RankBadge rank={player.rank} />
-
-                        <div className="flex min-w-0 items-center gap-3">
-                          <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full border bg-[#f7f2ea]" style={{ borderColor: "#e6d9c9" }}>
-                            {player.avatar_url ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={player.avatar_url} alt="" className="h-full w-full object-cover" />
-                            ) : (
-                              <div className="grid h-full w-full place-items-center text-sm font-extrabold text-[#1a2b5e]">
-                                {initialsFor(name)}
-                              </div>
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <h3 className="truncate text-[15px] font-bold text-[#1a2b5e] sm:text-base">{name}</h3>
-                              {isCurrentUser && (
-                                <span className="rounded-full bg-[#1a2b5e] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
-                                  You
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs font-medium text-[#667084]">
-                              {player.streak_count} day streak
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="text-right">
-                          <p className="text-xl font-extrabold tabular-nums text-[#1a2b5e]">{player.xp.toLocaleString()}</p>
-                          <p className="text-[11px] font-bold uppercase tracking-wider text-[#c9a84c]">XP</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : (
-              <div className="mt-6 rounded-[24px] border bg-[#fbf7f1] p-10 text-center" style={{ borderColor: "#e6d9c9" }}>
-                <Users className="mx-auto h-8 w-8 text-[#9aa5b1]" />
-                <p className="mt-3 text-sm font-semibold text-[#1a2b5e]">No rankings yet.</p>
-              </div>
-            )}
-
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-[#667084]">
-                Page {leaderboard?.page ?? page} of {leaderboard?.total_pages || 1}
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setPage((current) => Math.max(1, current - 1))}
-                  disabled={isLoading || !leaderboard?.has_prev}
-                  className="inline-flex h-10 items-center gap-2 rounded-full border bg-white px-4 text-sm font-semibold text-[#1a2b5e] transition-all enabled:hover:bg-[#fbf7f1] disabled:cursor-not-allowed disabled:opacity-45"
-                  style={{ borderColor: "#e6d9c9" }}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
-                </button>
-                <button
-                  onClick={() => setPage((current) => current + 1)}
-                  disabled={isLoading || !leaderboard?.has_next}
-                  className="inline-flex h-10 items-center gap-2 rounded-full border bg-white px-4 text-sm font-semibold text-[#1a2b5e] transition-all enabled:hover:bg-[#fbf7f1] disabled:cursor-not-allowed disabled:opacity-45"
-                  style={{ borderColor: "#e6d9c9" }}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+      <main className="mx-auto max-w-md space-y-4 px-4 pt-5 md:grid md:max-w-6xl md:grid-cols-3 md:gap-8 md:space-y-0 md:px-8 md:pt-8">
+        {loading ? (
+          <div className="md:col-span-3">
+            <RowListSkeleton count={6} />
           </div>
+        ) : error ? (
+          <p className="rounded-2xl border border-[#ef4444]/20 bg-[#ef4444]/5 py-12 text-center text-sm font-medium text-[#991b1b] md:col-span-3">
+            {error}
+          </p>
+        ) : rows.length === 0 ? (
+          <p className="py-12 text-center text-sm text-[#667084] md:col-span-3">
+            No learners yet.
+          </p>
+        ) : (
+          <>
+            <aside className="space-y-4 md:sticky md:top-24 md:col-span-1 md:self-start">
+              <section
+                className="rounded-2xl border bg-white p-4 shadow-[0_3px_14px_rgba(31,27,23,0.08)]"
+                style={{ borderColor: "#e6d9c9" }}
+              >
+                <div className="mb-3 flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-[#c9842f]" />
+                  <h2
+                    className="text-lg font-semibold text-[#17172f]"
+                    style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                  >
+                    Monthly Rewards
+                  </h2>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <RewardTile rank="#1" reward="Next month FREE" Icon={Crown} tone="gold" />
+                  <RewardTile rank="#2" reward="50% discount" Icon={Trophy} tone="soft" />
+                  <RewardTile rank="#3" reward="25% discount" Icon={Medal} tone="accent" />
+                </div>
+              </section>
 
-          <aside className="rounded-[28px] border bg-white p-5" style={{ borderColor: "#e6d9c9" }}>
-            <h2 className="text-lg font-bold text-[#1a2b5e]">Top learners</h2>
-            <div className="mt-4 space-y-3">
-              {topThree.length ? (
-                topThree.map((player) => {
-                  const name = displayName(player);
-                  return (
-                    <div key={player.id} className="flex items-center gap-3 rounded-2xl bg-[#fbf7f1] p-3">
-                      <RankBadge rank={player.rank} />
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-bold text-[#1a2b5e]">{name}</p>
-                        <p className="text-xs font-semibold text-[#c9a84c]">{player.xp.toLocaleString()} XP</p>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <p className="text-sm text-[#667084]">Top learners will appear after rankings load.</p>
+              {myRank > 0 && (
+                <div
+                  className="flex items-center justify-between rounded-2xl border bg-[#f4efe7]/70 px-4 py-3"
+                  style={{ borderColor: "#e6d9c9" }}
+                >
+                  <span className="text-sm text-[#17172f]">Your rank</span>
+                  <span
+                    className="text-lg font-semibold text-[#202b67]"
+                    style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                  >
+                    #{myRank}
+                  </span>
+                </div>
               )}
-            </div>
-          </aside>
-        </section>
-      </div>
-    </PageShell>
+            </aside>
+
+            <ul className="space-y-2 md:col-span-2">
+              {rows.map((row, index) => {
+                const rank = row.rank || index + 1;
+                const name = displayName(row);
+                const isMe = row.id === user?.id;
+                const level = Math.max(1, Math.floor((row.xp || 0) / 100) + 1);
+
+                return (
+                  <li
+                    key={row.id}
+                    className={cn(
+                      "flex items-center gap-3 rounded-2xl border px-3 py-3 transition-colors",
+                      isMe ? "bg-[#f4efe7]/70" : "bg-white",
+                    )}
+                    style={{ borderColor: "#e6d9c9" }}
+                  >
+                    <span className="grid w-10 shrink-0 place-items-center">
+                      {rank === 1 ? (
+                        <Crown className="h-6 w-6 text-[#c9842f]" strokeWidth={2.2} />
+                      ) : rank === 2 ? (
+                        <Trophy className="h-6 w-6 text-[#667084]" strokeWidth={2} />
+                      ) : rank === 3 ? (
+                        <Medal className="h-6 w-6 text-[#c9842f]" strokeWidth={2} />
+                      ) : (
+                        <span className="text-xs font-semibold tabular-nums text-[#667084]">
+                          #{rank}
+                        </span>
+                      )}
+                    </span>
+
+                    <Avatar name={name} url={row.avatar_url} size={40} />
+
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-[#17172f]">
+                        {name}
+                        {isMe && <span className="ml-1 font-normal text-[#202b67]">(You)</span>}
+                      </p>
+                      <p className="mt-0.5 inline-flex items-center gap-2 text-[11px] text-[#667084]">
+                        <span className="inline-flex items-center gap-0.5">
+                          <Star className="h-3 w-3" strokeWidth={1.8} />
+                          Lv.{level}
+                        </span>
+                        <span className="inline-flex items-center gap-0.5">
+                          <Flame className="h-3 w-3" strokeWidth={1.8} />
+                          {row.streak_count || 0}d
+                        </span>
+                      </p>
+                    </div>
+
+                    <div className="shrink-0 text-right">
+                      <p
+                        className="text-base font-semibold leading-none tabular-nums text-[#c9842f]"
+                        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                      >
+                        {(row.xp || 0).toLocaleString()}
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-[#667084]">XP</p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        )}
+      </main>
+    </div>
   );
 }

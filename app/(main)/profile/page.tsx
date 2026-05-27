@@ -14,16 +14,13 @@ import {
   Loader2,
   LogOut,
   MessageSquare,
-  Newspaper,
   Radio,
   Settings,
-  Star,
   Users,
   Zap,
 } from "lucide-react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/app/providers";
 import { DAILY_GOALS, PROFICIENCY_LEVELS } from "@/lib/data";
 
@@ -75,6 +72,8 @@ export default function ProfilePage() {
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
   const [selectedPace, setSelectedPace] = useState<string | null>(null);
   const [articleFrequency, setArticleFrequency] = useState<number>(2);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!session) return;
@@ -148,15 +147,9 @@ export default function ProfilePage() {
     }
   };
 
-  const totalNews = xpHistory.filter((entry) => entry.reason === "news_read").length;
-  const totalSessions = xpHistory.filter((entry) => entry.reason === "review_session").length;
-  const totalArticles = xpHistory.filter((entry) => entry.reason === "article_completed").length;
   const achievements = xpHistory.filter((entry) => entry.reason === "achievement_earned");
 
-  const totalXp = useMemo(() => {
-    if (typeof user?.xp === "number") return user.xp;
-    return xpHistory.reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
-  }, [user?.xp, xpHistory]);
+  const totalXp = user?.xp || 0;
 
   const currentLevel = selectedLevel || "B1";
   const currentLevelLabel = user?.preferences?.difficulty_pref
@@ -164,13 +157,18 @@ export default function ProfilePage() {
     : currentLevel;
   const xpInLevel = Math.max(0, totalXp % 100);
   const xpPercent = Math.min(100, xpInLevel);
+  const displayName = fullName.trim() || user?.full_name || "Atlas Learner";
+  const initials =
+    displayName
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("") || "AL";
 
   const stats = [
     { icon: Zap, label: "Total XP", value: totalXp, color: "#f2bd35" },
     { icon: Flame, label: "Day streak", value: user?.streak_count || 0, color: "#f2bd35" },
-    { icon: Newspaper, label: "Total News", value: totalNews, color: "#41329c" },
-    { icon: BookOpen, label: "Total Articles", value: totalArticles, color: "#41329c" },
-    { icon: Star, label: "Total Sessions", value: totalSessions, color: "#c9842f" },
   ];
 
   return (
@@ -191,31 +189,59 @@ export default function ProfilePage() {
               className="rounded-[26px] border bg-white px-5 py-6 text-center shadow-[0_3px_14px_rgba(31,27,23,0.08)] md:px-8 md:py-7"
               style={{ borderColor: "#e6d9c9" }}
             >
-              <div className="mx-auto mb-5 flex h-[104px] w-[104px] items-center justify-center rounded-full bg-[#17172f] p-3 shadow-[0_10px_24px_rgba(23,23,47,0.16)] ring-8 ring-white md:h-[128px] md:w-[128px]">
-                <Image
-                  src="/logo with word.webp"
-                  alt="Kalyma"
-                  width={150}
-                  height={72}
-                  priority
-                  className="h-auto w-[78px] object-contain md:w-[96px]"
-                />
-              </div>
-
-              <div className="relative flex items-center justify-center">
-                <h1
-                  className="max-w-[210px] text-[28px] font-bold leading-tight md:max-w-none md:text-[34px]"
+              <div className="mx-auto mb-5 flex h-[104px] w-[104px] items-center justify-center rounded-full bg-[#17172f] shadow-[0_10px_24px_rgba(23,23,47,0.16)] ring-8 ring-white md:h-[128px] md:w-[128px]">
+                <span
+                  className="text-[38px] font-bold uppercase tracking-tight text-white md:text-[46px]"
                   style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
                 >
-                  {user?.full_name || "Atlas Learner"}
-                </h1>
-                <button
-                  onClick={() => document.getElementById("profile-name")?.focus()}
-                  aria-label="Edit profile name"
-                  className="absolute right-0 rounded-full p-2 text-[#6d6d80] transition-colors hover:bg-[#f4efe7] hover:text-[#17172f] md:static md:ml-3"
-                >
-                  <Edit3 className="h-5 w-5 md:h-6 md:w-6" />
-                </button>
+                  {initials}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-center gap-2">
+                {isEditingName ? (
+                  <div className="flex w-full max-w-[320px] items-center gap-2">
+                    <input
+                      ref={nameInputRef}
+                      type="text"
+                      value={fullName}
+                      onChange={(event) => setFullName(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") handleSavePreferences();
+                        if (event.key === "Escape") setIsEditingName(false);
+                      }}
+                      className="min-w-0 flex-1 rounded-full border bg-[#fbf7f1] px-4 py-2 text-center text-[18px] font-semibold text-[#17172f] outline-none transition-colors focus:border-[#aeb5c9]"
+                      style={{ borderColor: "#e6d9c9" }}
+                    />
+                    <button
+                      onClick={handleSavePreferences}
+                      disabled={isSubmitting || !fullName.trim()}
+                      className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#202b67] text-white transition-colors hover:bg-[#121a46] disabled:cursor-wait disabled:opacity-60"
+                      aria-label="Save profile name"
+                    >
+                      {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <h1
+                      className="max-w-[230px] text-[28px] font-bold leading-tight md:max-w-none md:text-[34px]"
+                      style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                    >
+                      {displayName}
+                    </h1>
+                    <button
+                      onClick={() => {
+                        setIsEditingName(true);
+                        window.requestAnimationFrame(() => nameInputRef.current?.focus());
+                      }}
+                      aria-label="Edit profile name"
+                      className="rounded-full p-2 text-[#6d6d80] transition-colors hover:bg-[#f4efe7] hover:text-[#17172f]"
+                    >
+                      <Edit3 className="h-5 w-5 md:h-6 md:w-6" />
+                    </button>
+                  </>
+                )}
               </div>
               <p className="mt-2 text-[16px] font-medium text-[#6d6d80] md:text-[18px]">
                 {user?.email || "loading..."}
