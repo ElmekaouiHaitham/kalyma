@@ -432,12 +432,14 @@ export default function ChatPage() {
           }
 
           .atlas-chat-topbar {
-            justify-content: flex-end;
-            padding: 18px 22px 10px;
+            justify-content: space-between;
+            padding: 18px 22px 10px 70px;
           }
 
           .atlas-chat-topbar > .atlas-icon-button {
-            display: none;
+            display: grid;
+            width: 44px;
+            height: 44px;
           }
 
           .atlas-messages {
