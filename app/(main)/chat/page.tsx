@@ -129,8 +129,8 @@ export default function ChatPage() {
 
         .atlas-icon-button {
           display: grid;
-          width: 54px;
-          height: 54px;
+          width: 40px;
+          height: 40px;
           place-items: center;
           border: 0;
           border-radius: 999px;
@@ -465,7 +465,8 @@ export default function ChatPage() {
           }
 
           .atlas-input-area {
-            padding: 10px 30px calc(108px + env(safe-area-inset-bottom));
+            bottom: calc(100px + env(safe-area-inset-bottom));
+            padding: 8px 30px 10px;
           }
 
           .atlas-input-wrap {
