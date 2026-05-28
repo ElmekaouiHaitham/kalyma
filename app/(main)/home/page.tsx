@@ -5,15 +5,13 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/providers";
 import Image from "next/image";
 import {
-  Mic,
   BookOpen,
   Bookmark,
   ChevronRight,
   Radio,
-  Microscope,
-  Headphones,
   CircleUserRound,
   Newspaper,
+  Repeat2,
   Trophy,
 } from "lucide-react";
 
@@ -130,7 +128,7 @@ export default function HomePage() {
 
   const TASKS = [
     { id: "article", label: "Read an Article", icon: <BookOpen className="h-3 w-3" />, xp: 10, route: "/articles", done: hasArticleToday },
-    { id: "speak", label: "Review Session", icon: <Mic className="h-3 w-3" />, xp: 10, route: "/practice", done: hasReviewToday },
+    { id: "speak", label: "Review Session", icon: <Repeat2 className="h-3 w-3" />, xp: 10, route: "/practice", done: hasReviewToday },
     { id: "news", label: "Read News", icon: <Newspaper className="h-3 w-3" />, xp: 10, route: "/news", done: hasNewsToday },
   ];
 
@@ -146,7 +144,7 @@ export default function HomePage() {
         >
           <Trophy className="h-[18px] w-[18px]" />
         </button>
-        <Image src="/logo with word.webp" alt="kalyma.ma" width={328} height={128} className="h-16 w-auto md:hidden" priority />
+        <Image src="/logo with word.webp" alt="kalyma.ma" width={426} height={167} className="h-16 w-auto md:hidden" priority />
         <button
           onClick={() => router.push("/profile")}
           aria-label="Profile settings"
@@ -222,7 +220,7 @@ export default function HomePage() {
             />
             <SimpleCard
               onClick={() => router.push("/practice")}
-              icon={<Headphones className="h-5 w-5" style={{ color: "#7C3AED" }} />}
+              icon={<Repeat2 className="h-5 w-5" style={{ color: "#7C3AED" }} />}
               iconColor="#7C3AED"
               title="Review Session"
               subtitle="Practice saved words and Learn My notes"
@@ -249,7 +247,7 @@ export default function HomePage() {
             />
             <SimpleCard
               onClick={() => router.push("/news")}
-              icon={<Microscope className="h-5 w-5" style={{ color: "#0369A1" }} />}
+              icon={<Newspaper className="h-5 w-5" style={{ color: "#0369A1" }} />}
               iconColor="#0369A1"
               title="News"
               subtitle="Learn from current events"
