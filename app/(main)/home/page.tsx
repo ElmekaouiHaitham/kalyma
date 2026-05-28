@@ -146,7 +146,7 @@ export default function HomePage() {
         >
           <Trophy className="h-[18px] w-[18px]" />
         </button>
-        <Image src="/logo with word.webp" alt="kalyma.ma" width={246} height={96} className="h-12 w-auto md:hidden" priority />
+        <Image src="/logo with word.webp" alt="kalyma.ma" width={328} height={128} className="h-16 w-auto md:hidden" priority />
         <button
           onClick={() => router.push("/profile")}
           aria-label="Profile settings"
