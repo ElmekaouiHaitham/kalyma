@@ -10,7 +10,6 @@ import {
   Mic,
   Plus,
   Send,
-  Share2,
   SquarePen,
   ThumbsDown,
   ThumbsUp,
@@ -169,14 +168,25 @@ export default function ChatPage() {
           width: max-content;
           max-width: 100%;
           align-items: center;
-          gap: 8px;
+          gap: 10px;
           margin: 0 auto 24px;
           border-radius: 999px;
-          background: #eeeeee;
-          padding: 9px 16px;
-          color: #7c7c7c;
-          font-size: 15px;
-          font-weight: 600;
+          background: transparent;
+          padding: 0;
+          color: #111111;
+          font-size: 16px;
+          font-weight: 700;
+        }
+
+        .atlas-memory-logo {
+          display: grid;
+          width: 34px;
+          height: 34px;
+          place-items: center;
+          overflow: hidden;
+          border-radius: 999px;
+          background: #ffffff;
+          box-shadow: 0 5px 16px rgba(0, 0, 0, 0.08);
         }
 
         .atlas-empty {
@@ -439,6 +449,11 @@ export default function ChatPage() {
             font-size: 14px;
           }
 
+          .atlas-memory-logo {
+            width: 32px;
+            height: 32px;
+          }
+
           .atlas-bubble-user {
             max-width: 86%;
             border-radius: 26px;
@@ -528,7 +543,9 @@ export default function ChatPage() {
         <div className="atlas-thread">
           {started && (
             <div className="atlas-memory-pill">
-              <Image src="/atlas-logo.png" alt="" width={24} height={24} className="h-6 w-6 object-contain" />
+              <span className="atlas-memory-logo">
+                <Image src="/atlas-logo.png" alt="" width={41} height={41} className="h-full w-full rounded-full object-cover" />
+              </span>
               Atlas AI
             </div>
           )}
@@ -590,9 +607,6 @@ export default function ChatPage() {
                               </button>
                               <button className="atlas-action-icon" type="button" aria-label="Read aloud">
                                 <Volume2 size={23} strokeWidth={2} />
-                              </button>
-                              <button className="atlas-action-icon" type="button" aria-label="Share response">
-                                <Share2 size={21} strokeWidth={2} />
                               </button>
                               <button
                                 className="atlas-action-icon disabled:cursor-wait disabled:opacity-50"

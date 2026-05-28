@@ -54,9 +54,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           <Image
             src="/logo with word.webp"
             alt="kalyma.ma"
-            width={164}
-            height={64}
-            className="h-10 w-auto object-contain"
+            width={246}
+            height={96}
+            className="h-[60px] w-auto object-contain"
             priority
           />
         </div>

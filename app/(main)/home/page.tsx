@@ -5,18 +5,16 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/providers";
 import Image from "next/image";
 import {
-  Check,
-  Search,
   Mic,
   BookOpen,
   Bookmark,
   ChevronRight,
   Radio,
-  Brain,
   Microscope,
   Headphones,
   CircleUserRound,
   Newspaper,
+  Trophy,
 } from "lucide-react";
 
 type XpHistoryEntry = {
@@ -141,8 +139,14 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#f7f2ea] pb-28 md:pb-10">
       <header className="px-5 pt-6 pb-2 flex items-center justify-between max-w-md md:max-w-5xl mx-auto">
-        <div className="w-10 h-10 md:hidden" />
-        <Image src="/logo with word.webp" alt="kalyma.ma" width={164} height={64} className="h-8 w-auto md:hidden" priority />
+        <button
+          onClick={() => router.push("/leaderboard")}
+          aria-label="Leaderboard"
+          className="cursor-pointer w-10 h-10 rounded-full flex items-center justify-center text-[#667084] hover:text-[#1a2b5e] active:bg-[#eef2fc] transition-colors md:hidden"
+        >
+          <Trophy className="h-[18px] w-[18px]" />
+        </button>
+        <Image src="/logo with word.webp" alt="kalyma.ma" width={246} height={96} className="h-12 w-auto md:hidden" priority />
         <button
           onClick={() => router.push("/profile")}
           aria-label="Profile settings"
@@ -177,7 +181,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="min-w-0">
-              <p className="text-[13px] font-semibold text-[#1a2b5e]">Today's progress</p>
+              <p className="text-[13px] font-semibold text-[#1a2b5e]">Today&apos;s progress</p>
               <p className="mt-0.5 text-[11px] text-[#667084]">
                 {doneCount} of {TASKS.length} tasks ·{" "}
                 <span className="text-[#c9842f] font-semibold">30 XP</span>
