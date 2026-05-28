@@ -8,7 +8,6 @@ import {
   Loader2,
   Menu,
   Mic,
-  MoreVertical,
   Plus,
   Send,
   Share2,
@@ -423,7 +422,7 @@ export default function ChatPage() {
           }
 
           .atlas-messages {
-            padding: 104px 31px calc(170px + env(safe-area-inset-bottom));
+            padding: 104px 31px calc(188px + env(safe-area-inset-bottom));
           }
 
           .atlas-memory-pill {
@@ -466,16 +465,33 @@ export default function ChatPage() {
           }
 
           .atlas-input-area {
-            padding: 12px 30px calc(88px + env(safe-area-inset-bottom));
+            padding: 10px 30px calc(108px + env(safe-area-inset-bottom));
           }
 
           .atlas-input-wrap {
             border-radius: 999px;
-            padding: 7px 7px 7px 10px;
+            gap: 6px;
+            padding: 5px 6px 5px 8px;
+          }
+
+          .atlas-composer-button {
+            width: 36px;
+            height: 36px;
+            flex-basis: 36px;
           }
 
           .atlas-textarea {
-            font-size: 17px;
+            min-height: 36px;
+            padding: 8px 2px 7px;
+            font-size: 16px;
+            line-height: 1.3;
+          }
+
+          .atlas-voice-button,
+          .atlas-send-btn {
+            width: 40px;
+            height: 40px;
+            flex-basis: 40px;
           }
         }
       `}</style>
