@@ -417,12 +417,21 @@ export default function ChatPage() {
         }
 
         @media (max-width: 767px) {
+          .atlas-chat-root {
+            height: 100%;
+          }
+
           .atlas-chat-topbar {
+            justify-content: flex-end;
             padding: 18px 22px 10px;
           }
 
+          .atlas-chat-topbar > .atlas-icon-button {
+            display: none;
+          }
+
           .atlas-messages {
-            padding: 104px 31px calc(188px + env(safe-area-inset-bottom));
+            padding: 104px 31px calc(110px + env(safe-area-inset-bottom));
           }
 
           .atlas-memory-pill {
@@ -465,7 +474,9 @@ export default function ChatPage() {
           }
 
           .atlas-input-area {
-            bottom: calc(100px + env(safe-area-inset-bottom));
+            position: fixed;
+            bottom: calc(12px + env(safe-area-inset-bottom));
+            z-index: 60;
             padding: 8px 30px 10px;
           }
 

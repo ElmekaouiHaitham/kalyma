@@ -1,6 +1,7 @@
 "use client";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  ArrowLeft,
   Home,
   Radio,
   LogOut,
@@ -32,6 +33,8 @@ const MOBILE_NAV_ITEMS = NAV_ITEMS.filter(
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const showMobileNav = pathname === "/home" || pathname.startsWith("/profile");
+  const showMobileBack = !showMobileNav;
 
   const nav = (href: string) => router.push(href);
   const active = (href: string) =>
@@ -106,7 +109,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           <div
             style={{
               height: pathname === "/chat" ? "100%" : "auto",
-              paddingBottom: pathname === "/chat" ? 0 : "5rem",
+              paddingBottom: pathname === "/chat" ? 0 : showMobileNav ? "5rem" : 0,
               background: pathname === "/home" ? "#f3f4fb" : pathname === "/chat" ? "#ffffff" : undefined,
             }}
             className={pathname !== "/chat" ? "md:pb-6" : ""}
@@ -116,6 +119,19 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </main>
 
         {/* Bottom nav — mobile only */}
+        {showMobileBack && (
+          <button
+            type="button"
+            onClick={() => router.back()}
+            aria-label="Back"
+            className="fixed left-4 top-4 z-[70] grid h-11 w-11 place-items-center rounded-full border bg-white text-[#17172f] shadow-[0_10px_26px_rgba(31,27,23,0.12)] transition-colors hover:bg-[#f4efe7] md:hidden"
+            style={{ borderColor: "#eee6dd" }}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        )}
+
+        {showMobileNav && (
         <nav
           className="pointer-events-none fixed bottom-4 left-0 right-0 z-50 px-5 md:hidden"
           style={{
@@ -168,6 +184,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             })}
           </div>
         </nav>
+        )}
       </div>
     </div>
   );
