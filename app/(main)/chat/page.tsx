@@ -23,7 +23,7 @@ import ReactMarkdown from "react-markdown";
 import { useAtlasChat } from "@/hooks/useAtlasChat";
 
 export default function ChatPage() {
-  const { messages, isTyping, sendMessage, clearMessages, addMessage, autoSaveToDeck } = useAtlasChat({
+  const { messages, isTyping, sendMessage, clearMessages, autoSaveToDeck } = useAtlasChat({
     context_type: "general",
     context_content: "General English learning conversation. Be helpful, encouraging, and friendly.",
   });
@@ -55,12 +55,6 @@ export default function ChatPage() {
       setTimeout(() => setSavedId(null), 2000);
     }
   };
-
-  useEffect(() => {
-    if (started && messages.length === 0 && !isTyping) {
-      addMessage("ai", "Hello! I'm Atlas. How can I help you practice your English today?");
-    }
-  }, [started, messages.length, isTyping, addMessage]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -499,9 +493,6 @@ export default function ChatPage() {
           >
             <SquarePen size={27} strokeWidth={2.4} />
           </button>
-          <button className="atlas-icon-button" type="button" aria-label="More options">
-            <MoreVertical size={28} strokeWidth={2.6} />
-          </button>
         </div>
       </div>
 
@@ -535,60 +526,69 @@ export default function ChatPage() {
 
           {started && (
             <>
-              {messages.map((message) => (
-                <motion.div
-                  key={message.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.22 }}
-                  className={`atlas-msg-row ${message.role === "ai" ? "ai-row" : "user-row"}`}
-                  onMouseEnter={() => setHoveredMsg(message.id)}
-                  onMouseLeave={() => setHoveredMsg(null)}
-                >
-                  {message.role === "user" ? (
-                    <div className="atlas-bubble-user">{message.content}</div>
-                  ) : (
-                    <>
-                      <div className="atlas-bubble-ai overflow-hidden">
-                        <ReactMarkdown>{message.content}</ReactMarkdown>
-                      </div>
-                      <div className={`atlas-msg-actions ${hoveredMsg === message.id ? "visible" : ""}`}>
-                        <button className="atlas-action-icon" type="button" aria-label="Copy response">
-                          <Copy size={22} strokeWidth={2} />
-                        </button>
-                        <button className="atlas-action-icon" type="button" aria-label="Good response">
-                          <ThumbsUp size={22} strokeWidth={2} />
-                        </button>
-                        <button className="atlas-action-icon" type="button" aria-label="Bad response">
-                          <ThumbsDown size={22} strokeWidth={2} />
-                        </button>
-                        <button className="atlas-action-icon" type="button" aria-label="Read aloud">
-                          <Volume2 size={23} strokeWidth={2} />
-                        </button>
-                        <button className="atlas-action-icon" type="button" aria-label="Share response">
-                          <Share2 size={21} strokeWidth={2} />
-                        </button>
-                        <button
-                          className="atlas-action-icon disabled:cursor-wait disabled:opacity-50"
-                          type="button"
-                          aria-label="Save to practice deck"
-                          title="Save to Practice Deck"
-                          onClick={() => handleAutoSave(message.id, message.content)}
-                          disabled={savingId === message.id || savedId === message.id}
-                        >
-                          {savingId === message.id ? (
-                            <Loader2 size={22} className="animate-spin" />
-                          ) : savedId === message.id ? (
-                            <CheckCircle2 size={22} />
-                          ) : (
-                            <BookMarked size={22} strokeWidth={2} />
+              {messages.map((message) => {
+                  const isLatestMessage = messages[messages.length - 1]?.id === message.id;
+                  const isPendingAiResponse = message.role === "ai" && isTyping && isLatestMessage;
+                  const canShowActions =
+                    message.role === "ai" && message.content.trim().length > 0 && !isPendingAiResponse;
+
+                  return (
+                    <motion.div
+                      key={message.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.22 }}
+                      className={`atlas-msg-row ${message.role === "ai" ? "ai-row" : "user-row"}`}
+                      onMouseEnter={() => setHoveredMsg(message.id)}
+                      onMouseLeave={() => setHoveredMsg(null)}
+                    >
+                      {message.role === "user" ? (
+                        <div className="atlas-bubble-user">{message.content}</div>
+                      ) : (
+                        <>
+                          <div className="atlas-bubble-ai overflow-hidden">
+                            <ReactMarkdown>{message.content}</ReactMarkdown>
+                          </div>
+                          {canShowActions && (
+                            <div className={`atlas-msg-actions ${hoveredMsg === message.id ? "visible" : ""}`}>
+                              <button className="atlas-action-icon" type="button" aria-label="Copy response">
+                                <Copy size={22} strokeWidth={2} />
+                              </button>
+                              <button className="atlas-action-icon" type="button" aria-label="Good response">
+                                <ThumbsUp size={22} strokeWidth={2} />
+                              </button>
+                              <button className="atlas-action-icon" type="button" aria-label="Bad response">
+                                <ThumbsDown size={22} strokeWidth={2} />
+                              </button>
+                              <button className="atlas-action-icon" type="button" aria-label="Read aloud">
+                                <Volume2 size={23} strokeWidth={2} />
+                              </button>
+                              <button className="atlas-action-icon" type="button" aria-label="Share response">
+                                <Share2 size={21} strokeWidth={2} />
+                              </button>
+                              <button
+                                className="atlas-action-icon disabled:cursor-wait disabled:opacity-50"
+                                type="button"
+                                aria-label="Save to practice deck"
+                                title="Save to Practice Deck"
+                                onClick={() => handleAutoSave(message.id, message.content)}
+                                disabled={savingId === message.id || savedId === message.id}
+                              >
+                                {savingId === message.id ? (
+                                  <Loader2 size={22} className="animate-spin" />
+                                ) : savedId === message.id ? (
+                                  <CheckCircle2 size={22} />
+                                ) : (
+                                  <BookMarked size={22} strokeWidth={2} />
+                                )}
+                              </button>
+                            </div>
                           )}
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </motion.div>
-              ))}
+                        </>
+                      )}
+                    </motion.div>
+                  );
+                })}
 
               <AnimatePresence>
                 {isTyping && (
