@@ -144,6 +144,10 @@ export default function ChatPage() {
           transform: translateY(-1px);
         }
 
+        .atlas-mobile-group-menu {
+          display: none;
+        }
+
         .atlas-messages {
           flex: 1;
           overflow-y: auto;
@@ -432,12 +436,19 @@ export default function ChatPage() {
           }
 
           .atlas-chat-topbar {
-            justify-content: space-between;
+            justify-content: flex-end;
             padding: 18px 22px 10px 70px;
           }
 
-          .atlas-chat-topbar > .atlas-icon-button {
+          .atlas-left-menu {
+            display: none;
+          }
+
+          .atlas-mobile-group-menu {
             display: grid;
+          }
+
+          .atlas-chat-topbar .atlas-icon-button {
             width: 44px;
             height: 44px;
           }
@@ -526,7 +537,7 @@ export default function ChatPage() {
       `}</style>
 
       <div className="atlas-chat-topbar">
-        <button className="atlas-icon-button" type="button" aria-label="Open chat menu">
+        <button className="atlas-icon-button atlas-left-menu" type="button" aria-label="Open chat menu">
           <Menu size={30} strokeWidth={2.5} />
         </button>
         <div className="atlas-top-group">
@@ -537,6 +548,9 @@ export default function ChatPage() {
             onClick={handleNewConversation}
           >
             <SquarePen size={27} strokeWidth={2.4} />
+          </button>
+          <button className="atlas-icon-button atlas-mobile-group-menu" type="button" aria-label="Open chat menu">
+            <Menu size={27} strokeWidth={2.5} />
           </button>
         </div>
       </div>
