@@ -1,7 +1,18 @@
 "use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, ChevronLeft, Globe, Check, Timer, Zap, Target, Heart, ArrowLeft, Loader2 } from "lucide-react";
+import {
+  ChevronRight,
+  ChevronLeft,
+  Globe,
+  Check,
+  Timer,
+  Zap,
+  Target,
+  Heart,
+  ArrowLeft,
+  Loader2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PROFICIENCY_LEVELS, TOPICS, DAILY_GOALS } from "@/lib/data";
 import { useAuth } from "@/app/providers";
@@ -30,9 +41,8 @@ export default function OnboardingPage() {
 
   const next = async () => {
     if (step < STEPS.length - 1) {
-       setStep(step + 1);
-    }
-    else {
+      setStep(step + 1);
+    } else {
       if (!session) {
         router.push("/auth");
         return;
@@ -40,29 +50,36 @@ export default function OnboardingPage() {
       setIsSubmitting(true);
       try {
         const difficultyMap: Record<string, string> = {
-          "A1": "beginner",
-          "A2": "beginner",
-          "B1": "intermediate",
-          "B2": "upper_intermediate",
-          "C1": "advanced",
-          "C2": "advanced",
+          A1: "beginner",
+          A2: "beginner",
+          B1: "intermediate",
+          B2: "upper_intermediate",
+          C1: "advanced",
+          C2: "advanced",
         };
         const payload = {
           full_name: fullName.trim(),
-          difficulty_pref: selectedLevel ? difficultyMap[selectedLevel] : "intermediate",
-          reading_pace: selectedPace ? DAILY_GOALS.find(g => g.label === selectedPace)?.minutes || 10 : 10,
+          difficulty_pref: selectedLevel
+            ? difficultyMap[selectedLevel]
+            : "intermediate",
+          reading_pace: selectedPace
+            ? DAILY_GOALS.find((g) => g.label === selectedPace)?.minutes || 10
+            : 10,
           article_frequency: articleFrequency || 2,
           topics: selectedSubTopics,
-          news_topics: selectedSubTopics
+          news_topics: selectedSubTopics,
         };
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me/preferences`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/users/me/preferences`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify(payload),
           },
-          body: JSON.stringify(payload)
-        });
+        );
         if (res.ok) {
           router.push("/home");
         } else {
@@ -89,24 +106,26 @@ export default function OnboardingPage() {
     );
   };
 
-  const activeTopic = TOPICS.find(t => t.id === activeTopicId);
+  const activeTopic = TOPICS.find((t) => t.id === activeTopicId);
 
   return (
-    <div
-      className="min-h-screen flex flex-col bg-[#f7f2ea]"
-    >
+    <div className="min-h-screen flex flex-col bg-[#f7f2ea]">
       {/* Header */}
       <div className="px-6 pt-8 pb-4 bg-white/50 backdrop-blur-sm sticky top-0 z-50 border-b border-[#1a2b5e]/5">
         <div className="flex items-center justify-between max-w-2xl mx-auto mb-6">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden shrink-0">
-              <img src="/logo.png" alt="kalyma.ma" className="w-full h-full object-contain" />
+              <img
+                src="/logo.png"
+                alt="kalyma"
+                className="w-full h-full object-contain"
+              />
             </div>
             <span
               className="font-bold text-lg text-[#1a2b5e]"
               style={{ fontFamily: "'Outfit', sans-serif" }}
             >
-              kalyma.ma
+              kalyma
             </span>
           </div>
           <div className="text-xs font-bold text-[#9aa5b1] uppercase tracking-wider">
@@ -121,7 +140,7 @@ export default function OnboardingPage() {
               key={s}
               className="flex-1 h-1.5 rounded-full transition-all duration-700 overflow-hidden bg-[#1a2b5e]/5"
             >
-              <motion.div 
+              <motion.div
                 initial={false}
                 animate={{ width: i <= step ? "100%" : "0%" }}
                 className="h-full bg-gradient-to-r from-[#1a2b5e] to-[#c9a84c]"
@@ -184,7 +203,8 @@ export default function OnboardingPage() {
                     What's your proficiency level?
                   </h1>
                   <p className="text-[#4a5568]">
-                    We'll tailor your learning path to match your current skills.
+                    We'll tailor your learning path to match your current
+                    skills.
                   </p>
                 </div>
 
@@ -209,7 +229,9 @@ export default function OnboardingPage() {
                         {level.code}
                       </div>
                       <div className="flex-1">
-                        <div className="font-bold text-[#1a2b5e]">{level.label}</div>
+                        <div className="font-bold text-[#1a2b5e]">
+                          {level.label}
+                        </div>
                         <div className="text-sm text-[#4a5568]">
                           {level.desc}
                         </div>
@@ -256,17 +278,17 @@ export default function OnboardingPage() {
                           : "bg-white border-[#1a2b5e]/5 hover:border-[#1a2b5e]/20"
                       }`}
                     >
-                      <div className="text-4xl mb-2">
-                        {goal.icon}
-                      </div>
+                      <div className="text-4xl mb-2">{goal.icon}</div>
                       <div>
-                        <div className="font-bold text-lg text-[#1a2b5e]">{goal.label}</div>
+                        <div className="font-bold text-lg text-[#1a2b5e]">
+                          {goal.label}
+                        </div>
                         <div className="text-sm text-[#4a5568] opacity-80">
                           {goal.desc}
                         </div>
                       </div>
                       {selectedPace === goal.label && (
-                        <motion.div 
+                        <motion.div
                           layoutId="active-pace"
                           className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-[#1a2b5e] border-4 border-white flex items-center justify-center text-white"
                         >
@@ -300,36 +322,38 @@ export default function OnboardingPage() {
                 </div>
 
                 <div className="bg-white p-10 rounded-[40px] border-2 border-[#1a2b5e]/5 shadow-2xl shadow-[#1a2b5e]/5 flex flex-col items-center text-center">
-                   <div className="relative mb-10">
-                      <motion.div 
-                        key={articleFrequency}
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="text-8xl font-black text-[#1a2b5e] font-outfit tabular-nums"
-                      >
-                        {articleFrequency}
-                      </motion.div>
-                      <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[#9aa5b1] font-bold uppercase tracking-widest text-sm whitespace-nowrap">
-                        Articles / Week
-                      </div>
-                   </div>
+                  <div className="relative mb-10">
+                    <motion.div
+                      key={articleFrequency}
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="text-8xl font-black text-[#1a2b5e] font-outfit tabular-nums"
+                    >
+                      {articleFrequency}
+                    </motion.div>
+                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[#9aa5b1] font-bold uppercase tracking-widest text-sm whitespace-nowrap">
+                      Articles / Week
+                    </div>
+                  </div>
 
-                   <div className="w-full space-y-8 px-4">
-                      <input 
-                        type="range"
-                        min="1"
-                        max="5"
-                        step="1"
-                        value={articleFrequency || 2}
-                        onChange={(e) => setArticleFrequency(parseInt(e.target.value))}
-                        className="w-full h-3 bg-[#f7f2ea] rounded-full appearance-none cursor-pointer accent-[#1a2b5e]"
-                      />
-                      <div className="flex justify-between text-xs font-bold text-[#9aa5b1]">
-                        <span>1</span>
-                        <span>3</span>
-                        <span>5</span>
-                      </div>
-                   </div>
+                  <div className="w-full space-y-8 px-4">
+                    <input
+                      type="range"
+                      min="1"
+                      max="5"
+                      step="1"
+                      value={articleFrequency || 2}
+                      onChange={(e) =>
+                        setArticleFrequency(parseInt(e.target.value))
+                      }
+                      className="w-full h-3 bg-[#f7f2ea] rounded-full appearance-none cursor-pointer accent-[#1a2b5e]"
+                    />
+                    <div className="flex justify-between text-xs font-bold text-[#9aa5b1]">
+                      <span>1</span>
+                      <span>3</span>
+                      <span>5</span>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -359,13 +383,17 @@ export default function OnboardingPage() {
                           Select your interests
                         </h1>
                         <p className="text-[#4a5568]">
-                          Pick at least 3 sub-topics across your favorite themes.
+                          Pick at least 3 sub-topics across your favorite
+                          themes.
                         </p>
                       </div>
 
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {TOPICS.map((topic) => {
-                          const selectedCount = topic.subTopics?.filter(s => selectedSubTopics.includes(s)).length || 0;
+                          const selectedCount =
+                            topic.subTopics?.filter((s) =>
+                              selectedSubTopics.includes(s),
+                            ).length || 0;
                           return (
                             <button
                               key={topic.id}
@@ -378,7 +406,9 @@ export default function OnboardingPage() {
                             >
                               <div className="text-3xl">{topic.icon}</div>
                               <div>
-                                <div className="text-sm font-bold text-[#1a2b5e]">{topic.label}</div>
+                                <div className="text-sm font-bold text-[#1a2b5e]">
+                                  {topic.label}
+                                </div>
                                 {selectedCount > 0 && (
                                   <div className="text-[10px] font-bold text-[#c9a84c] uppercase tracking-wider">
                                     {selectedCount} selected
@@ -403,7 +433,7 @@ export default function OnboardingPage() {
                       exit={{ opacity: 0, x: -20 }}
                       className="space-y-6"
                     >
-                      <button 
+                      <button
                         onClick={() => setActiveTopicId(null)}
                         className="flex items-center gap-2 text-[#1a2b5e] font-bold text-sm hover:translate-x-[-4px] transition-transform"
                       >
@@ -414,8 +444,12 @@ export default function OnboardingPage() {
                       <div className="flex items-center gap-4 p-6 rounded-3xl bg-white border-2 border-[#1a2b5e]/5 shadow-xl shadow-black/5">
                         <div className="text-5xl">{activeTopic?.icon}</div>
                         <div>
-                          <h2 className="text-2xl font-bold text-[#1a2b5e] font-outfit">{activeTopic?.label}</h2>
-                          <p className="text-sm text-[#4a5568]">Select specific areas of interest</p>
+                          <h2 className="text-2xl font-bold text-[#1a2b5e] font-outfit">
+                            {activeTopic?.label}
+                          </h2>
+                          <p className="text-sm text-[#4a5568]">
+                            Select specific areas of interest
+                          </p>
                         </div>
                       </div>
 
@@ -452,9 +486,7 @@ export default function OnboardingPage() {
       </div>
 
       {/* Bottom navigation */}
-      <div
-        className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-[#1a2b5e]/10 p-6 flex justify-center"
-      >
+      <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-[#1a2b5e]/10 p-6 flex justify-center">
         <div className="max-w-xl w-full flex gap-4">
           {(step > 0 || (step === 4 && activeTopicId)) && (
             <button

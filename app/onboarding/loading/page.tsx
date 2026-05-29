@@ -40,15 +40,14 @@ export default function LoadingPage() {
   }, [router]);
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center bg-[#f7f2ea]"
-    >
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f7f2ea]">
       {/* Background glow */}
       <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
         <div
           className="w-[500px] h-[500px] rounded-full opacity-30 animate-pulse blur-3xl"
           style={{
-            background: "radial-gradient(circle, rgba(201,168,76,0.15) 0%, transparent 70%)",
+            background:
+              "radial-gradient(circle, rgba(201,168,76,0.15) 0%, transparent 70%)",
           }}
         />
       </div>
@@ -60,10 +59,16 @@ export default function LoadingPage() {
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           className="inline-flex items-center justify-center w-24 h-24 rounded-[32px] mb-8 bg-white shadow-2xl shadow-[#1a2b5e]/10 p-5"
         >
-          <img src="/logo.png" alt="kalyma.ma" className="w-full h-full object-contain" />
+          <img
+            src="/logo.png"
+            alt="kalyma"
+            className="w-full h-full object-contain"
+          />
         </motion.div>
 
-        <h1 className="text-3xl font-bold mb-3 font-outfit text-[#1a2b5e]">Building Your Experience</h1>
+        <h1 className="text-3xl font-bold mb-3 font-outfit text-[#1a2b5e]">
+          Building Your Experience
+        </h1>
 
         {/* Animated message */}
         <motion.p
@@ -77,9 +82,7 @@ export default function LoadingPage() {
         </motion.p>
 
         {/* Progress bar */}
-        <div
-          className="w-full rounded-full h-2 mb-4 overflow-hidden bg-[#1a2b5e]/5"
-        >
+        <div className="w-full rounded-full h-2 mb-4 overflow-hidden bg-[#1a2b5e]/5">
           <motion.div
             className="h-full rounded-full bg-gradient-to-r from-[#1a2b5e] to-[#c9a84c]"
             style={{ width: `${progress}%` }}

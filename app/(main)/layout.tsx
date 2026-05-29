@@ -27,10 +27,15 @@ const NAV_ITEMS = [
 ];
 
 const MOBILE_NAV_ITEMS = NAV_ITEMS.filter(
-  ({ href }) => href !== "/articles" && href !== "/leaderboard" && href !== "/profile",
+  ({ href }) =>
+    href !== "/articles" && href !== "/leaderboard" && href !== "/profile",
 );
 
-export default function MainLayout({ children }: { children: React.ReactNode }) {
+export default function MainLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const showMobileNav = pathname === "/home" || pathname.startsWith("/profile");
@@ -44,7 +49,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     <div
       className="flex h-screen overflow-hidden"
       style={{
-        background: pathname === "/home" ? "#f3f4fb" : pathname === "/chat" ? "#ffffff" : "#f7f2ea",
+        background:
+          pathname === "/home"
+            ? "#f3f4fb"
+            : pathname === "/chat"
+              ? "#ffffff"
+              : "#f7f2ea",
         colorScheme: "light",
       }}
     >
@@ -53,14 +63,14 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <div className="px-2 mb-6 shrink-0">
           <Image
             src="/logo with word.webp"
-            alt="kalyma.ma"
+            alt="kalyma"
             width={328}
             height={128}
             className="h-20 w-auto object-contain"
             priority
           />
         </div>
-        
+
         <nav className="flex-1 overflow-y-auto">
           <ul className="space-y-1">
             {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
@@ -73,7 +83,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                       "cursor-pointer w-full flex items-center gap-3 px-4 py-3 rounded-[14px] border-2 text-[15px] font-medium transition-all duration-200 active:scale-[0.98]",
                       isActive
                         ? "border-[#aeb5c9] bg-[#f4efe7] text-[#1a2b5e]"
-                        : "border-transparent text-[#667084] hover:border-[#aeb5c9] hover:bg-[#f4efe7] hover:text-[#1a2b5e]"
+                        : "border-transparent text-[#667084] hover:border-[#aeb5c9] hover:bg-[#f4efe7] hover:text-[#1a2b5e]",
                     )}
                   >
                     <Icon className="h-[20px] w-[20px]" />
@@ -84,7 +94,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             })}
           </ul>
         </nav>
-        
+
         <button
           onClick={() => router.push("/auth")}
           className="cursor-pointer mt-4 flex items-center gap-3 px-4 py-3 rounded-[14px] border-2 border-transparent text-[15px] font-medium text-[#667084] hover:border-[#aeb5c9] hover:bg-[#f4efe7] hover:text-[#1a2b5e] active:scale-[0.98] transition-all duration-200 shrink-0"
@@ -103,14 +113,25 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             // Chat manages its own scroll; other pages get pb for bottom nav
             overflowY: pathname === "/chat" ? "hidden" : "auto",
             paddingBottom: pathname === "/chat" ? 0 : undefined,
-            background: pathname === "/home" ? "#f3f4fb" : pathname === "/chat" ? "#ffffff" : undefined,
+            background:
+              pathname === "/home"
+                ? "#f3f4fb"
+                : pathname === "/chat"
+                  ? "#ffffff"
+                  : undefined,
           }}
         >
           <div
             style={{
               height: pathname === "/chat" ? "100%" : "auto",
-              paddingBottom: pathname === "/chat" ? 0 : showMobileNav ? "5rem" : 0,
-              background: pathname === "/home" ? "#f3f4fb" : pathname === "/chat" ? "#ffffff" : undefined,
+              paddingBottom:
+                pathname === "/chat" ? 0 : showMobileNav ? "5rem" : 0,
+              background:
+                pathname === "/home"
+                  ? "#f3f4fb"
+                  : pathname === "/chat"
+                    ? "#ffffff"
+                    : undefined,
             }}
             className={pathname !== "/chat" ? "md:pb-6" : ""}
           >
@@ -132,58 +153,60 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         )}
 
         {showMobileNav && (
-        <nav
-          className="pointer-events-none fixed bottom-4 left-0 right-0 z-50 px-5 md:hidden"
-          style={{
-            paddingBottom: "env(safe-area-inset-bottom)",
-          }}
-        >
-          <div
-            className="pointer-events-auto mx-auto flex h-[66px] max-w-[340px] items-center rounded-[28px] border bg-white px-3"
+          <nav
+            className="pointer-events-none fixed bottom-4 left-0 right-0 z-50 px-5 md:hidden"
             style={{
-              borderColor: "#eee6dd",
-              boxShadow: "0 14px 32px rgba(31,27,23,0.12)",
+              paddingBottom: "env(safe-area-inset-bottom)",
             }}
           >
-            {MOBILE_NAV_ITEMS.map(({ label, icon: Icon, href, atlas }) => {
-              const isActive = active(href);
-              return (
-                <button
-                  key={href}
-                  onClick={() => router.push(href)}
-                  className="cursor-pointer relative flex h-full flex-1 flex-col items-center justify-center gap-1 rounded-2xl text-[10px] font-medium transition-colors"
-                  style={{ color: isActive ? "#1a2b5e" : "#667084" }}
-                >
-                  {atlas ? (
-                    <Image
-                      src="/atlas-logo.png"
-                      alt=""
-                      width={23}
-                      height={23}
-                      className="h-[23px] w-[23px] object-contain"
-                    />
-                  ) : (
-                    <Icon
-                      style={{
-                         width: 21,
-                         height: 21,
-                         strokeWidth: isActive ? 2.3 : 1.9,
-                         color: "currentColor",
-                      }}
-                    />
-                  )}
-                  <span className="leading-none truncate w-full text-center">{label === "Profile Settings" ? "Profile" : label}</span>
-                  {isActive && (
-                    <span
-                      className="absolute bottom-2 h-[3px] w-6 rounded-full"
-                      style={{ background: "#1a2b5e" }}
-                    />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </nav>
+            <div
+              className="pointer-events-auto mx-auto flex h-[66px] max-w-[340px] items-center rounded-[28px] border bg-white px-3"
+              style={{
+                borderColor: "#eee6dd",
+                boxShadow: "0 14px 32px rgba(31,27,23,0.12)",
+              }}
+            >
+              {MOBILE_NAV_ITEMS.map(({ label, icon: Icon, href, atlas }) => {
+                const isActive = active(href);
+                return (
+                  <button
+                    key={href}
+                    onClick={() => router.push(href)}
+                    className="cursor-pointer relative flex h-full flex-1 flex-col items-center justify-center gap-1 rounded-2xl text-[10px] font-medium transition-colors"
+                    style={{ color: isActive ? "#1a2b5e" : "#667084" }}
+                  >
+                    {atlas ? (
+                      <Image
+                        src="/atlas-logo.png"
+                        alt=""
+                        width={23}
+                        height={23}
+                        className="h-[23px] w-[23px] object-contain"
+                      />
+                    ) : (
+                      <Icon
+                        style={{
+                          width: 21,
+                          height: 21,
+                          strokeWidth: isActive ? 2.3 : 1.9,
+                          color: "currentColor",
+                        }}
+                      />
+                    )}
+                    <span className="leading-none truncate w-full text-center">
+                      {label === "Profile Settings" ? "Profile" : label}
+                    </span>
+                    {isActive && (
+                      <span
+                        className="absolute bottom-2 h-[3px] w-6 rounded-full"
+                        style={{ background: "#1a2b5e" }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
         )}
       </div>
     </div>

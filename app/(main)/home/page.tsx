@@ -21,11 +21,27 @@ type XpHistoryEntry = {
   created_at: string;
 };
 
-const SectionHeader = ({ title, onView, viewLabel = "View all" }: { title: string; onView?: () => void; viewLabel?: string }) => (
+const SectionHeader = ({
+  title,
+  onView,
+  viewLabel = "View all",
+}: {
+  title: string;
+  onView?: () => void;
+  viewLabel?: string;
+}) => (
   <div className="flex items-center justify-between px-1">
-    <h2 className="text-[18px] font-semibold text-[#1a2b5e] tracking-tight" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>{title}</h2>
+    <h2
+      className="text-[18px] font-semibold text-[#1a2b5e] tracking-tight"
+      style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+    >
+      {title}
+    </h2>
     {onView && (
-      <button onClick={onView} className="cursor-pointer text-[13px] text-[#667084] hover:text-[#1a2b5e] inline-flex items-center gap-0.5 transition-colors active:scale-[0.98]">
+      <button
+        onClick={onView}
+        className="cursor-pointer text-[13px] text-[#667084] hover:text-[#1a2b5e] inline-flex items-center gap-0.5 transition-colors active:scale-[0.98]"
+      >
         {viewLabel} <ChevronRight className="h-3.5 w-3.5" />
       </button>
     )}
@@ -33,29 +49,61 @@ const SectionHeader = ({ title, onView, viewLabel = "View all" }: { title: strin
 );
 
 const FeedRow = ({
-  done = false, icon, label, xp, onClick,
-}: { done?: boolean; icon: React.ReactNode; label: string; xp: number; onClick?: () => void }) => (
+  done = false,
+  icon,
+  label,
+  xp,
+  onClick,
+}: {
+  done?: boolean;
+  icon: React.ReactNode;
+  label: string;
+  xp: number;
+  onClick?: () => void;
+}) => (
   <li>
     <button
       onClick={onClick}
       className="cursor-pointer w-full flex items-center justify-between py-1.5 px-1 hover:bg-[#eef2fc]/40 rounded-lg transition-colors active:scale-[0.98]"
     >
       <span className="flex items-center gap-2.5 min-w-0">
-        <span className={`h-5 w-5 rounded-full grid place-items-center shrink-0 ${
-          done ? "bg-[#10b981]/15 text-[#10b981]" : "bg-[#eef2fc] text-[#667084]"
-        }`}>
+        <span
+          className={`h-5 w-5 rounded-full grid place-items-center shrink-0 ${
+            done
+              ? "bg-[#10b981]/15 text-[#10b981]"
+              : "bg-[#eef2fc] text-[#667084]"
+          }`}
+        >
           {icon}
         </span>
-        <span className={`text-[12px] truncate ${done ? "text-[#667084] line-through" : "text-[#1a2b5e]"}`}>{label}</span>
+        <span
+          className={`text-[12px] truncate ${done ? "text-[#667084] line-through" : "text-[#1a2b5e]"}`}
+        >
+          {label}
+        </span>
       </span>
-      <span className="text-[11px] font-semibold text-[#c9842f] shrink-0">+{xp} XP</span>
+      <span className="text-[11px] font-semibold text-[#c9842f] shrink-0">
+        +{xp} XP
+      </span>
     </button>
   </li>
 );
 
 const SimpleCard = ({
-  icon, title, subtitle, onClick, iconColor, isAtlas,
-}: { icon: React.ReactNode; title: string; subtitle: string; onClick?: () => void; iconColor?: string; isAtlas?: boolean }) => (
+  icon,
+  title,
+  subtitle,
+  onClick,
+  iconColor,
+  isAtlas,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  onClick?: () => void;
+  iconColor?: string;
+  isAtlas?: boolean;
+}) => (
   <button
     onClick={onClick}
     className="text-left cursor-pointer rounded-[20px] bg-white border-2 border-[rgba(26,43,94,0.08)] p-4 min-h-[140px] flex flex-col justify-between hover:border-[#aeb5c9] active:scale-[0.98] transition-all duration-200"
@@ -71,7 +119,9 @@ const SimpleCard = ({
       {icon}
     </div>
     <div className="mt-2">
-      <h3 className="font-bold text-[14px] leading-tight text-[#1a2b5e]">{title}</h3>
+      <h3 className="font-bold text-[14px] leading-tight text-[#1a2b5e]">
+        {title}
+      </h3>
       <p className="mt-1 text-[12px] text-[#667084] leading-snug">{subtitle}</p>
     </div>
   </button>
@@ -83,7 +133,9 @@ const StreakIndicator = ({ count }: { count: number }) => (
     aria-label={`${count} day streak`}
   >
     <Flame className="h-[15px] w-[15px] animate-bounce" fill="currentColor" />
-    <span className="text-[12px] font-bold tabular-nums text-[#1a2b5e]">{count}</span>
+    <span className="text-[12px] font-bold tabular-nums text-[#1a2b5e]">
+      {count}
+    </span>
   </div>
 );
 
@@ -125,22 +177,49 @@ export default function HomePage() {
   };
 
   const articleReadsThisWeek = xpHistory.filter(
-    (h) => h.reason === "article_completed" && isThisWeek(h.created_at)
+    (h) => h.reason === "article_completed" && isThisWeek(h.created_at),
   ).length;
   const targetFreq = user?.preferences?.article_frequency || 2;
   const progressPercent = Math.min(
     100,
-    Math.round((articleReadsThisWeek / Math.max(targetFreq, 1)) * 100)
+    Math.round((articleReadsThisWeek / Math.max(targetFreq, 1)) * 100),
   );
 
-  const hasArticleToday = xpHistory.some((h) => h.reason === "article_completed" && isToday(h.created_at));
-  const hasReviewToday = xpHistory.some((h) => h.reason === "review_session" && isToday(h.created_at));
-  const hasNewsToday = xpHistory.some((h) => h.reason === "news_read" && isToday(h.created_at));
+  const hasArticleToday = xpHistory.some(
+    (h) => h.reason === "article_completed" && isToday(h.created_at),
+  );
+  const hasReviewToday = xpHistory.some(
+    (h) => h.reason === "review_session" && isToday(h.created_at),
+  );
+  const hasNewsToday = xpHistory.some(
+    (h) => h.reason === "news_read" && isToday(h.created_at),
+  );
 
   const TASKS = [
-    { id: "article", label: "Read an Article", icon: <BookOpen className="h-3 w-3" />, xp: 10, route: "/articles", done: hasArticleToday },
-    { id: "speak", label: "Review Session", icon: <Repeat2 className="h-3 w-3" />, xp: 10, route: "/practice", done: hasReviewToday },
-    { id: "news", label: "Read News", icon: <Newspaper className="h-3 w-3" />, xp: 10, route: "/news", done: hasNewsToday },
+    {
+      id: "article",
+      label: "Read an Article",
+      icon: <BookOpen className="h-3 w-3" />,
+      xp: 10,
+      route: "/articles",
+      done: hasArticleToday,
+    },
+    {
+      id: "speak",
+      label: "Review Session",
+      icon: <Repeat2 className="h-3 w-3" />,
+      xp: 10,
+      route: "/practice",
+      done: hasReviewToday,
+    },
+    {
+      id: "news",
+      label: "Read News",
+      icon: <Newspaper className="h-3 w-3" />,
+      xp: 10,
+      route: "/news",
+      done: hasNewsToday,
+    },
   ];
 
   const doneCount = TASKS.filter((t) => t.done).length;
@@ -156,7 +235,14 @@ export default function HomePage() {
         >
           <Trophy className="h-[18px] w-[18px]" />
         </button>
-        <Image src="/logo with word.webp" alt="kalyma.ma" width={426} height={167} className="h-16 w-auto md:hidden" priority />
+        <Image
+          src="/logo with word.webp"
+          alt="kalyma"
+          width={426}
+          height={167}
+          className="h-16 w-auto md:hidden"
+          priority
+        />
         <button
           onClick={() => router.push("/profile")}
           aria-label="Profile settings"
@@ -169,10 +255,15 @@ export default function HomePage() {
 
       <main className="max-w-md md:max-w-5xl mx-auto px-5 space-y-8">
         <section className="pt-3 animate-fade-in text-center">
-          <h1 className="text-[28px] leading-tight text-[#1a2b5e] tracking-tight" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+          <h1
+            className="text-[28px] leading-tight text-[#1a2b5e] tracking-tight"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
             Hello, <span className="font-semibold">{firstName}</span>
           </h1>
-          <p className="mt-1.5 text-[15px] text-[#667084]">Ready to speak with confidence?</p>
+          <p className="mt-1.5 text-[15px] text-[#667084]">
+            Ready to speak with confidence?
+          </p>
         </section>
 
         <section className="rounded-2xl bg-white border border-[rgba(26,43,94,0.08)] p-3.5 animate-fade-in">
@@ -185,14 +276,20 @@ export default function HomePage() {
                 }}
               />
               <div className="absolute inset-[4px] rounded-full bg-white flex items-center justify-center">
-                <span className="text-sm font-semibold tracking-tight text-[#1a2b5e]" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-                  {progressPercent}<span className="text-[9px] text-[#667084]">%</span>
+                <span
+                  className="text-sm font-semibold tracking-tight text-[#1a2b5e]"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                >
+                  {progressPercent}
+                  <span className="text-[9px] text-[#667084]">%</span>
                 </span>
               </div>
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-[13px] font-semibold text-[#1a2b5e]">Today&apos;s progress</p>
+                <p className="text-[13px] font-semibold text-[#1a2b5e]">
+                  Today&apos;s progress
+                </p>
                 <StreakIndicator count={streakCount} />
               </div>
               <p className="mt-0.5 text-[11px] text-[#667084]">
@@ -228,14 +325,24 @@ export default function HomePage() {
           <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
             <SimpleCard
               onClick={() => router.push("/chat")}
-              icon={<Image src="/atlas-logo.png" alt="" width={44} height={44} className="h-full w-full object-cover" />}
+              icon={
+                <Image
+                  src="/atlas-logo.png"
+                  alt=""
+                  width={44}
+                  height={44}
+                  className="h-full w-full object-cover"
+                />
+              }
               isAtlas
               title="Atlas AI"
               subtitle="Chat with your AI coach"
             />
             <SimpleCard
               onClick={() => router.push("/practice")}
-              icon={<Repeat2 className="h-5 w-5" style={{ color: "#7C3AED" }} />}
+              icon={
+                <Repeat2 className="h-5 w-5" style={{ color: "#7C3AED" }} />
+              }
               iconColor="#7C3AED"
               title="Review Session"
               subtitle="Practice saved words and Learn My notes"
@@ -251,18 +358,26 @@ export default function HomePage() {
         </section>
 
         <section className="animate-fade-in">
-          <SectionHeader title="Learn" onView={() => router.push("/profile/notifications")} viewLabel="My notes" />
+          <SectionHeader
+            title="Learn"
+            onView={() => router.push("/profile/notifications")}
+            viewLabel="My notes"
+          />
           <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
             <SimpleCard
               onClick={() => router.push("/articles")}
-              icon={<BookOpen className="h-5 w-5" style={{ color: "#15803D" }} />}
+              icon={
+                <BookOpen className="h-5 w-5" style={{ color: "#15803D" }} />
+              }
               iconColor="#15803D"
               title="Articles"
               subtitle="Read level-matched articles"
             />
             <SimpleCard
               onClick={() => router.push("/news")}
-              icon={<Newspaper className="h-5 w-5" style={{ color: "#0369A1" }} />}
+              icon={
+                <Newspaper className="h-5 w-5" style={{ color: "#0369A1" }} />
+              }
               iconColor="#0369A1"
               title="News"
               subtitle="Learn from current events"
@@ -278,8 +393,12 @@ export default function HomePage() {
           <span>My notes</span>
         </button>
 
-        <p className="text-center text-[15px] text-[#667084] pt-2 pb-2" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-          Speak. Make mistakes. <span className="italic text-[#c9842f] font-semibold">Grow.</span>
+        <p
+          className="text-center text-[15px] text-[#667084] pt-2 pb-2"
+          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+        >
+          Speak. Make mistakes.{" "}
+          <span className="italic text-[#c9842f] font-semibold">Grow.</span>
         </p>
       </main>
     </div>

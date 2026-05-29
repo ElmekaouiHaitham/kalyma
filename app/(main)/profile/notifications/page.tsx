@@ -2,29 +2,73 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Bell, MessageSquare, Zap, Newspaper, BookOpen, Radio } from "lucide-react";
+import {
+  ArrowLeft,
+  Bell,
+  MessageSquare,
+  Zap,
+  Newspaper,
+  BookOpen,
+  Radio,
+} from "lucide-react";
 import PageShell from "@/components/PageShell";
 
 const NOTIF_SETTINGS = [
   {
     section: "Learning Reminders",
     items: [
-      { id: "daily", icon: Zap, label: "Daily Goal Reminder", sub: "Remind me to practice every day", enabled: true },
-      { id: "streak", icon: Bell, label: "Streak Alert", sub: "Notify if I'm about to lose my streak", enabled: true },
+      {
+        id: "daily",
+        icon: Zap,
+        label: "Daily Goal Reminder",
+        sub: "Remind me to practice every day",
+        enabled: true,
+      },
+      {
+        id: "streak",
+        icon: Bell,
+        label: "Streak Alert",
+        sub: "Notify if I'm about to lose my streak",
+        enabled: true,
+      },
     ],
   },
   {
     section: "Content Updates",
     items: [
-      { id: "news", icon: Newspaper, label: "New Articles", sub: "When articles matching my interests are added", enabled: true },
-      { id: "books", icon: BookOpen, label: "Book Updates", sub: "New chapters or books available", enabled: false },
-      { id: "live", icon: Radio, label: "Live Sessions", sub: "Upcoming live sessions reminder", enabled: true },
+      {
+        id: "news",
+        icon: Newspaper,
+        label: "New Articles",
+        sub: "When articles matching my interests are added",
+        enabled: true,
+      },
+      {
+        id: "books",
+        icon: BookOpen,
+        label: "Book Updates",
+        sub: "New chapters or books available",
+        enabled: false,
+      },
+      {
+        id: "live",
+        icon: Radio,
+        label: "Live Sessions",
+        sub: "Upcoming live sessions reminder",
+        enabled: true,
+      },
     ],
   },
   {
     section: "Engagement",
     items: [
-      { id: "tips", icon: MessageSquare, label: "Language Tips", sub: "Daily vocabulary and grammar tips", enabled: false },
+      {
+        id: "tips",
+        icon: MessageSquare,
+        label: "Language Tips",
+        sub: "Daily vocabulary and grammar tips",
+        enabled: false,
+      },
     ],
   },
 ];
@@ -33,8 +77,8 @@ export default function NotificationsPage() {
   const router = useRouter();
   const [settings, setSettings] = useState<Record<string, boolean>>(
     Object.fromEntries(
-      NOTIF_SETTINGS.flatMap((s) => s.items).map((i) => [i.id, i.enabled])
-    )
+      NOTIF_SETTINGS.flatMap((s) => s.items).map((i) => [i.id, i.enabled]),
+    ),
   );
 
   const toggle = (id: string) =>
@@ -43,7 +87,7 @@ export default function NotificationsPage() {
   return (
     <PageShell
       title="Notifications"
-      subtitle="Control how and when kalyma.ma notifies you."
+      subtitle="Control how and when kalyma notifies you."
       maxWidth="max-w-lg"
       action={
         <button
@@ -56,7 +100,6 @@ export default function NotificationsPage() {
         </button>
       }
     >
-
       {NOTIF_SETTINGS.map((section, si) => (
         <motion.div
           key={section.section}
@@ -74,7 +117,10 @@ export default function NotificationsPage() {
             className="px-4 py-3"
             style={{ borderBottom: "1px solid rgba(26,43,94,0.06)" }}
           >
-            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#9aa5b1" }}>
+            <span
+              className="text-xs font-bold uppercase tracking-wider"
+              style={{ color: "#9aa5b1" }}
+            >
               {section.section}
             </span>
           </div>
@@ -84,7 +130,10 @@ export default function NotificationsPage() {
                 key={id}
                 className="flex items-center gap-3 px-4 py-3.5"
                 style={{
-                  borderBottom: i < arr.length - 1 ? "1px solid rgba(26,43,94,0.05)" : "none",
+                  borderBottom:
+                    i < arr.length - 1
+                      ? "1px solid rgba(26,43,94,0.05)"
+                      : "none",
                 }}
               >
                 <div
@@ -94,7 +143,10 @@ export default function NotificationsPage() {
                   <Icon size={16} style={{ color: "#1a2b5e" }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium" style={{ color: "#1a2b5e" }}>
+                  <div
+                    className="text-sm font-medium"
+                    style={{ color: "#1a2b5e" }}
+                  >
                     {label}
                   </div>
                   <div className="text-xs" style={{ color: "#9aa5b1" }}>

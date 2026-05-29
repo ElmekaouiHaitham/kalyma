@@ -1,12 +1,12 @@
 # Kalyma — Frontend
 
-> The client-side application for **kalyma.ma**, an English learning platform that blends language acquisition with real-world knowledge — through live topic sessions, curated articles, AI conversation, and news. This repository contains the full Next.js frontend; the backend API is maintained in a private repository.
+> The client-side application for **kalyma**, an English learning platform that blends language acquisition with real-world knowledge — through live topic sessions, curated articles, AI conversation, and news. This repository contains the full Next.js frontend; the backend API is maintained in a private repository.
 
 ---
 
 ## 🧭 Project Overview
 
-**kalyma.ma** is an English learning platform built around the idea that language is best acquired through meaningful content — not drills. Users improve their English while genuinely expanding their knowledge through:
+**kalyma** is an English learning platform built around the idea that language is best acquired through meaningful content — not drills. Users improve their English while genuinely expanding their knowledge through:
 
 - **Live sessions** on diverse real-world topics (hosted streams users can join and follow along in English)
 - **Curated articles** graded to the learner's level, with vocabulary saving built in

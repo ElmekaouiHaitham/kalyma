@@ -4,10 +4,10 @@ import { AuthProvider } from "./providers";
 import PWARegister from "./PWARegister";
 
 export const metadata: Metadata = {
-  applicationName: "kalyma.ma",
-  title: "kalyma.ma - Speak English with Confidence",
+  applicationName: "kalyma",
+  title: "kalyma - Speak English with Confidence",
   description:
-    "Master English with AI-powered articles, live sessions, and conversational practice. kalyma.ma adapts to your level and interests.",
+    "Master English with AI-powered articles, live sessions, and conversational practice. kalyma adapts to your level and interests.",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: "/icon.png",
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     telephone: false,
   },
   openGraph: {
-    title: "kalyma.ma",
+    title: "kalyma",
     description: "Learn English through real-world content and AI conversation",
     type: "website",
   },

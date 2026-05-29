@@ -35,8 +35,16 @@ const featureCards = [
 
 const loopSteps = [
   { icon: Newspaper, label: "Read", text: "Articles, books, and current news" },
-  { icon: MessageCircle, label: "Ask", text: "Atlas explains words and passages" },
-  { icon: BookmarkPlus, label: "Save", text: "Keep useful vocabulary and notes" },
+  {
+    icon: MessageCircle,
+    label: "Ask",
+    text: "Atlas explains words and passages",
+  },
+  {
+    icon: BookmarkPlus,
+    label: "Save",
+    text: "Keep useful vocabulary and notes",
+  },
   { icon: Repeat2, label: "Review", text: "Practice with spaced repetition" },
 ];
 
@@ -58,7 +66,7 @@ export default function LandingPage() {
         <Link href="/" aria-label="Kalyma home" className="block">
           <Image
             src="/logo with word.webp"
-            alt="kalyma.ma"
+            alt="kalyma"
             width={190}
             height={76}
             priority
@@ -103,8 +111,9 @@ export default function LandingPage() {
           transition={{ duration: 0.55, delay: 0.16 }}
           className="mt-7 max-w-2xl text-[17px] font-medium leading-relaxed text-[#111735] sm:text-xl"
         >
-          Kalyma turns articles, books, and news into a complete English-learning loop:
-          read, ask Atlas AI, save what matters, review it, then speak with confidence.
+          Kalyma turns articles, books, and news into a complete
+          English-learning loop: read, ask Atlas AI, save what matters, review
+          it, then speak with confidence.
         </motion.p>
 
         <motion.div
@@ -118,7 +127,10 @@ export default function LandingPage() {
             className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#202b67] px-8 py-4 text-base font-extrabold text-white shadow-[0_18px_35px_rgba(32,43,103,0.22)] transition-all hover:-translate-y-0.5 hover:bg-[#121a46] sm:w-auto"
           >
             Get Started for Free
-            <ChevronRight size={20} className="transition-transform group-hover:translate-x-1" />
+            <ChevronRight
+              size={20}
+              className="transition-transform group-hover:translate-x-1"
+            />
           </Link>
           <a
             href="#how-it-works"
@@ -144,7 +156,9 @@ export default function LandingPage() {
                 <Icon size={25} strokeWidth={2.2} />
               </div>
               <h2 className="text-[22px] font-black leading-tight">{title}</h2>
-              <p className="mt-3 text-[16px] font-medium leading-snug text-black/80">{text}</p>
+              <p className="mt-3 text-[16px] font-medium leading-snug text-black/80">
+                {text}
+              </p>
             </article>
           ))}
         </motion.div>
@@ -167,22 +181,30 @@ export default function LandingPage() {
                 Every lesson becomes something you can use.
               </h2>
               <p className="mt-4 text-[17px] font-medium leading-relaxed text-black/75">
-                Instead of isolated drills, Kalyma connects reading, AI coaching, saved vocabulary,
-                review, and live speaking practice into one daily flow.
+                Instead of isolated drills, Kalyma connects reading, AI
+                coaching, saved vocabulary, review, and live speaking practice
+                into one daily flow.
               </p>
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {loopSteps.map(({ icon: Icon, label, text }, index) => (
-                <div key={label} className="rounded-[22px] border border-[#050a2f]/10 bg-[#fbf7f1]/80 p-5">
+                <div
+                  key={label}
+                  className="rounded-[22px] border border-[#050a2f]/10 bg-[#fbf7f1]/80 p-5"
+                >
                   <div className="mb-5 flex items-center justify-between">
                     <div className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-[#050a2f] bg-white">
                       <Icon size={21} />
                     </div>
-                    <span className="font-black text-[#c9842f]">0{index + 1}</span>
+                    <span className="font-black text-[#c9842f]">
+                      0{index + 1}
+                    </span>
                   </div>
                   <h3 className="text-xl font-black">{label}</h3>
-                  <p className="mt-1 text-sm font-semibold leading-snug text-black/65">{text}</p>
+                  <p className="mt-1 text-sm font-semibold leading-snug text-black/65">
+                    {text}
+                  </p>
                 </div>
               ))}
             </div>
@@ -190,7 +212,10 @@ export default function LandingPage() {
 
           <div className="mt-8 grid gap-3 border-t border-[#050a2f]/10 pt-6 sm:grid-cols-3">
             {stats.map((item) => (
-              <div key={item} className="rounded-full border border-[#050a2f]/10 bg-white/55 px-4 py-3 text-center text-sm font-extrabold">
+              <div
+                key={item}
+                className="rounded-full border border-[#050a2f]/10 bg-white/55 px-4 py-3 text-center text-sm font-extrabold"
+              >
                 {item}
               </div>
             ))}
@@ -201,9 +226,12 @@ export default function LandingPage() {
       <section className="relative z-10 mx-auto max-w-6xl px-6 pb-10">
         <div className="flex flex-col items-center justify-between gap-5 rounded-[30px] bg-[#202b67] px-7 py-7 text-center text-white shadow-[0_24px_50px_rgba(32,43,103,0.22)] sm:flex-row sm:text-left">
           <div>
-            <h2 className="text-2xl font-black sm:text-3xl">Start with what you already like reading.</h2>
+            <h2 className="text-2xl font-black sm:text-3xl">
+              Start with what you already like reading.
+            </h2>
             <p className="mt-2 max-w-2xl text-sm font-medium text-white/76 sm:text-base">
-              Build vocabulary, understand real English, and turn saved insights into confident speaking.
+              Build vocabulary, understand real English, and turn saved insights
+              into confident speaking.
             </p>
           </div>
           <Link
@@ -218,12 +246,18 @@ export default function LandingPage() {
       </section>
 
       <footer className="relative z-10 mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 pb-8 text-center text-sm font-medium text-black/70 sm:flex-row sm:text-left">
-        <p>&copy; 2026 kalyma.ma. All rights reserved. Speak with confidence.</p>
+        <p>&copy; 2026 kalyma. All rights reserved. Speak with confidence.</p>
         <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 font-extrabold text-[#050a2f]">
-          <Link href="/privacy" className="transition-colors hover:text-[#c9842f]">
+          <Link
+            href="/privacy"
+            className="transition-colors hover:text-[#c9842f]"
+          >
             Privacy Policy
           </Link>
-          <Link href="/terms" className="transition-colors hover:text-[#c9842f]">
+          <Link
+            href="/terms"
+            className="transition-colors hover:text-[#c9842f]"
+          >
             Terms and Conditions
           </Link>
         </div>
@@ -237,7 +271,11 @@ export default function LandingPage() {
           opacity: 0.28;
           background-image:
             linear-gradient(rgba(255, 255, 255, 0.22) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px);
+            linear-gradient(
+              90deg,
+              rgba(255, 255, 255, 0.2) 1px,
+              transparent 1px
+            );
           background-size: 42px 42px;
           mix-blend-mode: soft-light;
         }
