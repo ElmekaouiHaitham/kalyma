@@ -8,6 +8,7 @@ import {
   BookOpen,
   Bookmark,
   ChevronRight,
+  Flame,
   Radio,
   CircleUserRound,
   Newspaper,
@@ -76,6 +77,16 @@ const SimpleCard = ({
   </button>
 );
 
+const StreakIndicator = ({ count }: { count: number }) => (
+  <div
+    className="flex h-6 items-center gap-1 rounded-full px-1.5 text-[#c9842f]"
+    aria-label={`${count} day streak`}
+  >
+    <Flame className="h-[15px] w-[15px] animate-bounce" fill="currentColor" />
+    <span className="text-[12px] font-bold tabular-nums text-[#1a2b5e]">{count}</span>
+  </div>
+);
+
 export default function HomePage() {
   const router = useRouter();
   const { user, session } = useAuth();
@@ -133,6 +144,7 @@ export default function HomePage() {
   ];
 
   const doneCount = TASKS.filter((t) => t.done).length;
+  const streakCount = user?.streak_count || 0;
 
   return (
     <div className="min-h-screen bg-[#f7f2ea] pb-28 md:pb-10">
@@ -178,8 +190,11 @@ export default function HomePage() {
                 </span>
               </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-[13px] font-semibold text-[#1a2b5e]">Today&apos;s progress</p>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[13px] font-semibold text-[#1a2b5e]">Today&apos;s progress</p>
+                <StreakIndicator count={streakCount} />
+              </div>
               <p className="mt-0.5 text-[11px] text-[#667084]">
                 {doneCount} of {TASKS.length} tasks ·{" "}
                 <span className="text-[#c9842f] font-semibold">30 XP</span>
