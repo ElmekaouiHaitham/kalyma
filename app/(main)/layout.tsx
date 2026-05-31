@@ -172,7 +172,7 @@ export default function MainLayout({
             }}
           >
             <div
-              className="pointer-events-auto mx-auto flex h-[66px] max-w-[340px] items-center rounded-[28px] border bg-white px-3"
+              className="pointer-events-auto mx-auto flex h-[99px] max-w-[510px] items-center rounded-[42px] border bg-white px-5"
               style={{
                 borderColor: "#eee6dd",
                 boxShadow: "0 14px 32px rgba(31,27,23,0.12)",
@@ -184,7 +184,7 @@ export default function MainLayout({
                   <button
                     key={href}
                     onClick={() => router.push(href)}
-                    className="cursor-pointer relative flex h-full flex-1 flex-col items-center justify-center gap-1 rounded-2xl text-[10px] font-medium transition-colors"
+                    className="cursor-pointer relative flex h-full flex-1 flex-col items-center justify-center gap-1.5 rounded-[28px] text-[15px] font-medium transition-colors"
                     style={{ color: isActive ? "#1a2b5e" : "#667084" }}
                   >
                     {atlas ? (
@@ -193,13 +193,13 @@ export default function MainLayout({
                         alt=""
                         width={23}
                         height={23}
-                        className="h-[23px] w-[23px] object-contain"
+                        className="h-[35px] w-[35px] object-contain"
                       />
                     ) : (
                       <Icon
                         style={{
-                          width: 21,
-                          height: 21,
+                          width: 32,
+                          height: 32,
                           strokeWidth: isActive ? 2.3 : 1.9,
                           color: "currentColor",
                         }}
@@ -210,7 +210,7 @@ export default function MainLayout({
                     </span>
                     {isActive && (
                       <span
-                        className="absolute bottom-2 h-[3px] w-6 rounded-full"
+                        className="absolute bottom-3 h-[4px] w-9 rounded-full"
                         style={{ background: "#1a2b5e" }}
                       />
                     )}

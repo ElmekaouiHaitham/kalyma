@@ -241,7 +241,7 @@ export default function HomePage() {
           alt="kalyma"
           width={426}
           height={167}
-          className="h-16 w-auto md:hidden"
+          className="h-24 w-auto md:hidden"
           priority
         />
         <button
@@ -252,7 +252,7 @@ export default function HomePage() {
           <UserAvatar
             avatarUrl={user?.avatar_url}
             name={displayName}
-            size={40}
+            size={52}
             className="ring-2 ring-white"
           />
         </button>
