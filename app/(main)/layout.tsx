@@ -25,7 +25,7 @@ const NAV_ITEMS = [
   { label: "Live Sessions", icon: Radio, href: "/live" },
   { label: "News", icon: Newspaper, href: "/news" },
   { label: "Leaderboard", icon: Trophy, href: "/leaderboard" },
-  { label: "Profile Settings", icon: Settings, href: "/profile" },
+  { label: "Profile Settings", icon: Settings, href: "/profile", profile: true },
 ];
 
 const MOBILE_NAV_ITEMS = NAV_ITEMS.filter(
@@ -77,7 +77,7 @@ export default function MainLayout({
 
         <nav className="flex-1 overflow-y-auto">
           <ul className="space-y-1">
-            {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+            {NAV_ITEMS.map(({ href, label, icon: Icon, profile }) => {
               const isActive = active(href);
               return (
                 <li key={href}>
@@ -87,10 +87,18 @@ export default function MainLayout({
                       "cursor-pointer w-full flex items-center gap-3 px-4 py-3 rounded-[14px] border-2 text-[15px] font-medium transition-all duration-200 active:scale-[0.98]",
                       isActive
                         ? "border-[#aeb5c9] bg-[#f4efe7] text-[#1a2b5e]"
-                        : "border-transparent text-[#667084] hover:border-[#aeb5c9] hover:bg-[#f4efe7] hover:text-[#1a2b5e]",
+                      : "border-transparent text-[#667084] hover:border-[#aeb5c9] hover:bg-[#f4efe7] hover:text-[#1a2b5e]",
                     )}
                   >
-                    <Icon className="h-[20px] w-[20px]" />
+                    {profile ? (
+                      <UserAvatar
+                        avatarUrl={user?.avatar_url}
+                        name={displayName}
+                        size={20}
+                      />
+                    ) : (
+                      <Icon className="h-[20px] w-[20px]" />
+                    )}
                     <span>{label}</span>
                   </button>
                 </li>
@@ -98,26 +106,6 @@ export default function MainLayout({
             })}
           </ul>
         </nav>
-
-        <button
-          onClick={() => router.push("/profile")}
-          className="cursor-pointer mt-4 flex items-center gap-3 rounded-[16px] border border-[rgba(26,43,94,0.08)] bg-[#f7f2ea] px-3 py-3 text-left transition-colors hover:border-[#aeb5c9] hover:bg-[#f4efe7]"
-        >
-          <UserAvatar
-            avatarUrl={user?.avatar_url}
-            name={displayName}
-            size={42}
-            className="ring-2 ring-white"
-          />
-          <span className="min-w-0">
-            <span className="block truncate text-sm font-semibold text-[#1a2b5e]">
-              {displayName}
-            </span>
-            <span className="block truncate text-xs text-[#667084]">
-              {user?.email || "Profile"}
-            </span>
-          </span>
-        </button>
 
         <button
           onClick={() => router.push("/auth")}
