@@ -193,13 +193,13 @@ export default function MainLayout({
                         alt=""
                         width={23}
                         height={23}
-                        className="h-[23px] w-[23px] object-contain"
+                        className="h-[25px] w-[25px] object-contain"
                       />
                     ) : (
                       <Icon
                         style={{
-                          width: 21,
-                          height: 21,
+                          width: 23,
+                          height: 23,
                           strokeWidth: isActive ? 2.3 : 1.9,
                           color: "currentColor",
                         }}

@@ -252,7 +252,7 @@ export default function HomePage() {
           <UserAvatar
             avatarUrl={user?.avatar_url}
             name={displayName}
-            size={52}
+            size={36}
             className="ring-2 ring-white"
           />
         </button>
