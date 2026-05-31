@@ -55,7 +55,7 @@ export default function MainLayout({
       style={{
         background:
           pathname === "/home"
-            ? "#f3f4fb"
+            ? "#f7f2ea"
             : pathname === "/chat"
               ? "#ffffff"
               : "#f7f2ea",
@@ -127,7 +127,7 @@ export default function MainLayout({
             paddingBottom: pathname === "/chat" ? 0 : undefined,
             background:
               pathname === "/home"
-                ? "#f3f4fb"
+                ? "#f7f2ea"
                 : pathname === "/chat"
                   ? "#ffffff"
                   : undefined,
@@ -136,11 +136,10 @@ export default function MainLayout({
           <div
             style={{
               height: pathname === "/chat" ? "100%" : "auto",
-              paddingBottom:
-                pathname === "/chat" ? 0 : showMobileNav ? "5rem" : 0,
+              paddingBottom: 0,
               background:
                 pathname === "/home"
-                  ? "#f3f4fb"
+                  ? "#f7f2ea"
                   : pathname === "/chat"
                     ? "#ffffff"
                     : undefined,

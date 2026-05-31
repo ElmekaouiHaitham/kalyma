@@ -7,7 +7,6 @@ import { UserAvatar } from "@/components/UserAvatar";
 import Image from "next/image";
 import {
   BookOpen,
-  Bookmark,
   ChevronRight,
   Flame,
   Radio,
@@ -364,11 +363,7 @@ export default function HomePage() {
         </section>
 
         <section className="animate-fade-in">
-          <SectionHeader
-            title="Learn"
-            onView={() => router.push("/profile/notifications")}
-            viewLabel="My notes"
-          />
+          <SectionHeader title="Learn" />
           <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
             <SimpleCard
               onClick={() => router.push("/articles")}
@@ -390,14 +385,6 @@ export default function HomePage() {
             />
           </div>
         </section>
-
-        <button
-          onClick={() => router.push("/profile/notifications")}
-          className="cursor-pointer w-full flex items-center gap-3 px-5 py-4 rounded-[20px] border-2 border-[rgba(26,43,94,0.08)] bg-white text-[15px] font-medium text-[#1a2b5e] hover:border-[#aeb5c9] hover:bg-[#f4efe7] active:scale-[0.99] transition-all duration-200 animate-fade-in"
-        >
-          <Bookmark className="h-[20px] w-[20px] text-[#1a2b5e]" />
-          <span>My notes</span>
-        </button>
 
         <p
           className="text-center text-[15px] text-[#667084] pt-2 pb-2"
