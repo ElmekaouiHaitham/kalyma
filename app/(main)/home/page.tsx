@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/providers";
+import { UserAvatar } from "@/components/UserAvatar";
 import Image from "next/image";
 import {
   BookOpen,
@@ -10,7 +11,6 @@ import {
   ChevronRight,
   Flame,
   Radio,
-  CircleUserRound,
   Newspaper,
   Repeat2,
   Trophy,
@@ -156,6 +156,7 @@ export default function HomePage() {
       .catch((err) => console.error(err));
   }, [session]);
 
+  const displayName = user?.full_name?.trim() || "Kalyma Learner";
   const firstName = user?.full_name ? user.full_name.split(" ")[0] : "Learner";
 
   const isToday = (dateString: string) => {
@@ -246,9 +247,14 @@ export default function HomePage() {
         <button
           onClick={() => router.push("/profile")}
           aria-label="Profile settings"
-          className="cursor-pointer w-10 h-10 rounded-full flex items-center justify-center text-[#667084] hover:text-[#1a2b5e] active:bg-[#eef2fc] transition-colors md:hidden"
+          className="cursor-pointer rounded-full transition-transform active:scale-[0.98] md:hidden"
         >
-          <CircleUserRound className="h-[18px] w-[18px]" />
+          <UserAvatar
+            avatarUrl={user?.avatar_url}
+            name={displayName}
+            size={40}
+            className="ring-2 ring-white"
+          />
         </button>
         <div className="hidden md:block" />
       </header>

@@ -13,6 +13,8 @@ import {
   Trophy,
 } from "lucide-react";
 import Image from "next/image";
+import { useAuth } from "@/app/providers";
+import { UserAvatar } from "@/components/UserAvatar";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -38,8 +40,10 @@ export default function MainLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { user } = useAuth();
   const showMobileNav = pathname === "/home" || pathname.startsWith("/profile");
   const showMobileBack = !showMobileNav;
+  const displayName = user?.full_name?.trim() || "Kalyma Learner";
 
   const nav = (href: string) => router.push(href);
   const active = (href: string) =>
@@ -94,6 +98,26 @@ export default function MainLayout({
             })}
           </ul>
         </nav>
+
+        <button
+          onClick={() => router.push("/profile")}
+          className="cursor-pointer mt-4 flex items-center gap-3 rounded-[16px] border border-[rgba(26,43,94,0.08)] bg-[#f7f2ea] px-3 py-3 text-left transition-colors hover:border-[#aeb5c9] hover:bg-[#f4efe7]"
+        >
+          <UserAvatar
+            avatarUrl={user?.avatar_url}
+            name={displayName}
+            size={42}
+            className="ring-2 ring-white"
+          />
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-semibold text-[#1a2b5e]">
+              {displayName}
+            </span>
+            <span className="block truncate text-xs text-[#667084]">
+              {user?.email || "Profile"}
+            </span>
+          </span>
+        </button>
 
         <button
           onClick={() => router.push("/auth")}

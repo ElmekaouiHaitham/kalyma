@@ -22,6 +22,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/app/providers";
+import { UserAvatar } from "@/components/UserAvatar";
 import { DAILY_GOALS, PROFICIENCY_LEVELS } from "@/lib/data";
 
 const PLAN_FEATURES = [
@@ -158,14 +159,6 @@ export default function ProfilePage() {
   const xpInLevel = Math.max(0, totalXp % 100);
   const xpPercent = Math.min(100, xpInLevel);
   const displayName = fullName.trim() || user?.full_name || "Atlas Learner";
-  const initials =
-    displayName
-      .split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase())
-      .join("") || "AL";
-
   const stats = [
     { icon: Zap, label: "Total XP", value: totalXp, color: "#f2bd35" },
     { icon: Flame, label: "Day streak", value: user?.streak_count || 0, color: "#f2bd35" },
@@ -189,14 +182,12 @@ export default function ProfilePage() {
               className="rounded-[26px] border bg-white px-5 py-6 text-center shadow-[0_3px_14px_rgba(31,27,23,0.08)] md:px-8 md:py-7"
               style={{ borderColor: "#e6d9c9" }}
             >
-              <div className="mx-auto mb-5 flex h-[104px] w-[104px] items-center justify-center rounded-full bg-[#17172f] shadow-[0_10px_24px_rgba(23,23,47,0.16)] ring-8 ring-white md:h-[128px] md:w-[128px]">
-                <span
-                  className="text-[38px] font-bold uppercase tracking-tight text-white md:text-[46px]"
-                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-                >
-                  {initials}
-                </span>
-              </div>
+              <UserAvatar
+                avatarUrl={user?.avatar_url}
+                name={displayName}
+                className="mx-auto mb-5 h-[104px] w-[104px] shadow-[0_10px_24px_rgba(23,23,47,0.16)] ring-8 ring-white md:h-[128px] md:w-[128px]"
+                textClassName="text-[38px] md:text-[46px]"
+              />
 
               <div className="flex items-center justify-center gap-2">
                 {isEditingName ? (
