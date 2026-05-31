@@ -11,12 +11,46 @@ import {
   Heart,
   ArrowLeft,
   Loader2,
+  Briefcase,
+  GraduationCap,
+  HeartPulse,
+  Landmark,
+  Laptop,
+  LucideIcon,
+  Map,
+  Microscope,
+  Newspaper,
+  Palette,
+  Play,
+  Trophy,
+  Utensils,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PROFICIENCY_LEVELS, DAILY_GOALS } from "@/lib/data";
 import { useAuth } from "@/app/providers";
 
 const STEPS = ["Name", "Proficiency", "Pace", "Frequency", "Interests"];
+
+const TOPIC_ICONS: Record<string, LucideIcon> = {
+  laptop: Laptop,
+  trophy: Trophy,
+  briefcase: Briefcase,
+  "graduation-cap": GraduationCap,
+  landmark: Landmark,
+  newspaper: Newspaper,
+  microscope: Microscope,
+  "heart-pulse": HeartPulse,
+  map: Map,
+  utensils: Utensils,
+  play: Play,
+  palette: Palette,
+};
+
+function TopicIcon({ icon, label, className }: { icon?: string; label: string; className?: string }) {
+  const Icon = icon ? TOPIC_ICONS[icon] : undefined;
+  if (Icon) return <Icon className={className} strokeWidth={2.2} />;
+  return <span className="text-sm font-black uppercase">{label.slice(0, 2)}</span>;
+}
 
 interface Subtopic {
   id: string;
@@ -440,8 +474,8 @@ export default function OnboardingPage() {
                                   : "bg-white border-[#1a2b5e]/5 hover:border-[#1a2b5e]/20"
                               }`}
                             >
-                              <div className="text-3xl uppercase">
-                                {topic.icon?.slice(0, 2) || topic.label.slice(0, 2)}
+                              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1a2b5e]/5 text-[#1a2b5e]">
+                                <TopicIcon icon={topic.icon} label={topic.label} className="h-6 w-6" />
                               </div>
                               <div>
                                 <div className="text-sm font-bold text-[#1a2b5e]">
@@ -480,8 +514,12 @@ export default function OnboardingPage() {
                       </button>
 
                       <div className="flex items-center gap-4 p-6 rounded-3xl bg-white border-2 border-[#1a2b5e]/5 shadow-xl shadow-black/5">
-                        <div className="text-5xl uppercase">
-                          {activeTopic?.icon?.slice(0, 2) || activeTopic?.label.slice(0, 2)}
+                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#1a2b5e]/5 text-[#1a2b5e]">
+                          <TopicIcon
+                            icon={activeTopic?.icon}
+                            label={activeTopic?.label || ""}
+                            className="h-9 w-9"
+                          />
                         </div>
                         <div>
                           <h2 className="text-2xl font-bold text-[#1a2b5e] font-outfit">
