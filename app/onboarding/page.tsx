@@ -1,10 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronRight,
   ChevronLeft,
-  Globe,
   Check,
   Timer,
   Zap,
@@ -14,10 +13,25 @@ import {
   Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { PROFICIENCY_LEVELS, TOPICS, DAILY_GOALS } from "@/lib/data";
+import { PROFICIENCY_LEVELS, DAILY_GOALS } from "@/lib/data";
 import { useAuth } from "@/app/providers";
 
 const STEPS = ["Name", "Proficiency", "Pace", "Frequency", "Interests"];
+
+interface Subtopic {
+  id: string;
+  topic_id: string;
+  label: string;
+  display_order: number;
+}
+
+interface Topic {
+  id: string;
+  label: string;
+  icon?: string;
+  display_order: number;
+  subtopics: Subtopic[];
+}
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(0);
@@ -27,6 +41,8 @@ export default function OnboardingPage() {
   const [articleFrequency, setArticleFrequency] = useState<number | null>(2);
   const [selectedSubTopics, setSelectedSubTopics] = useState<string[]>([]);
   const [activeTopicId, setActiveTopicId] = useState<string | null>(null);
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [isLoadingTopics, setIsLoadingTopics] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { session } = useAuth();
@@ -36,8 +52,27 @@ export default function OnboardingPage() {
     !!selectedLevel,
     !!selectedPace,
     !!articleFrequency,
-    selectedSubTopics.length >= 3,
+    !isLoadingTopics && selectedSubTopics.length >= 3,
   ][step];
+
+  useEffect(() => {
+    const fetchTopics = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/topics`);
+        if (res.ok) {
+          setTopics(await res.json());
+        } else {
+          console.error("Failed to fetch topics", await res.text());
+        }
+      } catch (error) {
+        console.error("Error fetching topics:", error);
+      } finally {
+        setIsLoadingTopics(false);
+      }
+    };
+
+    fetchTopics();
+  }, []);
 
   const next = async () => {
     if (step < STEPS.length - 1) {
@@ -66,8 +101,7 @@ export default function OnboardingPage() {
             ? DAILY_GOALS.find((g) => g.label === selectedPace)?.minutes || 10
             : 10,
           article_frequency: articleFrequency || 2,
-          topics: selectedSubTopics,
-          news_topics: selectedSubTopics,
+          selected_subtopic_ids: selectedSubTopics,
         };
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/users/me/preferences`,
@@ -100,13 +134,15 @@ export default function OnboardingPage() {
     }
   };
 
-  const toggleSubTopic = (sub: string) => {
+  const toggleSubTopic = (subtopicId: string) => {
     setSelectedSubTopics((prev) =>
-      prev.includes(sub) ? prev.filter((t) => t !== sub) : [...prev, sub],
+      prev.includes(subtopicId)
+        ? prev.filter((t) => t !== subtopicId)
+        : [...prev, subtopicId],
     );
   };
 
-  const activeTopic = TOPICS.find((t) => t.id === activeTopicId);
+  const activeTopic = topics.find((t) => t.id === activeTopicId);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f7f2ea]">
@@ -200,10 +236,10 @@ export default function OnboardingPage() {
                     <Target size={24} />
                   </div>
                   <h1 className="text-3xl font-bold text-[#1a2b5e] mb-2 font-outfit">
-                    What's your proficiency level?
+                    What&apos;s your proficiency level?
                   </h1>
                   <p className="text-[#4a5568]">
-                    We'll tailor your learning path to match your current
+                    We&apos;ll tailor your learning path to match your current
                     skills.
                   </p>
                 </div>
@@ -389,10 +425,10 @@ export default function OnboardingPage() {
                       </div>
 
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {TOPICS.map((topic) => {
+                        {topics.map((topic) => {
                           const selectedCount =
-                            topic.subTopics?.filter((s) =>
-                              selectedSubTopics.includes(s),
+                            topic.subtopics?.filter((s) =>
+                              selectedSubTopics.includes(s.id),
                             ).length || 0;
                           return (
                             <button
@@ -404,7 +440,9 @@ export default function OnboardingPage() {
                                   : "bg-white border-[#1a2b5e]/5 hover:border-[#1a2b5e]/20"
                               }`}
                             >
-                              <div className="text-3xl">{topic.icon}</div>
+                              <div className="text-3xl uppercase">
+                                {topic.icon?.slice(0, 2) || topic.label.slice(0, 2)}
+                              </div>
                               <div>
                                 <div className="text-sm font-bold text-[#1a2b5e]">
                                   {topic.label}
@@ -442,7 +480,9 @@ export default function OnboardingPage() {
                       </button>
 
                       <div className="flex items-center gap-4 p-6 rounded-3xl bg-white border-2 border-[#1a2b5e]/5 shadow-xl shadow-black/5">
-                        <div className="text-5xl">{activeTopic?.icon}</div>
+                        <div className="text-5xl uppercase">
+                          {activeTopic?.icon?.slice(0, 2) || activeTopic?.label.slice(0, 2)}
+                        </div>
                         <div>
                           <h2 className="text-2xl font-bold text-[#1a2b5e] font-outfit">
                             {activeTopic?.label}
@@ -454,19 +494,19 @@ export default function OnboardingPage() {
                       </div>
 
                       <div className="space-y-2">
-                        {activeTopic?.subTopics?.map((sub) => {
-                          const selected = selectedSubTopics.includes(sub);
+                        {activeTopic?.subtopics?.map((sub) => {
+                          const selected = selectedSubTopics.includes(sub.id);
                           return (
                             <button
-                              key={sub}
-                              onClick={() => toggleSubTopic(sub)}
+                              key={sub.id}
+                              onClick={() => toggleSubTopic(sub.id)}
                               className={`w-full p-4 rounded-xl text-left flex items-center justify-between transition-all border-2 ${
                                 selected
                                   ? "bg-[#1a2b5e] border-[#1a2b5e] text-white"
                                   : "bg-white border-[#1a2b5e]/5 text-[#1a2b5e] hover:border-[#1a2b5e]/20"
                               }`}
                             >
-                              <span className="font-semibold">{sub}</span>
+                              <span className="font-semibold">{sub.label}</span>
                               {selected ? (
                                 <Check size={18} strokeWidth={3} />
                               ) : (

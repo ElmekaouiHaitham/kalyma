@@ -16,15 +16,30 @@ interface NewsItem {
   published_at: string;
 }
 
+interface Topic {
+  id: string;
+  label: string;
+}
+
 export default function AllNewsPage() {
   const router = useRouter();
   const { session } = useAuth();
   
   const [news, setNews] = useState<NewsItem[]>([]);
+  const [topics, setTopics] = useState<Topic[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // Filters
   const [topic, setTopic] = useState<string>("");
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/topics`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (Array.isArray(data)) setTopics(data);
+      })
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     if (!session?.access_token) {
@@ -80,12 +95,11 @@ export default function AllNewsPage() {
           onChange={(e) => setTopic(e.target.value)}
         >
            <option value="">All Topics</option>
-           <option value="business">Business</option>
-           <option value="technology">Technology</option>
-           <option value="culture">Culture</option>
-           <option value="health">Health</option>
-           <option value="politics">Politics</option>
-           <option value="sports">Sports</option>
+           {topics.map((item) => (
+             <option key={item.id} value={item.id}>
+               {item.label}
+             </option>
+           ))}
         </select>
       </div>
 

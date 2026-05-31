@@ -15,6 +15,8 @@ interface UserProfile {
   streak_count: number;
   preferences?: {
     topics?: string[];
+    selected_subtopic_ids?: string[];
+    news_topics?: string[];
     difficulty_pref?: string;
     article_frequency?: number;
     reading_pace?: number;

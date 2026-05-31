@@ -17,16 +17,31 @@ interface Article {
   thumbnail_url?: string;
 }
 
+interface Topic {
+  id: string;
+  label: string;
+}
+
 export default function AllArticlesPage() {
   const router = useRouter();
   const { session } = useAuth();
   
   const [articles, setArticles] = useState<Article[]>([]);
+  const [topics, setTopics] = useState<Topic[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // Filters
   const [topic, setTopic] = useState<string>("");
   const [difficulty, setDifficulty] = useState<string>("");
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/topics`)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (Array.isArray(data)) setTopics(data);
+      })
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     if (!session?.access_token) {
@@ -83,10 +98,11 @@ export default function AllArticlesPage() {
           onChange={(e) => setTopic(e.target.value)}
         >
            <option value="">All Topics</option>
-           <option value="business">Business</option>
-           <option value="technology">Technology</option>
-           <option value="culture">Culture</option>
-           <option value="health">Health</option>
+           {topics.map((item) => (
+             <option key={item.id} value={item.id}>
+               {item.label}
+             </option>
+           ))}
         </select>
         <select 
           className="px-3 py-2 text-sm rounded-xl border-none shadow-sm focus:ring-0 outline-none"
