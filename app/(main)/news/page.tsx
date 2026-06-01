@@ -1,10 +1,16 @@
 "use client";
-import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Newspaper, Search, ChevronRight, Clock, CheckCircle2, Bookmark } from "lucide-react";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  CheckCircle2,
+  Loader2,
+  MoreVertical,
+  Newspaper,
+  RefreshCw,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/providers";
-import PageShell from "@/components/PageShell";
 
 interface NewsItem {
   id: string;
@@ -22,27 +28,48 @@ interface ReadNews {
   news_article: NewsItem;
 }
 
+const CAT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  sports: { bg: "#ef4444", text: "#ffffff", border: "#2f80ff" },
+  health: { bg: "#22c55e", text: "#ffffff", border: "#2f80ff" },
+  science: { bg: "#2f80ff", text: "#ffffff", border: "#2f80ff" },
+  business: { bg: "#f59e0b", text: "#1f1300", border: "#2f80ff" },
+  technology: { bg: "#8b5cf6", text: "#ffffff", border: "#2f80ff" },
+  entertainment: { bg: "#ec4899", text: "#ffffff", border: "#2f80ff" },
+  world: { bg: "#0ea5e9", text: "#ffffff", border: "#2f80ff" },
+};
+
+const catStyle = (category: string) =>
+  CAT_COLORS[category?.toLowerCase()] ?? {
+    bg: "#2f80ff",
+    text: "#ffffff",
+    border: "#2f80ff",
+  };
+
 export default function NewsPage() {
   const router = useRouter();
   const { session } = useAuth();
-  
+
   const [recommended, setRecommended] = useState<NewsItem[]>([]);
   const [readNews, setReadNews] = useState<ReadNews[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  useEffect(() => {
-    if (!session?.access_token) {
-      setIsLoading(false);
-      return;
-    }
+  const fetchNews = useCallback(
+    async (refresh = false) => {
+      if (!session?.access_token) {
+        setIsLoading(false);
+        return;
+      }
 
-    const fetchNews = async () => {
+      if (refresh) setIsRefreshing(true);
       try {
         const headers = { Authorization: `Bearer ${session.access_token}` };
         const [recRes, readRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/news/recommended`, { headers }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/news/me/read`, { headers })
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/news/recommended`, {
+            headers,
+          }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/news/me/read`, { headers }),
         ]);
 
         if (recRes.ok) setRecommended(await recRes.json());
@@ -51,208 +78,316 @@ export default function NewsPage() {
         console.error("Failed to fetch news", err);
       } finally {
         setIsLoading(false);
+        setIsRefreshing(false);
       }
-    };
-
-    fetchNews();
-  }, [session]);
-
-  const filteredRecommended = recommended.filter(item => 
-    item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    item.summary.toLowerCase().includes(searchQuery.toLowerCase())
+    },
+    [session],
   );
+
+  useEffect(() => {
+    fetchNews();
+  }, [fetchNews]);
+
+  const latestDate = useMemo(() => {
+    const first = recommended[0]?.published_at;
+    return first ? new Date(first) : new Date();
+  }, [recommended]);
 
   if (isLoading) {
     return (
-      <PageShell title="News Feed" subtitle="Stay updated with the latest happenings around the world.">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2" aria-busy="true" aria-label="Loading your news">
-          {[1, 2, 3, 4].map((item) => (
-            <div
-              key={item}
-              className="flex animate-pulse items-center gap-4 rounded-[2rem] bg-white p-4"
-              style={{ border: "1px solid #e6d9c9" }}
-            >
-              <div className="h-24 w-24 shrink-0 rounded-2xl bg-[#f0ebe4]" />
-              <div className="min-w-0 flex-1 space-y-3">
-                <div className="h-3 w-20 rounded-full bg-[#f0ebe4]" />
-                <div className="h-4 w-full rounded-full bg-[#f0ebe4]" />
-                <div className="h-4 w-4/5 rounded-full bg-[#f0ebe4]" />
-                <div className="h-3 w-3/4 rounded-full bg-[#f0ebe4]" />
+      <div className="min-h-screen bg-[#f7f2ea] pb-12">
+        <NewsHeader
+          isRefreshing={false}
+          menuOpen={false}
+          onAllNews={() => router.push("/news/all-news")}
+          onMenuOpenChange={() => undefined}
+          onRefresh={() => undefined}
+        />
+        <main className="mx-auto w-full max-w-[1464px] px-6 py-8 lg:px-8 xl:px-10">
+          <div
+            className="grid grid-cols-1 gap-7 md:grid-cols-2"
+            aria-busy="true"
+            aria-label="Loading your news"
+          >
+            {[1, 2, 3, 4].map((item) => (
+              <div
+                key={item}
+                className="h-[380px] animate-pulse overflow-hidden rounded-[22px] bg-[#171717]"
+                style={{ borderLeft: "4px solid #2f80ff" }}
+              >
+                <div className="h-[190px] bg-[#242424]" />
+                <div className="space-y-4 p-6">
+                  <div className="h-4 w-28 rounded-full bg-[#2d2d2d]" />
+                  <div className="h-5 w-5/6 rounded-full bg-[#2d2d2d]" />
+                  <div className="h-5 w-3/4 rounded-full bg-[#2d2d2d]" />
+                  <div className="h-4 w-2/3 rounded-full bg-[#2d2d2d]" />
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </PageShell>
+            ))}
+          </div>
+        </main>
+      </div>
     );
   }
 
   return (
-    <PageShell
-      title="News Feed"
-      subtitle="Stay updated with the latest happenings around the world."
-      maxWidth="max-w-[1180px]"
-      action={
-        <button
-          onClick={() => router.push('/news/all-news')}
-          className="rounded-full border px-5 py-2.5 text-[15px] font-medium transition-colors hover:border-black hover:bg-[#fbf7f1] hover:text-black"
-          style={{ borderColor: "#e6d9c9", color: "#1f1b17" }}
-        >
-          Browse All
-        </button>
-      }
-    >
-      <div className="space-y-10">
-        <div className="flex flex-col gap-4 md:flex-row">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9aa5b1]" size={18} />
-            <input
-              type="text"
-              placeholder="Search news..."
-              className="w-full rounded-[22px] border bg-white py-3 pl-10 pr-4 transition-all focus:outline-none focus:ring-2 focus:ring-[#c9842f]/20"
-              style={{ borderColor: "#e6d9c9", color: "#1f1b17" }}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
+    <div className="min-h-screen bg-[#f7f2ea] pb-12">
+      <NewsHeader
+        isRefreshing={isRefreshing}
+        menuOpen={menuOpen}
+        onAllNews={() => router.push("/news/all-news")}
+        onMenuOpenChange={setMenuOpen}
+        onRefresh={() => fetchNews(true)}
+      />
 
-      {/* Recommended News */}
-      <section className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-[#1a2b5e] flex items-center gap-2">
-            <Clock size={20} className="text-[#c9a84c]" />
-            Your news for today
-          </h2>
-          <div className="flex items-center gap-3">
-            <span className="hidden sm:inline text-xs font-bold text-[#9aa5b1] uppercase tracking-widest bg-white px-3 py-1 rounded-full border border-[#1a2b5e]/5">
-              {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
-            </span>
-            <button 
-              onClick={() => router.push('/news/all-news')}
-              className="text-xs font-bold px-3 py-1.5 rounded-lg whitespace-nowrap"
-              style={{ background: "#fbf7f1", color: "#1f1b17" }}
-            >
-              Browse All
-            </button>
-          </div>
-        </div>
-
-        {filteredRecommended.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-            <AnimatePresence mode="popLayout">
-              {filteredRecommended.map((item, idx) => {
-                return (
-                  <motion.div
-                    key={item.id}
-                    layout
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="group flex cursor-pointer flex-col overflow-hidden rounded-[22px] border bg-white transition-all hover:-translate-y-0.5 hover:bg-[#fbf7f1]"
-                    style={{ borderColor: "#e6d9c9" }}
-                    onClick={() => router.push(`/news/${item.id}`)}
-                  >
-                    <div className="bg-[#f7f2ea] flex items-center justify-center text-4xl sm:text-6xl h-32 sm:h-48 w-full group-hover:scale-105 transition-transform duration-700 shrink-0 relative">
-                      {item.thumbnail_url ? (
-                        <img src={item.thumbnail_url} alt="" className="w-full h-full object-cover" />
-                      ) : "🗞️"}
-                    </div>
-                    <div className="p-3 sm:p-6 flex-1 flex flex-col">
-                      <div className="flex items-center gap-1.5 mb-2 sm:mb-3">
-                        <span className="text-[8px] sm:text-[10px] font-extrabold text-[#c9a84c] uppercase tracking-wider px-1.5 sm:px-2 py-0.5 rounded bg-[#c9a84c]/10 border border-[#c9a84c]/20 truncate">
-                          {item.topic}
-                        </span>
-                        <span className="hidden xs:block text-[8px] sm:text-[10px] text-[#9aa5b1] font-bold uppercase tracking-widest ml-auto">
-                          Today
-                        </span>
-                      </div>
-                      <h3 className="mb-1.5 line-clamp-2 text-xs font-semibold leading-tight transition-colors sm:mb-2 sm:text-base" style={{ color: "#1f1b17", fontFamily: "'Playfair Display', Georgia, serif" }}>
-                        {item.title}
-                      </h3>
-                      <p className="hidden sm:block text-[#64748b] text-xs sm:text-sm mb-4 line-clamp-2">
-                        {item.summary}
-                      </p>
-                      <div className="flex items-center justify-between mt-auto pt-2 sm:pt-4 border-t border-[#1a2b5e]/5">
-                        <button
-                          onClick={() => router.push(`/news/${item.id}`)}
-                          className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-sm font-bold text-[#1a2b5e] hover:gap-1.5 sm:hover:gap-2.5 transition-all"
-                        >
-                          Read <span className="hidden xs:inline">More</span>
-                          <ChevronRight size={14} className="sm:w-[18px] sm:h-[18px]" />
-                        </button>
-                        <button className="p-1 sm:p-2 rounded-full hover:bg-[#1a2b5e]/5 text-[#9aa5b1] hover:text-[#1a2b5e] transition-colors">
-                          <Bookmark size={14} className="sm:w-[18px] sm:h-[18px]" />
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
+      <main className="mx-auto w-full max-w-[1464px] px-6 py-8 lg:px-8 xl:px-10">
+        <section className="space-y-7">
+          <div className="flex items-center justify-between">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-[#6f6b66]">
+              {latestDate.toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
               })}
-            </AnimatePresence>
+            </p>
           </div>
-        ) : (
-          <div className="bg-white/50 border-2 border-dashed border-[#1a2b5e]/10 rounded-[2rem] p-12 text-center">
-            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
-              <Newspaper size={24} className="text-[#9aa5b1]" />
+
+          {recommended.length > 0 ? (
+            <div className="grid grid-cols-1 gap-7 md:grid-cols-2">
+              <AnimatePresence mode="popLayout">
+                {recommended.map((item, idx) => {
+                  const cs = catStyle(item.topic);
+
+                  return (
+                    <motion.article
+                      key={item.id}
+                      layout
+                      initial={{ opacity: 0, y: 18 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.97 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className="group flex min-h-[390px] cursor-pointer flex-col overflow-hidden rounded-[22px] bg-[#171717] transition-transform duration-300 hover:-translate-y-0.5"
+                      style={{ borderLeft: `4px solid ${cs.border}` }}
+                      onClick={() => router.push(`/news/${item.id}`)}
+                    >
+                      <div className="h-[190px] w-full shrink-0 overflow-hidden bg-[#232323] sm:h-[270px]">
+                        {item.thumbnail_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={item.thumbnail_url}
+                            alt=""
+                            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                          />
+                        ) : (
+                          <div
+                            className="flex h-full w-full items-center justify-center"
+                            style={{ backgroundColor: cs.bg }}
+                          >
+                            <Newspaper
+                              className="h-12 w-12"
+                              style={{ color: cs.text }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-1 flex-col p-6 sm:p-8">
+                        <div className="mb-4 flex flex-wrap items-center gap-3">
+                          <span
+                            className="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-extrabold uppercase tracking-wide"
+                            style={{ backgroundColor: cs.bg, color: cs.text }}
+                          >
+                            {item.topic}
+                          </span>
+                          {item.source_name && (
+                            <span className="text-[13px] font-bold text-[#19b8ff]">
+                              {item.source_name}
+                            </span>
+                          )}
+                          <span className="ml-auto text-[13px] font-medium tabular-nums text-[#6f7680]">
+                            {new Date(item.published_at).toLocaleTimeString(
+                              [],
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
+                          </span>
+                        </div>
+                        <h3
+                          className="mb-3 line-clamp-2 text-[22px] font-semibold leading-[1.22] tracking-[-0.01em] text-white sm:text-[28px]"
+                          style={{
+                            fontFamily: "'Playfair Display', Georgia, serif",
+                          }}
+                        >
+                          {item.title}
+                        </h3>
+                        <p className="line-clamp-3 text-[17px] leading-[1.52] text-[#b8bdc5] sm:text-[20px]">
+                          {item.summary}
+                        </p>
+                      </div>
+                    </motion.article>
+                  );
+                })}
+              </AnimatePresence>
             </div>
-            <h3 className="text-[#1a2b5e] font-bold">No news found</h3>
-            <p className="text-[#64748b] text-sm">Try adjusting your filters or search query.</p>
-          </div>
-        )}
-      </section>
-
-      {/* Previously Read News */}
-      <section className="space-y-6">
-        <div className="flex items-center gap-2">
-          <CheckCircle2 size={20} className="text-green-500" />
-          <h2 className="text-xl font-bold text-[#1a2b5e]">Previously Read</h2>
-        </div>
-
-        <div className="bg-white rounded-[2rem] border border-[#1a2b5e]/10 overflow-hidden shadow-sm">
-          <div className="divide-y divide-[#1a2b5e]/5">
-            {readNews.map((item) => (
-              <div
-                key={item.news_id}
-                onClick={() => router.push(`/news/${item.news_id}`)}
-                className="p-4 sm:p-6 hover:bg-[#fbf7f1] transition-colors flex items-center gap-4 sm:gap-6 group cursor-pointer"
-              >
-                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-[#fbf7f1] flex items-center justify-center text-2xl sm:text-3xl shrink-0 overflow-hidden relative">
-                  {item.news_article.thumbnail_url ? (
-                    <img src={item.news_article.thumbnail_url} alt="" className="w-full h-full object-cover" />
-                  ) : "🗞️"}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-bold text-[#64748b] uppercase tracking-tighter">
-                      {item.news_article.topic}
-                    </span>
-                    <span className="text-[10px] text-[#9aa5b1]">
-                      • {new Date(item.news_article.published_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
-                    </span>
-                  </div>
-                  <h4 className="text-sm sm:text-base font-bold text-[#1a2b5e] truncate group-hover:text-[#2d4080]">
-                    {item.news_article.title}
-                  </h4>
-                  <p className="text-xs sm:text-sm text-[#64748b] truncate">
-                    {item.news_article.summary}
-                  </p>
-                </div>
-                <button className="p-2 sm:p-3 rounded-xl bg-[#1a2b5e]/5 text-[#1a2b5e] hover:bg-[#1a2b5e] hover:text-white transition-all shrink-0">
-                   <Bookmark size={18} />
-                </button>
+          ) : (
+            <div className="rounded-[22px] border border-[#e6d9c9] bg-white/70 p-12 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-[18px] bg-white shadow-sm">
+                <Newspaper size={24} className="text-[#667084]" />
               </div>
-            ))}
-          </div>
-          {readNews.length === 0 && (
-            <div className="p-12 text-center text-[#9aa5b1]">
-              <p className="text-sm">News you read will appear here.</p>
+              <h3 className="font-bold text-[#1a2b5e]">No news found</h3>
+              <p className="text-sm text-[#64748b]">
+                Fresh stories will appear here when they are available.
+              </p>
             </div>
           )}
-        </div>
-      </section>
-      </div>
-    </PageShell>
+        </section>
+
+        <section className="mt-12 space-y-6">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 size={20} className="text-[#2f80ff]" />
+            <h2
+              className="text-[26px] font-semibold text-[#1a2b5e]"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              Previously Read
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            {readNews.map((item) => {
+              const cs = catStyle(item.news_article.topic);
+
+              return (
+                <article
+                  key={item.news_id}
+                  onClick={() => router.push(`/news/${item.news_id}`)}
+                  className="group flex cursor-pointer overflow-hidden rounded-[20px] bg-[#171717] transition-transform duration-300 hover:-translate-y-0.5"
+                  style={{ borderLeft: `4px solid ${cs.border}` }}
+                >
+                  <div className="h-auto w-28 shrink-0 overflow-hidden bg-[#232323] sm:w-40">
+                    {item.news_article.thumbnail_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={item.news_article.thumbnail_url}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full min-h-32 w-full items-center justify-center">
+                        <Newspaper className="h-7 w-7 text-[#b8bdc5]" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1 p-4 sm:p-5">
+                    <div className="mb-2 flex items-center gap-2">
+                      <span
+                        className="rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide"
+                        style={{ backgroundColor: cs.bg, color: cs.text }}
+                      >
+                        {item.news_article.topic}
+                      </span>
+                      <span className="text-[11px] font-medium text-[#6f7680]">
+                        {new Date(
+                          item.news_article.published_at,
+                        ).toLocaleDateString("en-US", {
+                          day: "numeric",
+                          month: "short",
+                        })}
+                      </span>
+                    </div>
+                    <h4
+                      className="line-clamp-2 text-[17px] font-semibold leading-snug text-white sm:text-[20px]"
+                      style={{
+                        fontFamily: "'Playfair Display', Georgia, serif",
+                      }}
+                    >
+                      {item.news_article.title}
+                    </h4>
+                    <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#b8bdc5]">
+                      {item.news_article.summary}
+                    </p>
+                  </div>
+                </article>
+              );
+            })}
+            {readNews.length === 0 && (
+              <div className="col-span-full rounded-[22px] border border-[#e6d9c9] bg-white/70 p-12 text-center text-[#667084]">
+                <p className="text-sm">News you read will appear here.</p>
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+    </div>
   );
 }
 
+function NewsHeader({
+  isRefreshing,
+  menuOpen,
+  onAllNews,
+  onMenuOpenChange,
+  onRefresh,
+}: {
+  isRefreshing: boolean;
+  menuOpen: boolean;
+  onAllNews: () => void;
+  onMenuOpenChange: (open: boolean) => void;
+  onRefresh: () => void;
+}) {
+  return (
+    <header className="sticky top-0 z-30 border-b border-[#e6d9c9] bg-[#f7f2ea]/95 backdrop-blur-xl">
+      <div className="mx-auto flex h-20 w-full max-w-[1464px] items-center px-6 lg:h-28 lg:px-8 xl:px-10">
+        <h1
+          className="text-[31px] font-semibold leading-none text-[#16265c] sm:text-[34px]"
+          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+        >
+          Breaking News
+        </h1>
+        <div className="ml-auto flex items-center gap-4 text-[#667084]">
+          <button
+            type="button"
+            onClick={onRefresh}
+            aria-label="Refresh news"
+            className="grid h-10 w-10 place-items-center rounded-full transition-colors hover:bg-white/70 hover:text-[#16265c]"
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? (
+              <Loader2 className="h-[22px] w-[22px] animate-spin" />
+            ) : (
+              <RefreshCw className="h-[22px] w-[22px]" />
+            )}
+          </button>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => onMenuOpenChange(!menuOpen)}
+              aria-label="News menu"
+              aria-expanded={menuOpen}
+              className="grid h-10 w-10 place-items-center rounded-full transition-colors hover:bg-white/70 hover:text-[#16265c]"
+            >
+              <MoreVertical className="h-[22px] w-[22px]" />
+            </button>
+            {menuOpen && (
+              <div
+                className="absolute right-0 top-12 w-40 overflow-hidden rounded-2xl bg-white py-2 shadow-[0_18px_45px_rgba(31,27,23,0.15)]"
+                style={{ border: "1px solid #e6d9c9" }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    onMenuOpenChange(false);
+                    onAllNews();
+                  }}
+                  className="w-full px-4 py-2.5 text-left text-sm font-semibold text-[#1f1b17] transition-colors hover:bg-[#f7f2ea]"
+                >
+                  All
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}

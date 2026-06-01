@@ -42,7 +42,7 @@ export default function MainLayout({
   const router = useRouter();
   const { user } = useAuth();
   const showMobileNav = pathname === "/home" || pathname.startsWith("/profile");
-  const showMobileBack = !showMobileNav;
+  const showMobileBack = !showMobileNav && pathname !== "/news";
   const displayName = user?.full_name?.trim() || "Kalyma Learner";
 
   const nav = (href: string) => router.push(href);
