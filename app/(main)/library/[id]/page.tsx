@@ -28,6 +28,7 @@ interface ArticleDetail {
   topic: string;
   difficulty: string;
   reading_time_mins: number;
+  thumbnail_url?: string;
 }
 
 export default function ReaderPage() {
@@ -278,6 +279,21 @@ export default function ReaderPage() {
           >
             {article.summary}
           </p>
+        )}
+
+        {/* Hero image */}
+        {article.thumbnail_url && (
+          <div className="relative mb-8 h-[220px] w-full overflow-hidden rounded-[20px] sm:h-[280px]">
+            <Image
+              src={article.thumbnail_url}
+              alt={article.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 760px) 100vw, 760px"
+              priority
+            />
+            <div className="absolute inset-0 rounded-[20px] bg-gradient-to-t from-black/30 to-transparent" />
+          </div>
         )}
 
         {/* Tip */}

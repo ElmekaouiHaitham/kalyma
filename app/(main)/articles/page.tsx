@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { BookOpen, ChevronRight, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useAuth } from "@/app/providers";
 
 interface Article {
@@ -13,6 +14,7 @@ interface Article {
   topic: string;
   difficulty: "beginner" | "intermediate" | "advanced";
   reading_time_mins: number;
+  thumbnail_url?: string;
 }
 
 interface StartedArticle {
@@ -74,60 +76,84 @@ function ArticleCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.05 + index * 0.05 }}
       onClick={onClick}
-      className="group flex min-h-[190px] w-full flex-col rounded-[22px] border bg-white p-7 text-left transition-all hover:-translate-y-0.5 hover:bg-[#fbf7f1]"
+      className="group flex w-full flex-col overflow-hidden rounded-[22px] border bg-white text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
       style={{
         borderColor: border,
-        boxShadow: "0 1px 0 rgba(31,27,23,0.02)",
+        boxShadow: "0 1px 4px rgba(31,27,23,0.06)",
       }}
     >
-      <div className="mb-4 flex items-center justify-between gap-4">
+      {/* Cover image */}
+      <div className="relative h-[160px] w-full shrink-0 overflow-hidden bg-[#f0ebe4]">
+        {article.thumbnail_url ? (
+          <Image
+            src={article.thumbnail_url}
+            alt={article.title}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, 33vw"
+          />
+        ) : (
+          <div
+            className="flex h-full w-full items-center justify-center text-[13px] font-semibold uppercase tracking-[0.08em]"
+            style={{ color: accent, background: "#fdf6ed" }}
+          >
+            {article.topic || "Article"}
+          </div>
+        )}
+        {/* Reading time pill */}
         <span
-          className="text-[14px] font-semibold uppercase tracking-[0.08em]"
-          style={{ color: accent }}
+          className="absolute bottom-2.5 right-3 flex items-center gap-1 rounded-full bg-black/40 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm"
         >
-          {article.topic || "Article"}
-        </span>
-        <span className="flex items-center gap-1.5 text-[13px]" style={{ color: muted }}>
-          <Clock size={14} />
+          <Clock size={10} />
           {article.reading_time_mins} min
         </span>
       </div>
 
-      <h3
-        className="line-clamp-2 text-[25px] font-medium leading-[1.25]"
-        style={{ color: ink, fontFamily: "'Playfair Display', Georgia, serif" }}
-      >
-        {article.title}
-      </h3>
+      {/* Body */}
+      <div className="flex flex-1 flex-col p-5">
+        <span
+          className="mb-2 text-[12px] font-semibold uppercase tracking-[0.08em]"
+          style={{ color: accent }}
+        >
+          {article.topic || "Article"}
+        </span>
 
-      <p className="mt-3 line-clamp-2 text-[18px] leading-[1.35]" style={{ color: muted }}>
-        {article.summary || "Continue exploring this article."}
-      </p>
+        <h3
+          className="line-clamp-2 text-[20px] font-medium leading-[1.25]"
+          style={{ color: ink, fontFamily: "'Playfair Display', Georgia, serif" }}
+        >
+          {article.title}
+        </h3>
 
-      <div className="mt-auto pt-5">
-        {progress !== undefined ? (
-          <div>
-            <div className="mb-2 flex items-center justify-between text-[13px]" style={{ color: muted }}>
-              <span>Reading progress</span>
-              <span>{pct}%</span>
+        <p className="mt-2 line-clamp-2 text-[14px] leading-[1.45]" style={{ color: muted }}>
+          {article.summary || "Continue exploring this article."}
+        </p>
+
+        <div className="mt-auto pt-4">
+          {progress !== undefined ? (
+            <div>
+              <div className="mb-2 flex items-center justify-between text-[12px]" style={{ color: muted }}>
+                <span>Reading progress</span>
+                <span>{pct}%</span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full" style={{ background: surface }}>
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: `${pct}%`, background: accent }}
+                />
+              </div>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full" style={{ background: surface }}>
-              <div
-                className="h-full rounded-full"
-                style={{ width: `${pct}%`, background: accent }}
+          ) : (
+            <div className="flex items-center justify-between text-[13px] font-medium" style={{ color: ink }}>
+              <span className="capitalize">{article.difficulty}</span>
+              <ChevronRight
+                size={16}
+                className="transition-transform group-hover:translate-x-1"
+                style={{ color: accent }}
               />
             </div>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between text-[15px] font-medium" style={{ color: ink }}>
-            <span className="capitalize">{article.difficulty}</span>
-            <ChevronRight
-              size={18}
-              className="transition-transform group-hover:translate-x-1"
-              style={{ color: accent }}
-            />
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </motion.button>
   );
