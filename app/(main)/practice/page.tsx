@@ -308,7 +308,7 @@ function AngledActionButton({
 }
 
 export default function PracticePage() {
-  const { session } = useAuth();
+  const { session, refreshUser } = useAuth();
   const [deck, setDeck] = useState<ReviewDeckItem[]>([]);
   const [stats, setStats] = useState<ReviewStats>({ total_saved: 0, due_today: 0 });
   const [loading, setLoading] = useState(true);
@@ -396,6 +396,10 @@ export default function PracticePage() {
       });
 
       if (!res.ok) throw new Error("Failed to submit rating");
+      const result = await res.json();
+      if (result?.streak_changed || result?.unlocked_achievements?.length) {
+        await refreshUser();
+      }
       const scoreKey = ratingToScoreKey(rating);
       setScores((prev) => ({ ...prev, [scoreKey]: prev[scoreKey] + 1 }));
       return true;

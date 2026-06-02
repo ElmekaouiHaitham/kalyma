@@ -38,11 +38,12 @@ export default function NewsDetailPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  const { session } = useAuth();
+  const { session, refreshUser } = useAuth();
 
   const [news, setNews] = useState<NewsDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [completionXp, setCompletionXp] = useState(10);
   const [isCompleting, setIsCompleting] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
@@ -126,7 +127,12 @@ export default function NewsDetailPage() {
         },
       );
       if (res.ok) {
+        const result = await res.json();
+        if (typeof result?.xp_awarded === "number") {
+          setCompletionXp(result.xp_awarded);
+        }
         setIsCompleted(true);
+        await refreshUser();
       }
     } catch (err) {
       console.error("Error completing news article", err);
@@ -338,7 +344,7 @@ export default function NewsDetailPage() {
                   Article Read!
                 </p>
                 <p className="text-sm font-semibold text-[#22c55e] mt-1">
-                  +10 XP Awarded
+                  +{completionXp} XP Awarded
                 </p>
               </div>
             </motion.div>

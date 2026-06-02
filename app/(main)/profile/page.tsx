@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   Award,
   Book,
+  BookMarked,
   BookOpen,
   Check,
   ChevronRight,
@@ -34,16 +35,27 @@ const PLAN_FEATURES = [
 ];
 
 const ACHIEVEMENT_MAP: Record<
-  number,
+  string,
   { title: string; icon: React.ElementType; color: string }
 > = {
-  200: { title: "Bookworm", icon: Book, color: "#41329c" },
-  150: { title: "Consistent reviewer", icon: MessageSquare, color: "#10b981" },
-  50: { title: "First read", icon: BookOpen, color: "#008ed0" },
-  100: { title: "Live learner", icon: Radio, color: "#ef6c22" },
-  110: { title: "7-day streak", icon: Flame, color: "#f2bd35" },
-  60: { title: "Community voice", icon: Users, color: "#7c3aed" },
-  500: { title: "30-day streak", icon: Zap, color: "#f2bd35" },
+  first_article: { title: "First read", icon: BookOpen, color: "#008ed0" },
+  week_streak: { title: "7-day streak", icon: Flame, color: "#f2bd35" },
+  month_streak: { title: "30-day streak", icon: Zap, color: "#f2bd35" },
+  word_saver: { title: "Word collector", icon: BookMarked, color: "#41329c" },
+  bookworm: { title: "Bookworm", icon: Book, color: "#41329c" },
+  session_goer: { title: "Live learner", icon: Radio, color: "#ef6c22" },
+  reviewer: { title: "Consistent reviewer", icon: MessageSquare, color: "#10b981" },
+  community_voice: { title: "Community voice", icon: Users, color: "#7c3aed" },
+};
+
+const LEGACY_ACHIEVEMENT_AMOUNT_SLUGS: Record<number, string> = {
+  50: "first_article",
+  60: "community_voice",
+  75: "word_saver",
+  100: "session_goer",
+  150: "reviewer",
+  200: "bookworm",
+  500: "month_streak",
 };
 
 const diffLabelMap: Record<string, string> = {
@@ -56,6 +68,10 @@ const diffLabelMap: Record<string, string> = {
 type XpHistoryEntry = {
   amount?: number;
   reason?: string;
+  event_metadata?: {
+    achievement_slug?: string;
+    achievement_name?: string;
+  } | null;
 };
 
 const cardMotion = {
@@ -312,8 +328,11 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {achievements.map((achievement, index) => {
                     const amount = Number(achievement.amount) || 0;
-                    const badge = ACHIEVEMENT_MAP[amount] || {
-                      title: "Secret Badge",
+                    const slug =
+                      achievement.event_metadata?.achievement_slug ||
+                      LEGACY_ACHIEVEMENT_AMOUNT_SLUGS[amount];
+                    const badge = ACHIEVEMENT_MAP[slug] || {
+                      title: achievement.event_metadata?.achievement_name || "Secret Badge",
                       icon: Award,
                       color: "#41329c",
                     };

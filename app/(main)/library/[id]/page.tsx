@@ -34,10 +34,11 @@ export default function ReaderPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  const { session } = useAuth();
+  const { session, refreshUser } = useAuth();
 
   const [article, setArticle] = useState<ArticleDetail | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [completionXp, setCompletionXp] = useState(30);
   const [loading, setLoading] = useState(true);
   const [isCompleting, setIsCompleting] = useState(false);
 
@@ -120,7 +121,12 @@ export default function ReaderPage() {
         },
       );
       if (res.ok) {
+        const result = await res.json();
+        if (typeof result?.xp_awarded === "number") {
+          setCompletionXp(result.xp_awarded);
+        }
         setIsCompleted(true);
+        await refreshUser();
       }
     } catch (err) {
       console.error("Error completing article", err);
@@ -316,7 +322,7 @@ export default function ReaderPage() {
             >
               <CheckCircle size={40} />
               <p className="font-bold text-lg">Article Completed!</p>
-              <p className="text-sm opacity-80">+30 XP Earned</p>
+              <p className="text-sm opacity-80">+{completionXp} XP Earned</p>
             </motion.div>
           ) : (
             <button

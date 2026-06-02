@@ -27,6 +27,7 @@ interface AuthContextType {
   session: Session | null;
   user: UserProfile | null;
   isLoading: boolean;
+  refreshUser: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -73,8 +74,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const processingRef = React.useRef<string | null>(null);
 
-  const verifyUserWithBackend = async (currentSession: Session) => {
-    if (processingRef.current === currentSession.access_token) return;
+  const verifyUserWithBackend = async (
+    currentSession: Session,
+    options: { force?: boolean; redirect?: boolean } = {},
+  ) => {
+    if (!options.force && processingRef.current === currentSession.access_token) return;
     processingRef.current = currentSession.access_token;
     
     // Only show loading if we haven't identified the user yet
@@ -96,14 +100,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const needsOnboarding = !userData.preferences || !userData.preferences.topics || userData.preferences.topics.length === 0;
         const currentPath = window.location.pathname;
 
-        if (needsOnboarding) {
-          if (!currentPath.startsWith('/onboarding')) {
-             router.push("/onboarding");
-          }
-        } else {
-          // Send returning users away from Auth or Root to Home
-          if (currentPath === '/auth' || currentPath === '/') {
-             router.push("/home");
+        if (options.redirect !== false) {
+          if (needsOnboarding) {
+            if (!currentPath.startsWith('/onboarding')) {
+               router.push("/onboarding");
+            }
+          } else {
+            // Send returning users away from Auth or Root to Home
+            if (currentPath === '/auth' || currentPath === '/') {
+               router.push("/home");
+            }
           }
         }
       } else {
@@ -116,6 +122,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshUser = async () => {
+    const currentSession = session ?? (await supabase.auth.getSession()).data.session;
+    if (!currentSession) return;
+    await verifyUserWithBackend(currentSession, { force: true, redirect: false });
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -123,7 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, isLoading, signOut }}>
+    <AuthContext.Provider value={{ session, user, isLoading, refreshUser, signOut }}>
       {children}
     </AuthContext.Provider>
   );

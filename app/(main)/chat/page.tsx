@@ -168,7 +168,7 @@ export default function ChatPage() {
         .atlas-messages {
           flex: 1;
           overflow-y: auto;
-          padding: 96px 24px 132px;
+          padding: 72px 24px 132px;
           scrollbar-width: thin;
           scrollbar-color: rgba(0, 0, 0, 0.16) transparent;
         }
@@ -266,22 +266,22 @@ export default function ChatPage() {
         .atlas-bubble-ai {
           max-width: 760px;
           color: #111111;
-          font-size: 19px;
+          font-size: 14px;
           line-height: 1.62;
         }
 
         .atlas-bubble-ai p {
-          margin: 0 0 18px;
+          margin: 0 0 14px;
         }
 
         .atlas-bubble-ai ul,
         .atlas-bubble-ai ol {
-          margin: 0 0 18px 24px;
+          margin: 0 0 14px 20px;
           padding: 0;
         }
 
         .atlas-bubble-ai li {
-          margin: 8px 0;
+          margin: 6px 0;
         }
 
         .atlas-msg-actions {
@@ -432,7 +432,7 @@ export default function ChatPage() {
           }
 
           .atlas-messages {
-            padding-top: 108px;
+            padding-top: 72px;
             padding-bottom: 150px;
           }
 
@@ -492,7 +492,7 @@ export default function ChatPage() {
           }
 
           .atlas-bubble-ai {
-            font-size: 18px;
+            font-size: 13.5px;
             line-height: 1.58;
           }
 
@@ -553,10 +553,23 @@ export default function ChatPage() {
         }
       `}</style>
 
-      <div className="atlas-chat-topbar">
-        <button className="atlas-icon-button atlas-left-menu" type="button" aria-label="Open chat menu">
-          <Menu size={30} strokeWidth={2.5} />
-        </button>
+      <div className="atlas-chat-topbar" style={{ position: 'relative' }}>
+        {/* Left: hamburger */}
+        <div className="atlas-left-menu" style={{ display: 'inline-flex', alignItems: 'center', pointerEvents: 'auto' }}>
+          <button className="atlas-icon-button" type="button" aria-label="Open chat menu">
+            <Menu size={30} strokeWidth={2.5} />
+          </button>
+        </div>
+
+        {/* Center: Atlas logo + title */}
+        <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', display: 'flex', alignItems: 'center', gap: '8px', pointerEvents: 'none' }}>
+          <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', flexShrink: 0 }}>
+            <Image src="/atlas-logo.png" alt="Atlas AI" width={30} height={30} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          </div>
+          <span style={{ fontSize: '15px', fontWeight: 700, color: '#111111', letterSpacing: '-0.01em' }}>Atlas AI</span>
+        </div>
+
+        {/* Right: new chat + mobile menu */}
         <div className="atlas-top-group">
           <button
             className="atlas-icon-button"
@@ -574,33 +587,6 @@ export default function ChatPage() {
 
       <div className="atlas-messages">
         <div className="atlas-thread">
-          {started && (
-            <div className="atlas-memory-pill">
-              <span className="atlas-memory-logo">
-                <Image src="/atlas-logo.png" alt="" width={41} height={41} className="h-full w-full rounded-full object-cover" />
-              </span>
-              Atlas AI
-            </div>
-          )}
-
-          {!started && (
-            <div className="atlas-empty">
-              <div>
-                <div className="atlas-empty-icon mx-auto">
-                  <Image
-                    src="/atlas-logo.png"
-                    alt="Atlas AI"
-                    width={92}
-                    height={92}
-                    className="h-full w-full object-contain"
-                    priority
-                  />
-                </div>
-                <h1>Atlas AI</h1>
-                <p>Speak. Make mistakes. Grow.</p>
-              </div>
-            </div>
-          )}
 
           {started && (
             <>

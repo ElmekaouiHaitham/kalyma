@@ -63,14 +63,14 @@ export default function MainLayout({
       }}
     >
       {/* ── SIDEBAR (md+) ─────────────────────────────── */}
-      <aside className="hidden md:flex flex-col shrink-0 h-screen w-72 border-r border-[rgba(26,43,94,0.08)] bg-white/80 backdrop-blur-xl z-30 px-5 py-6">
-        <div className="px-2 mb-6 shrink-0">
+      <aside className="hidden md:flex flex-col shrink-0 h-screen border-r border-[rgba(26,43,94,0.08)] bg-white/80 backdrop-blur-xl z-30" style={{ width: '230px', padding: '19px 16px' }}>
+        <div className="px-1 mb-5 shrink-0">
           <Image
             src="/logo with word.webp"
             alt="kalyma"
-            width={328}
-            height={128}
-            className="h-20 w-auto object-contain"
+            width={262}
+            height={102}
+            className="h-16 w-auto object-contain"
             priority
           />
         </div>
@@ -84,7 +84,7 @@ export default function MainLayout({
                   <button
                     onClick={() => nav(href)}
                     className={cn(
-                      "cursor-pointer w-full flex items-center gap-3 px-4 py-3 rounded-[14px] border-2 text-[15px] font-medium transition-all duration-200 active:scale-[0.98]",
+                      "cursor-pointer w-full flex items-center gap-2.5 px-3 py-2.5 rounded-[11px] border-2 text-[12px] font-medium transition-all duration-200 active:scale-[0.98]",
                       isActive
                         ? "border-[#aeb5c9] bg-[#f4efe7] text-[#1a2b5e]"
                       : "border-transparent text-[#667084] hover:border-[#aeb5c9] hover:bg-[#f4efe7] hover:text-[#1a2b5e]",
@@ -94,10 +94,10 @@ export default function MainLayout({
                       <UserAvatar
                         avatarUrl={user?.avatar_url}
                         name={displayName}
-                        size={20}
+                        size={16}
                       />
                     ) : (
-                      <Icon className="h-[20px] w-[20px]" />
+                      <Icon className="h-[16px] w-[16px]" />
                     )}
                     <span>{label}</span>
                   </button>
@@ -109,9 +109,9 @@ export default function MainLayout({
 
         <button
           onClick={() => router.push("/auth")}
-          className="cursor-pointer mt-4 flex items-center gap-3 px-4 py-3 rounded-[14px] border-2 border-transparent text-[15px] font-medium text-[#667084] hover:border-[#aeb5c9] hover:bg-[#f4efe7] hover:text-[#1a2b5e] active:scale-[0.98] transition-all duration-200 shrink-0"
+          className="cursor-pointer mt-3 flex items-center gap-2.5 px-3 py-2.5 rounded-[11px] border-2 border-transparent text-[12px] font-medium text-[#667084] hover:border-[#aeb5c9] hover:bg-[#f4efe7] hover:text-[#1a2b5e] active:scale-[0.98] transition-all duration-200 shrink-0"
         >
-          <LogOut className="h-[20px] w-[20px]" />
+          <LogOut className="h-[16px] w-[16px]" />
           <span>Sign out</span>
         </button>
       </aside>
