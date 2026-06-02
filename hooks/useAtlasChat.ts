@@ -9,6 +9,11 @@ export type ChatMessage = {
   ts: Date;
 };
 
+export type AutoSaveResult = {
+  ok: boolean;
+  error?: string;
+};
+
 interface UseAtlasChatProps {
   context_type: "general" | "news" | "article" | "session";
   context_id?: string | null;
@@ -117,23 +122,27 @@ export function useAtlasChat({ context_type, context_id, context_content }: UseA
           }
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Chat error:", err);
+      const message = err instanceof Error ? err.message : "An unexpected error occurred.";
       setIsTyping(false);
-      setError(err.message || "An unexpected error occurred.");
+      setError(message);
       // Append error message as AI response for context if it fails mid-stream or before stream
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === aiMsgId && !msg.content
-            ? { ...msg, content: `⚠️ ${err.message || "Connection failed."}` }
+            ? { ...msg, content: `Warning: ${message || "Connection failed."}` }
             : msg
         )
       );
     }
   };
 
-  const autoSaveToDeck = async (question: string, answer: string) => {
-    if (!session?.access_token) return false;
+  const autoSaveToDeck = async (question: string, answer: string): Promise<AutoSaveResult> => {
+    if (!session?.access_token) {
+      return { ok: false, error: "You need to be signed in to save this." };
+    }
+
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/review/items/auto`, {
         method: "POST",
@@ -144,14 +153,30 @@ export function useAtlasChat({ context_type, context_id, context_content }: UseA
         body: JSON.stringify({
           question,
           answer,
+          context: context_content,
           source_type: context_type === "general" ? null : context_type,
           source_id: context_id || null,
         }),
       });
-      return res.ok;
-    } catch (err) {
+
+      if (!res.ok) {
+        let error = "Could not save this to practice.";
+        try {
+          const body = await res.json();
+          if (typeof body?.detail === "string") error = body.detail;
+        } catch {
+          // Keep the default message when the backend does not return JSON.
+        }
+        return { ok: false, error };
+      }
+
+      return { ok: true };
+    } catch (err: unknown) {
       console.error("Auto save failed:", err);
-      return false;
+      return {
+        ok: false,
+        error: err instanceof Error ? err.message : "Could not connect to the practice service.",
+      };
     }
   };
 

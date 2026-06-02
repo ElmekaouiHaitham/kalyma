@@ -59,7 +59,7 @@ export default function SaveWordModal({
         setDefinition("");
         onClose();
       }, 1400);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setError("Failed to save. Please try again.");
     } finally {

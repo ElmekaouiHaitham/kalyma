@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  AlertCircle,
   BookMarked,
   CheckCircle2,
   Copy,
@@ -31,6 +32,11 @@ export default function ChatPage() {
   const [hoveredMsg, setHoveredMsg] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [saveFeedback, setSaveFeedback] = useState<{
+    id: string;
+    status: "saved" | "error";
+    message: string;
+  } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -45,12 +51,23 @@ export default function ChatPage() {
     }
 
     setSavingId(aiMsgId);
-    const success = await autoSaveToDeck(question, aiText);
+    setSaveFeedback(null);
+    const result = await autoSaveToDeck(question, aiText);
     setSavingId(null);
 
-    if (success) {
+    if (result.ok) {
       setSavedId(aiMsgId);
+      setSaveFeedback({ id: aiMsgId, status: "saved", message: "Saved to Practice Deck" });
       setTimeout(() => setSavedId(null), 2000);
+      setTimeout(() => {
+        setSaveFeedback((current) => (current?.id === aiMsgId ? null : current));
+      }, 3200);
+    } else {
+      setSaveFeedback({
+        id: aiMsgId,
+        status: "error",
+        message: result.error || "Could not save this to practice.",
+      });
     }
   };
 
@@ -611,36 +628,72 @@ export default function ChatPage() {
                             <ReactMarkdown>{message.content}</ReactMarkdown>
                           </div>
                           {canShowActions && (
-                            <div className={`atlas-msg-actions ${hoveredMsg === message.id ? "visible" : ""}`}>
-                              <button className="atlas-action-icon" type="button" aria-label="Copy response">
-                                <Copy size={22} strokeWidth={2} />
-                              </button>
-                              <button className="atlas-action-icon" type="button" aria-label="Good response">
-                                <ThumbsUp size={22} strokeWidth={2} />
-                              </button>
-                              <button className="atlas-action-icon" type="button" aria-label="Bad response">
-                                <ThumbsDown size={22} strokeWidth={2} />
-                              </button>
-                              <button className="atlas-action-icon" type="button" aria-label="Read aloud">
-                                <Volume2 size={23} strokeWidth={2} />
-                              </button>
-                              <button
-                                className="atlas-action-icon disabled:cursor-wait disabled:opacity-50"
-                                type="button"
-                                aria-label="Save to practice deck"
-                                title="Save to Practice Deck"
-                                onClick={() => handleAutoSave(message.id, message.content)}
-                                disabled={savingId === message.id || savedId === message.id}
-                              >
-                                {savingId === message.id ? (
-                                  <Loader2 size={22} className="animate-spin" />
-                                ) : savedId === message.id ? (
-                                  <CheckCircle2 size={22} />
-                                ) : (
-                                  <BookMarked size={22} strokeWidth={2} />
-                                )}
-                              </button>
-                            </div>
+                            <>
+                              <div className={`atlas-msg-actions ${hoveredMsg === message.id ? "visible" : ""}`}>
+                                <button className="atlas-action-icon" type="button" aria-label="Copy response">
+                                  <Copy size={22} strokeWidth={2} />
+                                </button>
+                                <button className="atlas-action-icon" type="button" aria-label="Good response">
+                                  <ThumbsUp size={22} strokeWidth={2} />
+                                </button>
+                                <button className="atlas-action-icon" type="button" aria-label="Bad response">
+                                  <ThumbsDown size={22} strokeWidth={2} />
+                                </button>
+                                <button className="atlas-action-icon" type="button" aria-label="Read aloud">
+                                  <Volume2 size={23} strokeWidth={2} />
+                                </button>
+                                <button
+                                  className="atlas-action-icon disabled:cursor-wait disabled:opacity-50"
+                                  type="button"
+                                  aria-label="Save to practice deck"
+                                  title={
+                                    saveFeedback?.id === message.id
+                                      ? saveFeedback.message
+                                      : "Save to Practice Deck"
+                                  }
+                                  onClick={() => handleAutoSave(message.id, message.content)}
+                                  disabled={savingId === message.id || savedId === message.id}
+                                >
+                                  {savingId === message.id ? (
+                                    <Loader2 size={22} className="animate-spin" />
+                                  ) : savedId === message.id ? (
+                                    <CheckCircle2 size={22} />
+                                  ) : saveFeedback?.id === message.id && saveFeedback.status === "error" ? (
+                                    <AlertCircle size={22} />
+                                  ) : (
+                                    <BookMarked size={22} strokeWidth={2} />
+                                  )}
+                                </button>
+                              </div>
+                              {(savingId === message.id || saveFeedback?.id === message.id) && (
+                                <div
+                                  className={`mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold ${
+                                    saveFeedback?.status === "error"
+                                      ? "bg-red-50 text-red-600"
+                                      : "bg-emerald-50 text-emerald-700"
+                                  }`}
+                                  role="status"
+                                  aria-live="polite"
+                                >
+                                  {savingId === message.id ? (
+                                    <>
+                                      <Loader2 size={12} className="animate-spin" />
+                                      Saving to practice...
+                                    </>
+                                  ) : saveFeedback?.status === "error" ? (
+                                    <>
+                                      <AlertCircle size={12} />
+                                      {saveFeedback.message}
+                                    </>
+                                  ) : (
+                                    <>
+                                      <CheckCircle2 size={12} />
+                                      {saveFeedback?.message}
+                                    </>
+                                  )}
+                                </div>
+                              )}
+                            </>
                           )}
                         </>
                       )}

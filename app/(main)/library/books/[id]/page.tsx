@@ -5,11 +5,8 @@ import {
   ArrowLeft,
   Clock,
   X,
-  Bot,
   Send,
   BookMarked,
-  Sparkles,
-  BookOpen,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -132,6 +129,12 @@ export default function BookReaderPage() {
   const params = useParams();
   const id = params.id as string;
   const book = ALL_BOOKS.find((b) => b.id === id) ?? ALL_BOOKS[0];
+  const bookDetails = book as typeof book & {
+    content?: string;
+    cover?: string;
+    language?: string;
+    totalChapters?: number;
+  };
 
   const [panelOpen, setPanelOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
@@ -155,6 +158,7 @@ export default function BookReaderPage() {
   } | null>(null);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [saveWord, setSaveWord] = useState("");
+  const [saveContext, setSaveContext] = useState("");
   const [fontSize, setFontSize] = useState(16);
 
   const handleTextSelection = useCallback(() => {
@@ -171,7 +175,7 @@ export default function BookReaderPage() {
       x: rect.left + rect.width / 2,
       y: rect.top - 8,
     });
-  }, []);
+  }, [setSelectionBubble]);
 
   const askAIAboutSelection = (text: string) => {
     setSelectionBubble(null);
@@ -201,7 +205,7 @@ export default function BookReaderPage() {
     ]);
   };
 
-  const paragraphs = (book as any).content?.split("\n\n").filter(Boolean) ?? [
+  const paragraphs = bookDetails.content?.split("\n\n").filter(Boolean) ?? [
     book.description || "Content coming soon.",
   ];
 
@@ -269,7 +273,7 @@ export default function BookReaderPage() {
             border: "1px solid rgba(255,255,255,0.2)",
           }}
         >
-          {(book as any).cover}
+          {bookDetails.cover}
         </div>
         <div className="flex-1 min-w-0">
           <h1
@@ -304,7 +308,7 @@ export default function BookReaderPage() {
               className="text-xs"
               style={{ color: "rgba(255,255,255,0.5)" }}
             >
-              {(book as any).language || "English"}
+              {bookDetails.language || "English"}
             </span>
           </div>
         </div>
@@ -357,7 +361,7 @@ export default function BookReaderPage() {
             Previous
           </button>
           <span className="text-xs font-medium" style={{ color: "#9aa5b1" }}>
-            Chapter 1 of {(book as any).totalChapters || 12}
+            Chapter 1 of {bookDetails.totalChapters || 12}
           </span>
           <button
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white"
@@ -400,6 +404,7 @@ export default function BookReaderPage() {
             <button
               onClick={() => {
                 setSaveWord(selectionBubble.text);
+                setSaveContext(selectionBubble.text);
                 setSaveModalOpen(true);
                 setSelectionBubble(null);
                 window.getSelection()?.removeAllRanges();
@@ -512,7 +517,7 @@ export default function BookReaderPage() {
                       </div>
                       {msg.role === "ai" && (
                         <button
-                          onClick={() => { setSaveWord(""); setSaveModalOpen(true); }}
+                          onClick={() => { setSaveWord(""); setSaveContext(""); setSaveModalOpen(true); }}
                           className="flex items-center gap-1.5 mt-2 ml-2 text-[11px] font-bold uppercase tracking-wider text-[#9aa5b1] hover:text-[#1a2b5e] transition-colors"
                         >
                           <BookMarked size={12} />
@@ -563,6 +568,7 @@ export default function BookReaderPage() {
         isOpen={saveModalOpen}
         onClose={() => setSaveModalOpen(false)}
         prefillWord={saveWord}
+        context={saveContext}
       />
     </div>
   );

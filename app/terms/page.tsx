@@ -43,7 +43,7 @@ export default function TermsOfService() {
               </h2>
               <p>
                 Permission is granted to temporarily use the materials and
-                features (such as Atlas Chat and AI reading modules) on Kalyma's
+                features (such as Atlas Chat and AI reading modules) on Kalyma&apos;s
                 website for personal, non-commercial transitory viewing and
                 learning only.
               </p>

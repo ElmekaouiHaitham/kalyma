@@ -2,6 +2,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
+  AlertCircle,
   ArrowLeft,
   Clock,
   X,
@@ -52,6 +53,11 @@ export default function ReaderPage() {
   
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [saveFeedback, setSaveFeedback] = useState<{
+    id: string;
+    status: "saved" | "error";
+    message: string;
+  } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -65,6 +71,7 @@ export default function ReaderPage() {
   } | null>(null);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [saveWord, setSaveWord] = useState("");
+  const [saveContext, setSaveContext] = useState("");
 
   useEffect(() => {
     if (!session?.access_token || !id) return;
@@ -157,11 +164,22 @@ export default function ReaderPage() {
       }
     }
     setSavingId(aiMsgId);
-    const success = await autoSaveToDeck(question, aiText);
+    setSaveFeedback(null);
+    const result = await autoSaveToDeck(question, aiText);
     setSavingId(null);
-    if(success) {
+    if(result.ok) {
        setSavedId(aiMsgId);
+       setSaveFeedback({ id: aiMsgId, status: "saved", message: "Saved to Practice Deck" });
        setTimeout(() => setSavedId(null), 2000);
+       setTimeout(() => {
+         setSaveFeedback((current) => (current?.id === aiMsgId ? null : current));
+       }, 3200);
+    } else {
+       setSaveFeedback({
+         id: aiMsgId,
+         status: "error",
+         message: result.error || "Could not save this to practice.",
+       });
     }
   };
 
@@ -352,6 +370,7 @@ export default function ReaderPage() {
               <button
                 onClick={() => {
                   setSaveWord(selectionBubble.text);
+                  setSaveContext(selectionBubble.text);
                   setSaveModalOpen(true);
                   setSelectionBubble(null);
                   window.getSelection()?.removeAllRanges();
@@ -463,20 +482,45 @@ export default function ReaderPage() {
                         </ReactMarkdown>
                       </div>
                       {msg.role === "ai" && (
-                        <button
-                          onClick={() => handleAutoSave(msg.id, msg.content)}
-                          disabled={savingId === msg.id || savedId === msg.id}
-                          className="flex items-center gap-1.5 mt-2 ml-2 text-[11px] font-bold uppercase tracking-wider text-[#9aa5b1] hover:text-[#1a2b5e] transition-colors disabled:opacity-50"
-                        >
-                          {savingId === msg.id ? (
-                            <Loader2 size={12} className="animate-spin" />
-                          ) : savedId === msg.id ? (
-                            <CheckCircle2 size={12} className="text-green-500" />
-                          ) : (
-                            <BookMarked size={12} />
+                        <div className="mt-2 ml-2 space-y-1">
+                          <button
+                            onClick={() => handleAutoSave(msg.id, msg.content)}
+                            disabled={savingId === msg.id || savedId === msg.id}
+                            className={`flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50 ${
+                              saveFeedback?.id === msg.id && saveFeedback.status === "error"
+                                ? "text-red-600"
+                                : "text-[#9aa5b1] hover:text-[#1a2b5e]"
+                            }`}
+                          >
+                            {savingId === msg.id ? (
+                              <Loader2 size={12} className="animate-spin" />
+                            ) : savedId === msg.id ? (
+                              <CheckCircle2 size={12} className="text-green-500" />
+                            ) : saveFeedback?.id === msg.id && saveFeedback.status === "error" ? (
+                              <AlertCircle size={12} />
+                            ) : (
+                              <BookMarked size={12} />
+                            )}
+                            {savingId === msg.id
+                              ? "Saving..."
+                              : savedId === msg.id
+                                ? "Saved to Deck"
+                                : saveFeedback?.id === msg.id && saveFeedback.status === "error"
+                                  ? "Save failed"
+                                  : "Save to Deck"}
+                          </button>
+                          {saveFeedback?.id === msg.id && (
+                            <p
+                              className={`max-w-xs text-[11px] font-medium leading-4 ${
+                                saveFeedback.status === "error" ? "text-red-600" : "text-emerald-600"
+                              }`}
+                              role="status"
+                              aria-live="polite"
+                            >
+                              {saveFeedback.message}
+                            </p>
                           )}
-                          {savingId === msg.id ? "Saving..." : savedId === msg.id ? "Saved to Deck" : "Save to Deck"}
-                        </button>
+                        </div>
                       )}
                     </div>
                   </motion.div>
@@ -545,7 +589,7 @@ export default function ReaderPage() {
         isOpen={saveModalOpen}
         onClose={() => setSaveModalOpen(false)}
         prefillWord={saveWord}
-        context={selectionBubble?.text || ""}
+        context={saveContext}
         sourceType="article"
         sourceId={id}
       />
