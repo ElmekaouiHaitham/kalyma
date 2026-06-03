@@ -96,6 +96,16 @@ type PlacementResult = {
 const normalizeToken = (value: string) =>
   value.toLowerCase().trim().replace(/[^a-z0-9'-]+/g, "");
 
+const getPlacementMotivation = (level: number) => {
+  if (level <= 5) {
+    return "You already have enough English to start learning through real articles. Kalyma will keep the content understandable while introducing the words and expressions that move you forward.";
+  }
+  if (level <= 10) {
+    return "This is a strong starting point. You can handle serious topics now, and Kalyma will help you turn that ability into sharper vocabulary, clearer arguments, and more confident expression.";
+  }
+  return "You are ready for demanding English. Kalyma will challenge you with richer articles, precise expressions, and ideas that help you sound more natural, informed, and confident.";
+};
+
 function TopicIcon({ icon, label, className }: { icon?: string; label: string; className?: string }) {
   const Icon = icon ? TOPIC_ICONS[icon] : undefined;
   if (Icon) return <Icon className={className} strokeWidth={2.2} />;
@@ -633,8 +643,14 @@ export default function OnboardingPage() {
                 <StepIntro
                   icon={BookOpen}
                   title="Read and mark unknown words"
-                  text="Your selected words help Kalyma estimate your starting English reading level."
+                  text="This takes about 3 minutes. Your selected words help Kalyma estimate your starting English reading level."
                 />
+                <div className="mb-5 flex items-start gap-3 rounded-2xl border border-[#c9842f]/15 bg-[#fff8eb] px-4 py-3 text-left shadow-sm shadow-[#1a2b5e]/5">
+                  <Timer className="mt-0.5 h-5 w-5 shrink-0 text-[#c9842f]" />
+                  <p className="text-sm font-semibold leading-6 text-[#4a5568]">
+                    Quick calibration: read naturally, mark only the words you do not understand, then answer two simple questions.
+                  </p>
+                </div>
                 <PlacementReader
                   passage={passage}
                   selectedWords={selectedUnknownWords}
@@ -722,6 +738,9 @@ export default function OnboardingPage() {
                   <p className="mt-2 text-xl font-bold text-[#1a2b5e]">{placementResult.label}</p>
                   <p className="mt-1 text-sm font-semibold text-[#667084]">
                     CEFR hint: {placementResult.cefr_hint} | Confidence {Math.round(placementResult.confidence * 100)}%
+                  </p>
+                  <p className="mx-auto mt-5 max-w-md rounded-2xl bg-[#f7f2ea] px-5 py-4 text-sm font-semibold leading-6 text-[#4a5568]">
+                    {getPlacementMotivation(placementResult.estimated_level)}
                   </p>
                   <div className="mt-6 grid gap-3 sm:grid-cols-3">
                     <div className="rounded-2xl bg-[#f7f2ea] p-4">

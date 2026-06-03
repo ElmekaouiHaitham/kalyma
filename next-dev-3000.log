@@ -29,3 +29,4 @@
  GET /auth 200 in 54ms (compile: 11ms, render: 43ms)
  GET /home 200 in 186ms (compile: 22ms, render: 164ms)
  GET /auth 200 in 87ms (compile: 10ms, render: 77ms)
+✓ Finished filesystem cache database compaction in 25.2s
