@@ -21,6 +21,13 @@ interface UserProfile {
     article_frequency?: number;
     reading_pace?: number;
   };
+  learning_profile?: {
+    current_level: number;
+    confidence: number;
+    level_source: string;
+    placement_attempt_id?: string | null;
+    updated_at: string;
+  } | null;
 }
 
 interface AuthContextType {
@@ -97,7 +104,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const userData = await response.json();
         setUser(userData);
         
-        const needsOnboarding = !userData.preferences || !userData.preferences.topics || userData.preferences.topics.length === 0;
+        const needsOnboarding =
+          !userData.preferences ||
+          !userData.preferences.topics ||
+          userData.preferences.topics.length === 0 ||
+          !userData.learning_profile;
         const currentPath = window.location.pathname;
 
         if (options.redirect !== false) {
