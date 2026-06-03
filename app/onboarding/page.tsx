@@ -97,13 +97,26 @@ const normalizeToken = (value: string) =>
   value.toLowerCase().trim().replace(/[^a-z0-9'-]+/g, "");
 
 const getPlacementMotivation = (level: number) => {
-  if (level <= 5) {
-    return "You already have enough English to start learning through real articles. Kalyma will keep the content understandable while introducing the words and expressions that move you forward.";
-  }
-  if (level <= 10) {
-    return "This is a strong starting point. You can handle serious topics now, and Kalyma will help you turn that ability into sharper vocabulary, clearer arguments, and more confident expression.";
-  }
-  return "You are ready for demanding English. Kalyma will challenge you with richer articles, precise expressions, and ideas that help you sound more natural, informed, and confident.";
+  const messages: Record<number, string> = {
+    1: "You are entering the intermediate path. Kalyma will keep articles clear enough to follow while turning the words that slow you down into focused review.",
+    2: "You can already work with real English when the support is right. Kalyma will give you readable articles and build the missing vocabulary step by step.",
+    3: "You have a useful base for real content. Kalyma will help you close the gap between understanding the main idea and catching the precise expressions.",
+    4: "You are close to stronger independent reading. Kalyma will show you articles you can mostly understand while steadily stretching your vocabulary.",
+    5: "You are ready to learn through serious topics, not isolated exercises. Kalyma will help you turn difficult words into long-term memory.",
+    6: "You have enough control to read meaningful articles with support. Kalyma will push you toward clearer comprehension and more natural expression.",
+    7: "This is a solid intermediate-plus starting point. Kalyma will help you handle richer articles and collect the vocabulary that makes your English sharper.",
+    8: "You can follow complex ideas when the text is well matched. Kalyma will keep challenging you with useful content while protecting you from overload.",
+    9: "You are moving into strong upper-intermediate reading. Kalyma will help you notice tone, argument, and precise expressions, not only basic meaning.",
+    10: "You are ready for demanding articles across your interests. Kalyma will help you convert that ability into better vocabulary, confidence, and speaking ideas.",
+    11: "You can work with advanced English. Kalyma will focus on nuance: how writers frame arguments, soften claims, and choose words with intention.",
+    12: "You are close to high-level fluency in reading. Kalyma will keep giving you content that expands your vocabulary without wasting time on material that is too easy.",
+    13: "You are ready for C1-style content. Kalyma will challenge you with dense ideas, subtle wording, and expressions that make your English sound more mature.",
+    14: "Your reading level is strong. Kalyma will help you polish precision, argument structure, and the kind of vocabulary that improves public speaking.",
+    15: "You are ready for the hardest material Kalyma offers. The goal now is refinement: sharper nuance, stronger arguments, and more confident English in real conversations.",
+  };
+
+  const safeLevel = Math.min(15, Math.max(1, Math.round(level)));
+  return messages[safeLevel];
 };
 
 function TopicIcon({ icon, label, className }: { icon?: string; label: string; className?: string }) {
