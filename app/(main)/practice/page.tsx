@@ -189,7 +189,7 @@ function ReviewSigil({ variant = "dark" }: { variant?: "dark" | "light" }) {
 function PracticeShell({ children }: { children: ReactNode }) {
   return (
     <main
-      className="min-h-full overflow-hidden bg-[#fffdf7] px-[8.7vw] pb-8 pt-14 text-[#17265d] md:px-[6.5%] md:py-9"
+      className="min-h-full overflow-hidden bg-[#fffdf7] px-3 pb-8 pt-14 text-[#17265d] md:px-[6.5%] md:py-9"
       style={{
         ...surfaceFont,
       }}
