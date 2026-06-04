@@ -40,7 +40,7 @@ export default function MainLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const showMobileNav = pathname === "/home" || pathname.startsWith("/profile");
   const showMobileBack = !showMobileNav && pathname !== "/news";
   const displayName = user?.full_name?.trim() || "Kalyma Learner";
@@ -108,7 +108,7 @@ export default function MainLayout({
         </nav>
 
         <button
-          onClick={() => router.push("/auth")}
+          onClick={signOut}
           className="cursor-pointer mt-3 flex items-center gap-2.5 px-3 py-2.5 rounded-[11px] border-2 border-transparent text-[12px] font-medium text-[#667084] hover:border-[#aeb5c9] hover:bg-[#f4efe7] hover:text-[#1a2b5e] active:scale-[0.98] transition-all duration-200 shrink-0"
         >
           <LogOut className="h-[16px] w-[16px]" />

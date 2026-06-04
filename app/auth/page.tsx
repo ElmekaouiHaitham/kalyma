@@ -1,15 +1,82 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, ArrowRight, Loader2 } from "lucide-react";
+import { Check, ArrowRight, Loader2, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/app/providers";
+
+function AuthTransitionScreen({
+  title,
+  message,
+}: {
+  title: string;
+  message: string;
+}) {
+  return (
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-6 bg-[#f7f2ea]">
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute left-1/2 top-1/2 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#c9a84c]/15 blur-3xl" />
+        <div className="absolute bottom-[-12%] right-[-8%] h-[420px] w-[420px] rounded-full bg-[#1a2b5e]/10 blur-3xl animate-blob" />
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative z-10 w-full max-w-sm text-center"
+      >
+        <motion.div
+          animate={{ scale: [1, 1.04, 1], rotate: [0, 1.5, -1.5, 0] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className="mx-auto mb-7 grid h-24 w-24 place-items-center rounded-[32px] bg-white p-5 shadow-2xl shadow-[#1a2b5e]/10"
+        >
+          <Image
+            src="/logo.png"
+            alt="kalyma"
+            width={76}
+            height={76}
+            className="h-full w-full object-contain"
+            priority
+          />
+        </motion.div>
+
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#1a2b5e]/10 bg-white/80 px-3 py-1.5 text-xs font-bold text-[#1a2b5e] shadow-sm">
+          <Sparkles size={14} />
+          Personalizing
+        </div>
+
+        <h1 className="font-outfit text-3xl font-bold text-[#1a2b5e]">
+          {title}
+        </h1>
+        <p className="mt-3 text-sm font-medium leading-6 text-[#4a5568]">
+          {message}
+        </p>
+
+        <div className="mt-9 overflow-hidden rounded-full bg-white shadow-inner">
+          <motion.div
+            className="h-2 rounded-full bg-gradient-to-r from-[#1a2b5e] via-[#2d4080] to-[#c9a84c]"
+            initial={{ x: "-100%" }}
+            animate={{ x: "100%" }}
+            transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </div>
+
+        <div className="mt-7 flex items-center justify-center gap-2 text-xs font-bold text-[#9aa5b1]">
+          <Loader2 size={15} className="animate-spin" />
+          Taking you to your home
+        </div>
+      </motion.div>
+    </div>
+  );
+}
 
 export default function AuthPage() {
+  const { session, user, isLoading: authLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [handoffLoading, setHandoffLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [lastSignedUpEmail, setLastSignedUpEmail] = useState<string | null>(
@@ -47,6 +114,8 @@ export default function AuthPage() {
           } else {
             setError(formatAuthError(error.message));
           }
+        } else {
+          setHandoffLoading(true);
         }
         // On success, AuthProvider will detect session and redirect automatically
       } else {
@@ -102,6 +171,7 @@ export default function AuthPage() {
 
   const handleGoogleAuth = async () => {
     setLoading(true);
+    setHandoffLoading(true);
     setError(null);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -117,9 +187,41 @@ export default function AuthPage() {
           err instanceof Error ? err.message : "Could not connect to Google",
         ),
       );
+      setHandoffLoading(false);
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!handoffLoading || authLoading || !session || user) return;
+
+    const timeout = window.setTimeout(() => {
+      setHandoffLoading(false);
+      setLoading(false);
+      setError("We could not finish preparing your profile. Please try again.");
+    }, 8000);
+
+    return () => window.clearTimeout(timeout);
+  }, [authLoading, handoffLoading, session, user]);
+
+  const isRedirectingSignedInUser = Boolean(session && user);
+
+  if (authLoading || handoffLoading || isRedirectingSignedInUser) {
+    return (
+      <AuthTransitionScreen
+        title={
+          session || handoffLoading
+            ? "Preparing your home"
+            : "Checking your session"
+        }
+        message={
+          session || handoffLoading
+            ? "We are loading your profile, preferences, and learning plan."
+            : "One moment while we check whether you are already signed in."
+        }
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-6 bg-[#f7f2ea]">
