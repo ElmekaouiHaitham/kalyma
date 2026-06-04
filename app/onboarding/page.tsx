@@ -814,7 +814,7 @@ export default function OnboardingPage() {
             Read and mark unknown words
           </h1>
           <p className="mt-4 text-[16px] font-medium leading-[1.45] text-[#394260] md:text-[17px]">
-            Read naturally, mark only the words you do not understand, then answer two questions.
+            Read naturally, mark only the words you do not understand, then answer two questions. It will only take about 3 minutes.
           </p>
           <div className="mt-6">
             <PlacementReader
