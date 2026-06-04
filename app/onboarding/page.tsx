@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
-  BookOpen,
+  Briefcase,
   Check,
   ChevronLeft,
   ChevronRight,
+  Coffee,
+  Dumbbell,
+  Footprints,
   GraduationCap,
-  Heart,
   HeartPulse,
   Landmark,
   Laptop,
@@ -17,26 +19,34 @@ import {
   LucideIcon,
   Map,
   Microscope,
+  Minus,
   Newspaper,
   Palette,
   Play,
+  Plus,
+  Rocket,
   Target,
-  Timer,
   Trophy,
   Utensils,
-  Zap,
 } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/app/providers";
 import { DAILY_GOALS } from "@/lib/data";
 
 const STEPS = ["Name", "Pace", "Frequency", "Interests", "Reading", "Quiz", "Result"];
+const PACE_ICONS: Record<string, LucideIcon> = {
+  Casual: Coffee,
+  Regular: Footprints,
+  Serious: Dumbbell,
+  Intensive: Rocket,
+};
 
 const TOPIC_ICONS: Record<string, LucideIcon> = {
   laptop: Laptop,
   trophy: Trophy,
-  briefcase: GraduationCap,
+  briefcase: Briefcase,
   "graduation-cap": GraduationCap,
   landmark: Landmark,
   newspaper: Newspaper,
@@ -93,6 +103,15 @@ type PlacementResult = {
   final_score: number;
 };
 
+type OnboardingActionProps = {
+  step: number;
+  canProceed: boolean;
+  isSubmitting: boolean;
+  showBack: boolean;
+  onBack: () => void;
+  onNext: () => void;
+};
+
 const normalizeToken = (value: string) =>
   value.toLowerCase().trim().replace(/[^a-z0-9'-]+/g, "");
 
@@ -119,28 +138,209 @@ const getPlacementMotivation = (level: number) => {
   return messages[safeLevel];
 };
 
+function BrandMark({ compact = false }: { compact?: boolean }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      {!compact && (
+        <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full">
+          <Image src="/logo.png" alt="" width={32} height={32} className="h-full w-full object-contain" />
+        </div>
+      )}
+      <span className="text-[23px] font-extrabold leading-none tracking-[-0.01em] text-[#17265d] md:text-[26px]">
+        kalyma
+      </span>
+    </div>
+  );
+}
+
+function HorizontalProgress({ step }: { step: number }) {
+  return (
+    <div className="grid grid-cols-7 gap-2">
+      {STEPS.map((item, index) => (
+        <div
+          key={item}
+          className="h-1.5 overflow-hidden rounded-full bg-white/70 shadow-[inset_0_0_0_1px_rgba(25,42,98,0.02)]"
+        >
+          <motion.div
+            initial={false}
+            animate={{ width: index <= step ? "100%" : "0%" }}
+            transition={{ duration: 0.45, ease: "easeOut" }}
+            className="h-full rounded-full bg-gradient-to-r from-[#17265d] to-[#b79646]"
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DesktopRail({ step }: { step: number }) {
+  return (
+    <div className="absolute left-11 top-1/2 hidden -translate-y-1/2 items-center gap-5 xl:flex">
+      <div className="flex h-[300px] w-2 flex-col overflow-hidden rounded-full border-2 border-[#17265d] bg-white">
+        {STEPS.map((item, index) => (
+          <div
+            key={item}
+            className={`flex-1 border-b border-[#17265d] last:border-b-0 ${
+              index === step ? "bg-[#17265d]" : ""
+            }`}
+          />
+        ))}
+      </div>
+      <div className="text-[14px] font-medium uppercase leading-[1.2] tracking-[0.01em] text-[#17265d]">
+        <p>
+          Step {step + 1}
+          <br />
+          of 7
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function WelcomeIllustration({ className = "" }: { className?: string }) {
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      <Image
+        src="/onboarding/welcome-illustration.png"
+        alt=""
+        width={670}
+        height={555}
+        priority
+        unoptimized
+        className="h-full w-full object-contain"
+      />
+    </div>
+  );
+}
+function PlanningIllustration({ className = "" }: { className?: string }) {
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      <Image
+        src="/onboarding/planning-illustration.png"
+        alt=""
+        width={526}
+        height={498}
+        priority
+        unoptimized
+        className="h-full w-full object-contain"
+      />
+    </div>
+  );
+}
 function TopicIcon({ icon, label, className }: { icon?: string; label: string; className?: string }) {
   const Icon = icon ? TOPIC_ICONS[icon] : undefined;
   if (Icon) return <Icon className={className} strokeWidth={2.2} />;
   return <span className="text-sm font-black uppercase">{label.slice(0, 2)}</span>;
 }
 
-function StepIntro({
-  icon: Icon,
-  title,
-  text,
+function DesktopFrame({
+  step,
+  children,
 }: {
-  icon: LucideIcon;
-  title: string;
-  text: string;
+  step: number;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="mb-8 text-center">
-      <div className="mb-4 inline-flex rounded-2xl bg-[#1a2b5e]/5 p-3 text-[#1a2b5e]">
-        <Icon size={24} />
+    <div className="hidden min-h-screen grid-cols-[50.4%_49.6%] md:grid">
+      <aside className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f3dda9]">
+        <div className="absolute inset-0 opacity-[0.18] [background-image:radial-gradient(#c99d48_0.7px,transparent_0.7px)] [background-size:6px_6px]" />
+        <DesktopRail step={step} />
+        {step === 0 ? (
+          <WelcomeIllustration className="relative z-10 h-[46vh] max-h-[430px] w-[58%] max-w-[500px]" />
+        ) : (
+          <PlanningIllustration className="relative z-10 h-[47vh] max-h-[430px] w-[58%] max-w-[500px]" />
+        )}
+      </aside>
+
+      <main className="flex min-h-screen flex-col bg-[#fffdf7] px-[6.5%] py-9 text-[#17265d]">
+        <header className="flex items-center justify-between">
+          <BrandMark compact />
+          <p className="text-[14px] font-medium uppercase tracking-[0.04em] text-[#1d2130]">
+            Step {step + 1} of {STEPS.length}
+          </p>
+        </header>
+        <div className="flex flex-1 items-center justify-center py-6">
+          <div className="w-full max-w-[520px]">{children}</div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function MobileFrame({ step, children }: { step: number; children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-screen flex-col bg-[#f3dda9] md:hidden">
+      <div className="px-[8.7vw] pt-6">
+        <header className="mb-5 flex items-center justify-between">
+          <BrandMark />
+          <p className="text-[14px] font-medium uppercase tracking-[0.04em] text-[#1d2130]">
+            Step {step + 1} of {STEPS.length}
+          </p>
+        </header>
+        <HorizontalProgress step={step} />
       </div>
-      <h1 className="mb-2 text-3xl font-bold text-[#1a2b5e]">{title}</h1>
-      <p className="mx-auto max-w-md text-[#4a5568]">{text}</p>
+
+      <div className="flex h-[24vh] min-h-[170px] max-h-[220px] items-end justify-center px-5 pt-3">
+        {step === 0 ? (
+          <WelcomeIllustration className="h-full w-full max-w-[350px]" />
+        ) : (
+          <PlanningIllustration className="h-full w-full max-w-[340px]" />
+        )}
+      </div>
+
+      <main className="flex-1 bg-[#fffdf7] px-[8.7vw] pb-8 pt-8 text-[#17265d]">
+        {children}
+      </main>
+    </div>
+  );
+}
+
+function OnboardingActions({
+  step,
+  canProceed,
+  isSubmitting,
+  showBack,
+  onBack,
+  onNext,
+}: OnboardingActionProps) {
+  const label =
+    step === 3
+      ? "Start placement"
+      : step === 4
+        ? "Continue to questions"
+        : step === 5
+          ? "See my level"
+          : step === 6
+            ? "Start learning"
+            : "Continue";
+
+  return (
+    <div className="mt-6 flex justify-end gap-3 md:mt-7">
+      {showBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex h-11 min-w-[92px] items-center justify-center gap-1.5 rounded-lg border-2 border-[#17265d] bg-[#fffdf7] px-4 text-[15px] font-extrabold text-[#17265d] transition hover:bg-[#f7efd8] md:h-12 md:min-w-[98px] md:text-[16px]"
+        >
+          <ChevronLeft size={18} strokeWidth={3} />
+          Back
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={onNext}
+        disabled={!canProceed || isSubmitting}
+        className="inline-flex h-11 min-w-[128px] flex-1 items-center justify-center gap-2 rounded-lg bg-[#17265d] px-5 text-[15px] font-extrabold text-white shadow-[0_8px_16px_rgba(23,38,93,0.14)] transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-not-allowed sm:flex-none md:h-12 md:min-w-[136px] md:text-[16px]"
+      >
+        {isSubmitting ? (
+          <Loader2 size={20} className="animate-spin" />
+        ) : (
+          <>
+            {label}
+            <ChevronRight size={20} strokeWidth={2.5} />
+          </>
+        )}
+      </button>
     </div>
   );
 }
@@ -161,26 +361,13 @@ function PlacementReader({
   const selectedSet = new Set(selectedWords);
 
   return (
-    <div className="rounded-[28px] border-2 border-[#1a2b5e]/5 bg-white p-5 shadow-xl shadow-[#1a2b5e]/5 sm:p-7">
-      <div className="mb-5 flex items-start gap-3 border-b border-[#1a2b5e]/8 pb-5">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#1a2b5e] text-white">
-          <BookOpen size={20} />
-        </div>
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#c9842f]">
-            Placement reading
-          </p>
-          <h2 className="mt-1 text-2xl font-bold leading-tight text-[#1a2b5e]">
-            {passage.title}
-          </h2>
-        </div>
-      </div>
-
-      <p className="mb-5 rounded-2xl bg-[#f7f2ea] px-4 py-3 text-sm font-medium leading-6 text-[#4a5568]">
+    <div className="max-h-[46vh] overflow-y-auto rounded-xl border-2 border-[#17265d] bg-[#fffdf7] p-4 md:max-h-[52vh]">
+      <h2 className="mb-2 text-xl font-black tracking-[-0.02em] text-[#17265d]">{passage.title}</h2>
+      <p className="mb-4 text-[13px] font-semibold leading-5 text-[#394260]">
         Click every word you do not understand. There is no penalty for honesty.
       </p>
 
-      <div className="select-none text-[20px] font-medium leading-[2.05] text-[#1f2937]">
+      <div className="select-none text-[16px] font-medium leading-[1.85] text-[#1d2130]">
         {tokens.map((token, index) => {
           if (/^\s+$/.test(token)) return <span key={`${token}-${index}`}>{token}</span>;
           const normalized = normalizeToken(token);
@@ -193,10 +380,10 @@ function PlacementReader({
               key={`${token}-${index}`}
               type="button"
               onClick={() => onToggleWord(normalized)}
-              className={`mx-0.5 rounded-lg px-1.5 py-0.5 align-baseline transition ${
+              className={`mx-0.5 rounded-md px-1.5 py-0.5 align-baseline transition ${
                 selected
-                  ? "bg-[#c9842f] text-white shadow-sm"
-                  : "text-[#1f2937] hover:bg-[#fbf5e8] hover:text-[#1a2b5e]"
+                  ? "bg-[#17265d] text-white"
+                  : "text-[#1d2130] hover:bg-[#f3dda9] hover:text-[#17265d]"
               }`}
             >
               {token}
@@ -205,19 +392,19 @@ function PlacementReader({
         })}
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center gap-2">
-        <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#9aa5b1]">
+      <div className="mt-5 flex flex-wrap items-center gap-2">
+        <span className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#8b7f68]">
           Selected
         </span>
         {selectedWords.length === 0 ? (
-          <span className="text-sm font-semibold text-[#4a5568]">No unknown words selected yet</span>
+          <span className="text-sm font-semibold text-[#394260]">No unknown words selected yet</span>
         ) : (
           selectedWords.map((word) => (
             <button
               key={word}
               type="button"
               onClick={() => onToggleWord(word)}
-              className="rounded-full bg-[#fbf5e8] px-3 py-1 text-sm font-bold text-[#8b5c18]"
+              className="rounded-full bg-[#f2dda9] px-3 py-1 text-sm font-bold text-[#17265d]"
             >
               {word}
             </button>
@@ -231,8 +418,8 @@ function PlacementReader({
 export default function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [fullName, setFullName] = useState("");
-  const [selectedPace, setSelectedPace] = useState<string | null>(null);
-  const [articleFrequency, setArticleFrequency] = useState<number | null>(2);
+  const [selectedPace, setSelectedPace] = useState<string | null>("Casual");
+  const [articleFrequency, setArticleFrequency] = useState<number | null>(3);
   const [selectedSubTopics, setSelectedSubTopics] = useState<string[]>([]);
   const [activeTopicId, setActiveTopicId] = useState<string | null>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -306,7 +493,7 @@ export default function OnboardingPage() {
         reading_pace: selectedPace
           ? DAILY_GOALS.find((goal) => goal.label === selectedPace)?.minutes || 10
           : 10,
-        article_frequency: articleFrequency || 2,
+        article_frequency: articleFrequency || 3,
         selected_subtopic_ids: selectedSubTopics,
       };
 
@@ -395,428 +582,364 @@ export default function OnboardingPage() {
     setStep((prev) => Math.max(0, prev - 1));
   };
 
-  return (
-    <div className="flex min-h-screen flex-col bg-[#f7f2ea]">
-      <div className="sticky top-0 z-50 border-b border-[#1a2b5e]/5 bg-white/50 px-6 pb-4 pt-8 backdrop-blur-sm">
-        <div className="mx-auto mb-6 flex max-w-2xl items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl">
-              <img src="/logo.png" alt="kalyma" className="h-full w-full object-contain" />
-            </div>
-            <span className="text-lg font-bold text-[#1a2b5e]">kalyma</span>
-          </div>
-          <div className="text-xs font-bold uppercase tracking-wider text-[#9aa5b1]">
-            Step {step + 1} of {STEPS.length}
-          </div>
-        </div>
+  const showBack = Boolean((step > 0 || (step === 3 && activeTopicId)) && step !== 6);
 
-        <div className="mx-auto flex max-w-2xl gap-2">
-          {STEPS.map((item, index) => (
-            <div
-              key={item}
-              className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#1a2b5e]/5 transition-all duration-700"
+  const actions = (
+    <OnboardingActions
+      step={step}
+      canProceed={canProceed}
+      isSubmitting={isSubmitting}
+      showBack={showBack}
+      onBack={back}
+      onNext={next}
+    />
+  );
+
+  const renderContent = () => (
+    <AnimatePresence mode="wait">
+      {step === 0 && (
+        <motion.section
+          key="step-name"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -18 }}
+        >
+          <h1 className="max-w-[440px] text-[clamp(2.25rem,9vw,3rem)] font-black leading-[1.02] tracking-[-0.03em] text-[#17265d] md:text-[44px]">
+            What should we call you?
+          </h1>
+          <p className="mt-5 text-[16px] font-medium leading-[1.45] text-[#17265d] md:text-[18px]">
+            We use your name to make the learning space feel personal.
+          </p>
+          <input
+            type="text"
+            placeholder="Enter your name"
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value)}
+            className="mt-7 h-12 w-full rounded-lg border-2 border-[#17265d] bg-[#fffdf7] px-4 text-[17px] font-medium text-[#17265d] outline-none transition placeholder:text-[#7d7f86] focus:shadow-[0_0_0_4px_rgba(23,38,93,0.12)] md:mt-8 md:h-14 md:px-5 md:text-[18px]"
+            autoFocus
+          />
+          {actions}
+        </motion.section>
+      )}
+
+      {step === 1 && (
+        <motion.section
+          key="step-pace"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -18 }}
+        >
+          <h1 className="text-[clamp(2rem,7vw,2.45rem)] font-black leading-tight tracking-[-0.03em] text-[#17265d] md:text-[40px]">
+            Choose your learning pace
+          </h1>
+          <div className="mt-9 grid grid-cols-2 gap-4 md:mt-10">
+            {DAILY_GOALS.map((goal) => {
+              const selected = selectedPace === goal.label;
+              const Icon = PACE_ICONS[goal.label] || Target;
+              return (
+                <button
+                  key={goal.label}
+                  type="button"
+                  onClick={() => setSelectedPace(goal.label)}
+                  className={`relative flex min-h-[108px] flex-col items-center justify-center rounded-[18px] border-2 px-3 text-center transition md:min-h-[116px] ${
+                    selected
+                      ? "border-[#17265d] bg-[#dfe5fb] shadow-[inset_10px_0_0_#17265d]"
+                      : "border-[#17265d] bg-[#fff8df] hover:bg-[#f7efd8]"
+                  }`}
+                >
+                  {selected && (
+                    <span className="absolute -right-2.5 -top-2.5 flex h-9 w-9 items-center justify-center rounded-full border-4 border-[#fffdf7] bg-[#17265d] text-white">
+                      <Check size={20} strokeWidth={3.2} />
+                    </span>
+                  )}
+                  <Icon className="mb-2 h-7 w-7 text-[#17265d]" strokeWidth={2.2} />
+                  <span className="text-[16px] font-black leading-tight text-[#17265d] md:text-[17px]">
+                    {goal.label}
+                  </span>
+                  <span className="mt-1.5 text-[13px] font-medium text-[#3a3d4a] md:text-[14px]">{goal.desc}</span>
+                </button>
+              );
+            })}
+          </div>
+          {actions}
+        </motion.section>
+      )}
+
+      {step === 2 && (
+        <motion.section
+          key="step-frequency"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -18 }}
+        >
+          <h1 className="text-[clamp(2rem,7vw,2.45rem)] font-black leading-tight tracking-[-0.03em] text-[#17265d] md:text-[40px]">
+            How many articles per week?
+          </h1>
+          <div className="mt-8 flex items-center justify-between gap-4 md:mt-9">
+            <button
+              type="button"
+              aria-label="Decrease articles per week"
+              onClick={() => setArticleFrequency((value) => Math.max(1, (value || 3) - 1))}
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#17265d] text-white shadow-[0_8px_18px_rgba(23,38,93,0.18)] transition hover:-translate-y-0.5 md:h-14 md:w-14"
             >
-              <motion.div
-                initial={false}
-                animate={{ width: index <= step ? "100%" : "0%" }}
-                className="h-full bg-gradient-to-r from-[#1a2b5e] to-[#c9a84c]"
-              />
+              <Minus size={34} strokeWidth={3} />
+            </button>
+            <div className="flex h-[138px] min-w-0 flex-1 items-center justify-center rounded-[50%] bg-[#f2dda9] md:h-[160px]">
+              <motion.span
+                key={articleFrequency}
+                initial={{ scale: 0.86, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="text-[74px] font-black leading-none tabular-nums tracking-[-0.03em] text-[#17265d] md:text-[86px]"
+              >
+                {articleFrequency}
+              </motion.span>
             </div>
-          ))}
-        </div>
-      </div>
+            <button
+              type="button"
+              aria-label="Increase articles per week"
+              onClick={() => setArticleFrequency((value) => Math.min(7, (value || 3) + 1))}
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#17265d] text-white shadow-[0_8px_18px_rgba(23,38,93,0.18)] transition hover:-translate-y-0.5 md:h-14 md:w-14"
+            >
+              <Plus size={34} strokeWidth={3} />
+            </button>
+          </div>
+          <p className="mt-6 text-center font-serif text-[30px] font-semibold leading-tight text-[#17265d] md:text-[34px]">
+            articles / week
+          </p>
+          {actions}
+        </motion.section>
+      )}
 
-      <div className="flex-1 overflow-y-auto px-4 pb-44 pt-12">
-        <div className="mx-auto max-w-2xl">
-          <AnimatePresence mode="wait">
-            {step === 0 && (
-              <motion.div
-                key="step-name"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="space-y-6"
+      {step === 3 && (
+        <motion.section
+          key={activeTopicId ? "step-subtopics" : "step-interests"}
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -18 }}
+        >
+          {!activeTopicId ? (
+            <>
+              <h1 className="text-[clamp(2rem,7vw,2.45rem)] font-black leading-tight tracking-[-0.03em] text-[#17265d] md:text-[40px]">
+                What topics interest you?
+              </h1>
+              <p className="mt-4 text-[16px] font-medium leading-[1.45] text-[#394260] md:text-[17px]">
+                Pick at least 3 subtopics so Kalyma can choose your placement reading.
+              </p>
+              <div className="mt-7 grid max-h-[44vh] grid-cols-2 gap-3 overflow-y-auto pr-1 sm:grid-cols-3 md:max-h-[46vh]">
+                {isLoadingTopics ? (
+                  <div className="col-span-full flex items-center justify-center py-16 text-[#17265d]">
+                    <Loader2 className="mr-3 animate-spin" />
+                    Loading topics
+                  </div>
+                ) : (
+                  topics.map((topic) => {
+                    const selectedCount =
+                      topic.subtopics?.filter((subtopic) => selectedSubTopics.includes(subtopic.id)).length || 0;
+                    return (
+                      <button
+                        key={topic.id}
+                        type="button"
+                        onClick={() => setActiveTopicId(topic.id)}
+                        className={`relative flex min-h-[100px] flex-col justify-between rounded-[14px] border-2 p-3 text-left transition ${
+                          selectedCount > 0
+                            ? "border-[#17265d] bg-[#dfe5fb]"
+                            : "border-[#17265d] bg-[#fff8df] hover:bg-[#f7efd8]"
+                        }`}
+                      >
+                        <TopicIcon icon={topic.icon} label={topic.label} className="h-6 w-6 text-[#17265d]" />
+                        <span className="text-[13px] font-black leading-tight text-[#17265d] md:text-[14px]">
+                          {topic.label}
+                        </span>
+                        {selectedCount > 0 && (
+                          <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#17265d] text-white">
+                            <Check size={14} strokeWidth={3} />
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => setActiveTopicId(null)}
+                className="mb-6 inline-flex items-center gap-2 text-[15px] font-extrabold text-[#17265d]"
               >
-                <StepIntro
-                  icon={Heart}
-                  title="What should we call you?"
-                  text="We use your name to make the learning space feel personal."
-                />
-                <div className="rounded-3xl border-2 border-[#1a2b5e]/5 bg-white p-6 shadow-xl shadow-[#1a2b5e]/5">
-                  <input
-                    type="text"
-                    placeholder="Enter your name"
-                    value={fullName}
-                    onChange={(event) => setFullName(event.target.value)}
-                    className="w-full bg-transparent text-center text-2xl font-bold text-[#1a2b5e] outline-none placeholder:text-[#9aa5b1]"
-                    autoFocus
-                  />
-                </div>
-              </motion.div>
-            )}
-
-            {step === 1 && (
-              <motion.div
-                key="step-pace"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
-                <StepIntro
-                  icon={Zap}
-                  title="Choose your learning pace"
-                  text="This shapes your daily reading and review load."
-                />
-                <div className="grid grid-cols-2 gap-4">
-                  {DAILY_GOALS.map((goal) => (
+                <ArrowLeft size={18} />
+                Back to topics
+              </button>
+              <h1 className="text-[clamp(2rem,7vw,2.45rem)] font-black leading-tight tracking-[-0.03em] text-[#17265d] md:text-[40px]">
+                {activeTopic?.label}
+              </h1>
+              <p className="mt-4 text-[16px] font-medium leading-[1.45] text-[#394260] md:text-[17px]">
+                Select the areas you want to read about.
+              </p>
+              <div className="mt-7 grid max-h-[46vh] gap-2.5 overflow-y-auto pr-1">
+                {activeTopic?.subtopics?.map((subtopic) => {
+                  const selected = selectedSubTopics.includes(subtopic.id);
+                  return (
                     <button
-                      key={goal.label}
-                      onClick={() => setSelectedPace(goal.label)}
-                      className={`relative flex flex-col items-center gap-3 rounded-3xl border-2 p-6 text-center transition-all duration-300 ${
-                        selectedPace === goal.label
-                          ? "scale-[1.02] border-[#1a2b5e] bg-[#1a2b5e]/5 shadow-xl shadow-[#1a2b5e]/5"
-                          : "border-[#1a2b5e]/5 bg-white hover:border-[#1a2b5e]/20"
+                      key={subtopic.id}
+                      type="button"
+                      onClick={() => toggleSubTopic(subtopic.id)}
+                      className={`flex min-h-[48px] items-center justify-between rounded-lg border-2 px-4 text-left text-[15px] font-extrabold transition ${
+                        selected
+                          ? "border-[#17265d] bg-[#17265d] text-white"
+                          : "border-[#17265d] bg-[#fff8df] text-[#17265d] hover:bg-[#f7efd8]"
                       }`}
                     >
-                      <Timer className="h-8 w-8 text-[#c9842f]" />
-                      <div>
-                        <div className="text-lg font-bold text-[#1a2b5e]">{goal.label}</div>
-                        <div className="text-sm text-[#4a5568] opacity-80">{goal.desc}</div>
-                      </div>
-                      {selectedPace === goal.label && (
-                        <div className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full border-4 border-white bg-[#1a2b5e] text-white">
-                          <Check size={16} strokeWidth={3} />
-                        </div>
-                      )}
+                      {subtopic.label}
+                      {selected ? <Check size={22} strokeWidth={3} /> : <span className="h-5 w-5 rounded-full border-2 border-current" />}
                     </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
+                  );
+                })}
+              </div>
+            </>
+          )}
+          {actions}
+        </motion.section>
+      )}
 
-            {step === 2 && (
-              <motion.div
-                key="step-frequency"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
-                <StepIntro
-                  icon={Timer}
-                  title="Article frequency"
-                  text="Pick a weekly target that you can actually keep."
-                />
-                <div className="flex flex-col items-center rounded-[40px] border-2 border-[#1a2b5e]/5 bg-white p-10 text-center shadow-2xl shadow-[#1a2b5e]/5">
-                  <div className="relative mb-10">
-                    <motion.div
-                      key={articleFrequency}
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className="text-8xl font-black tabular-nums text-[#1a2b5e]"
-                    >
-                      {articleFrequency}
-                    </motion.div>
-                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap text-sm font-bold uppercase tracking-widest text-[#9aa5b1]">
-                      Articles / Week
-                    </div>
-                  </div>
-                  <div className="w-full space-y-8 px-4">
-                    <input
-                      type="range"
-                      min="1"
-                      max="5"
-                      step="1"
-                      value={articleFrequency || 2}
-                      onChange={(event) => setArticleFrequency(parseInt(event.target.value))}
-                      className="h-3 w-full cursor-pointer appearance-none rounded-full bg-[#f7f2ea] accent-[#1a2b5e]"
-                    />
-                    <div className="flex justify-between text-xs font-bold text-[#9aa5b1]">
-                      <span>1</span>
-                      <span>3</span>
-                      <span>5</span>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
+      {step === 4 && passage && (
+        <motion.section
+          key="step-reading"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -18 }}
+        >
+          <h1 className="text-[clamp(2rem,7vw,2.35rem)] font-black leading-tight tracking-[-0.03em] text-[#17265d] md:text-[38px]">
+            Read and mark unknown words
+          </h1>
+          <p className="mt-4 text-[16px] font-medium leading-[1.45] text-[#394260] md:text-[17px]">
+            Read naturally, mark only the words you do not understand, then answer two questions.
+          </p>
+          <div className="mt-6">
+            <PlacementReader
+              passage={passage}
+              selectedWords={selectedUnknownWords}
+              onToggleWord={toggleUnknownWord}
+            />
+          </div>
+          {actions}
+        </motion.section>
+      )}
 
-            {step === 3 && (
-              <motion.div
-                key="step-interests"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-6"
-              >
-                <AnimatePresence mode="wait">
-                  {!activeTopicId ? (
-                    <motion.div
-                      key="topics-grid"
-                      initial={{ opacity: 0, scale: 0.96 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.96 }}
-                      className="space-y-8"
-                    >
-                      <StepIntro
-                        icon={Target}
-                        title="Select your interests"
-                        text="Pick at least 3 subtopics. We use them to choose your placement reading."
-                      />
-                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                        {topics.map((topic) => {
-                          const selectedCount =
-                            topic.subtopics?.filter((subtopic) => selectedSubTopics.includes(subtopic.id)).length || 0;
-                          return (
-                            <button
-                              key={topic.id}
-                              onClick={() => setActiveTopicId(topic.id)}
-                              className={`relative flex h-32 flex-col justify-between rounded-2xl border-2 p-4 text-left transition-all duration-300 ${
-                                selectedCount > 0
-                                  ? "border-[#1a2b5e] bg-[#1a2b5e]/5"
-                                  : "border-[#1a2b5e]/5 bg-white hover:border-[#1a2b5e]/20"
-                              }`}
-                            >
-                              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1a2b5e]/5 text-[#1a2b5e]">
-                                <TopicIcon icon={topic.icon} label={topic.label} className="h-6 w-6" />
-                              </div>
-                              <div>
-                                <div className="text-sm font-bold text-[#1a2b5e]">{topic.label}</div>
-                                {selectedCount > 0 && (
-                                  <div className="text-[10px] font-bold uppercase tracking-wider text-[#c9a84c]">
-                                    {selectedCount} selected
-                                  </div>
-                                )}
-                              </div>
-                              {selectedCount > 0 && (
-                                <div className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#1a2b5e] text-white">
-                                  <Check size={12} strokeWidth={4} />
-                                </div>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="subtopics-list"
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      className="space-y-6"
-                    >
+      {step === 5 && passage && (
+        <motion.section
+          key="step-quiz"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -18 }}
+        >
+          <h1 className="text-[clamp(2rem,7vw,2.45rem)] font-black leading-tight tracking-[-0.03em] text-[#17265d] md:text-[40px]">
+            Two quick questions
+          </h1>
+          <p className="mt-4 text-[16px] font-medium leading-[1.45] text-[#394260] md:text-[17px]">
+            Answer from the passage. These questions check comprehension, not memory.
+          </p>
+          <div className="mt-6 max-h-[50vh] space-y-4 overflow-y-auto pr-1">
+            {passage.questions.map((question, questionIndex) => (
+              <div key={question.id} className="rounded-[16px] border-2 border-[#17265d] bg-[#fff8df] p-4">
+                <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.12em] text-[#8b6d2e]">
+                  Question {questionIndex + 1}
+                </p>
+                <h2 className="mb-3 text-lg font-black leading-snug text-[#17265d]">{question.question}</h2>
+                <div className="grid gap-2.5">
+                  {question.choices.map((choice) => {
+                    const selected = quizAnswers[question.id] === choice.id;
+                    return (
                       <button
-                        onClick={() => setActiveTopicId(null)}
-                        className="flex items-center gap-2 text-sm font-bold text-[#1a2b5e] transition-transform hover:translate-x-[-4px]"
+                        key={choice.id}
+                        type="button"
+                        onClick={() =>
+                          setQuizAnswers((prev) => ({
+                            ...prev,
+                            [question.id]: choice.id,
+                          }))
+                        }
+                        className={`flex items-start gap-3 rounded-lg border-2 p-3 text-left transition ${
+                          selected
+                            ? "border-[#17265d] bg-[#dfe5fb]"
+                            : "border-[#17265d] bg-[#fffdf7] hover:bg-[#f7efd8]"
+                        }`}
                       >
-                        <ArrowLeft size={16} />
-                        Back to themes
+                        <span
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-black ${
+                            selected ? "bg-[#17265d] text-white" : "bg-[#f2dda9] text-[#17265d]"
+                          }`}
+                        >
+                          {choice.id.toUpperCase()}
+                        </span>
+                        <span className="text-[14px] font-semibold leading-6 text-[#1d2130]">{choice.text}</span>
                       </button>
-                      <div className="flex items-center gap-4 rounded-3xl border-2 border-[#1a2b5e]/5 bg-white p-6 shadow-xl shadow-black/5">
-                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#1a2b5e]/5 text-[#1a2b5e]">
-                          <TopicIcon icon={activeTopic?.icon} label={activeTopic?.label || ""} className="h-9 w-9" />
-                        </div>
-                        <div>
-                          <h2 className="text-2xl font-bold text-[#1a2b5e]">{activeTopic?.label}</h2>
-                          <p className="text-sm text-[#4a5568]">Select specific areas of interest</p>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        {activeTopic?.subtopics?.map((subtopic) => {
-                          const selected = selectedSubTopics.includes(subtopic.id);
-                          return (
-                            <button
-                              key={subtopic.id}
-                              onClick={() => toggleSubTopic(subtopic.id)}
-                              className={`flex w-full items-center justify-between rounded-xl border-2 p-4 text-left transition-all ${
-                                selected
-                                  ? "border-[#1a2b5e] bg-[#1a2b5e] text-white"
-                                  : "border-[#1a2b5e]/5 bg-white text-[#1a2b5e] hover:border-[#1a2b5e]/20"
-                              }`}
-                            >
-                              <span className="font-semibold">{subtopic.label}</span>
-                              {selected ? <Check size={18} strokeWidth={3} /> : <div className="h-5 w-5 rounded-full border-2 border-current opacity-20" />}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            )}
-
-            {step === 4 && passage && (
-              <motion.div
-                key="step-reading"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
-                <StepIntro
-                  icon={BookOpen}
-                  title="Read and mark unknown words"
-                  text="This takes about 3 minutes. Your selected words help Kalyma estimate your starting English reading level."
-                />
-                <div className="mb-5 flex items-start gap-3 rounded-2xl border border-[#c9842f]/15 bg-[#fff8eb] px-4 py-3 text-left shadow-sm shadow-[#1a2b5e]/5">
-                  <Timer className="mt-0.5 h-5 w-5 shrink-0 text-[#c9842f]" />
-                  <p className="text-sm font-semibold leading-6 text-[#4a5568]">
-                    Quick calibration: read naturally, mark only the words you do not understand, then answer two simple questions.
-                  </p>
+                    );
+                  })}
                 </div>
-                <PlacementReader
-                  passage={passage}
-                  selectedWords={selectedUnknownWords}
-                  onToggleWord={toggleUnknownWord}
-                />
-              </motion.div>
-            )}
+              </div>
+            ))}
+          </div>
+          {actions}
+        </motion.section>
+      )}
 
-            {step === 5 && passage && (
-              <motion.div
-                key="step-quiz"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
-                <StepIntro
-                  icon={GraduationCap}
-                  title="Two quick questions"
-                  text="Answer from the passage. These questions check comprehension, not memory."
-                />
-                <div className="space-y-5">
-                  {passage.questions.map((question, questionIndex) => (
-                    <div
-                      key={question.id}
-                      className="rounded-[28px] border-2 border-[#1a2b5e]/5 bg-white p-5 shadow-xl shadow-[#1a2b5e]/5"
-                    >
-                      <p className="mb-2 text-xs font-bold uppercase tracking-[0.16em] text-[#c9842f]">
-                        Question {questionIndex + 1}
-                      </p>
-                      <h2 className="mb-4 text-xl font-bold leading-snug text-[#1a2b5e]">{question.question}</h2>
-                      <div className="grid gap-3">
-                        {question.choices.map((choice) => {
-                          const selected = quizAnswers[question.id] === choice.id;
-                          return (
-                            <button
-                              key={choice.id}
-                              type="button"
-                              onClick={() =>
-                                setQuizAnswers((prev) => ({
-                                  ...prev,
-                                  [question.id]: choice.id,
-                                }))
-                              }
-                              className={`flex items-start gap-3 rounded-2xl border-2 p-4 text-left transition ${
-                                selected
-                                  ? "border-[#1a2b5e] bg-[#1a2b5e]/5"
-                                  : "border-[#1a2b5e]/5 bg-[#f7f2ea]/45 hover:border-[#1a2b5e]/20"
-                              }`}
-                            >
-                              <span
-                                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-                                  selected ? "bg-[#1a2b5e] text-white" : "bg-white text-[#1a2b5e]"
-                                }`}
-                              >
-                                {choice.id.toUpperCase()}
-                              </span>
-                              <span className="text-sm font-semibold leading-6 text-[#334155]">{choice.text}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-
-            {step === 6 && placementResult && (
-              <motion.div
-                key="step-result"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
-                <div className="rounded-[36px] border-2 border-[#1a2b5e]/5 bg-white p-7 text-center shadow-2xl shadow-[#1a2b5e]/10">
-                  <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#1a2b5e] text-white">
-                    <GraduationCap size={30} />
-                  </div>
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#c9842f]">
-                    Reading level calibrated
-                  </p>
-                  <h1 className="mt-3 text-4xl font-black text-[#1a2b5e]">
-                    Level {placementResult.estimated_level}/15
-                  </h1>
-                  <p className="mt-2 text-xl font-bold text-[#1a2b5e]">{placementResult.label}</p>
-                  <p className="mt-1 text-sm font-semibold text-[#667084]">
-                    CEFR hint: {placementResult.cefr_hint} | Confidence {Math.round(placementResult.confidence * 100)}%
-                  </p>
-                  <p className="mx-auto mt-5 max-w-md rounded-2xl bg-[#f7f2ea] px-5 py-4 text-sm font-semibold leading-6 text-[#4a5568]">
-                    {getPlacementMotivation(placementResult.estimated_level)}
-                  </p>
-                  <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-2xl bg-[#f7f2ea] p-4">
-                      <p className="text-2xl font-black text-[#1a2b5e]">{placementResult.final_score}</p>
-                      <p className="text-xs font-bold uppercase tracking-wide text-[#667084]">Score</p>
-                    </div>
-                    <div className="rounded-2xl bg-[#f7f2ea] p-4">
-                      <p className="text-2xl font-black text-[#1a2b5e]">{placementResult.quiz_score}/2</p>
-                      <p className="text-xs font-bold uppercase tracking-wide text-[#667084]">Quiz</p>
-                    </div>
-                    <div className="rounded-2xl bg-[#f7f2ea] p-4">
-                      <p className="text-2xl font-black text-[#1a2b5e]">{placementResult.unknown_weight_sum}</p>
-                      <p className="text-xs font-bold uppercase tracking-wide text-[#667084]">Word weight</p>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {error && (
-            <div className="mt-6 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-center text-sm font-semibold text-red-600">
-              {error}
+      {step === 6 && placementResult && (
+        <motion.section
+          key="step-result"
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -18 }}
+        >
+          <h1 className="text-[clamp(2rem,7vw,2.45rem)] font-black leading-tight tracking-[-0.03em] text-[#17265d] md:text-[40px]">
+            Your reading level is ready
+          </h1>
+          <div className="mt-7 rounded-[20px] border-2 border-[#17265d] bg-[#fff8df] p-5 text-center">
+            <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#8b6d2e]">
+              Reading level calibrated
+            </p>
+            <p className="mt-3 text-[48px] font-black leading-none text-[#17265d]">
+              {placementResult.estimated_level}/15
+            </p>
+            <p className="mt-3 text-[20px] font-black text-[#17265d]">{placementResult.label}</p>
+            <p className="mt-2 text-[13px] font-semibold text-[#394260]">
+              CEFR hint: {placementResult.cefr_hint} | Confidence{" "}
+              {Math.round(placementResult.confidence * 100)}%
+            </p>
+            <p className="mt-4 text-[14px] font-semibold leading-6 text-[#394260]">
+              {getPlacementMotivation(placementResult.estimated_level)}
+            </p>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-2.5">
+            <div className="rounded-lg border-2 border-[#17265d] bg-[#fffdf7] p-2.5 text-center">
+              <p className="text-xl font-black text-[#17265d]">{placementResult.final_score}</p>
+              <p className="text-xs font-bold uppercase text-[#394260]">Score</p>
             </div>
-          )}
-        </div>
-      </div>
+            <div className="rounded-lg border-2 border-[#17265d] bg-[#fffdf7] p-2.5 text-center">
+              <p className="text-xl font-black text-[#17265d]">{placementResult.quiz_score}/2</p>
+              <p className="text-xs font-bold uppercase text-[#394260]">Quiz</p>
+            </div>
+            <div className="rounded-lg border-2 border-[#17265d] bg-[#fffdf7] p-2.5 text-center">
+              <p className="text-xl font-black text-[#17265d]">{placementResult.unknown_weight_sum}</p>
+              <p className="text-xs font-bold uppercase text-[#394260]">Words</p>
+            </div>
+          </div>
+          {actions}
+        </motion.section>
+      )}
+    </AnimatePresence>
+  );
 
-      <div className="fixed bottom-0 left-0 right-0 flex justify-center border-t border-[#1a2b5e]/10 bg-white/80 p-6 backdrop-blur-md">
-        <div className="flex w-full max-w-xl gap-4">
-          {(step > 0 || (step === 3 && activeTopicId)) && step !== 6 && (
-            <button
-              onClick={back}
-              className="flex items-center gap-2 rounded-2xl border-2 border-[#1a2b5e] px-8 py-4 font-bold text-[#1a2b5e] transition-colors hover:bg-[#1a2b5e]/5"
-            >
-              <ChevronLeft size={20} />
-              Back
-            </button>
-          )}
-          <button
-            onClick={next}
-            disabled={!canProceed || isSubmitting}
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[#1a2b5e] py-4 font-bold text-white shadow-xl shadow-[#1a2b5e]/20 transition-all hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-30"
-          >
-            {isSubmitting ? (
-              <Loader2 size={20} className="animate-spin" />
-            ) : (
-              <>
-                {step === 3
-                  ? "Start placement"
-                  : step === 4
-                    ? "Continue to questions"
-                    : step === 5
-                      ? "See my level"
-                      : step === 6
-                        ? "Start learning"
-                        : "Continue"}
-                <ChevronRight size={20} />
-              </>
-            )}
-          </button>
+  return (
+    <div className="min-h-screen bg-[#fffdf7]">
+      <DesktopFrame step={step}>{renderContent()}</DesktopFrame>
+      <MobileFrame step={step}>{renderContent()}</MobileFrame>
+      {error && (
+        <div className="fixed bottom-5 left-1/2 z-50 w-[calc(100%-32px)] max-w-xl -translate-x-1/2 rounded-xl border-2 border-red-700 bg-red-50 px-4 py-3 text-center text-sm font-bold text-red-700 shadow-lg">
+          {error}
         </div>
-      </div>
+      )}
     </div>
   );
 }
