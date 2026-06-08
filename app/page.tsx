@@ -279,7 +279,7 @@ function ProductIcon({
 export default function LandingPage() {
   const shouldReduceMotion = useReducedMotion();
   const [wordIndex, setWordIndex] = useState(0);
-  const words = ["follows you", "adapts to you", "grows with you", "moves with you"];
+  const words = ["intermediate level", "Fear of speaking", 'Pattern', 'Existing limits'];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -337,19 +337,9 @@ export default function LandingPage() {
             </Floating>
           )}
 
-          <div className="mb-5 grid max-w-[320px] grid-cols-[auto_1fr_auto] items-center gap-3 rounded-[18px] border border-[#1a2b5e]/12 bg-white/78 px-4 py-2.5 text-left shadow-[0_16px_42px_rgba(26,43,94,0.1)] backdrop-blur-xl sm:max-w-none">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#fbf5e8] text-[#c9842f]">
-              <Sparkles size={15} />
-            </span>
-            <span className="whitespace-nowrap text-[12px] font-bold uppercase leading-4 tracking-[0.18em] text-[#1a2b5e]">
-              Read. Ask. Save. Speak.
-            </span>
-            <span className="hidden h-px w-14 bg-[#1a2b5e]/18 sm:block" />
-          </div>
-
           <div className="relative z-10 flex w-full max-w-[360px] flex-col items-center sm:max-w-[940px]">
             <h1 className="flex w-full max-w-[360px] flex-col items-center text-balance text-[2.6rem] font-semibold leading-[0.91] tracking-[-0.035em] text-[#111735] sm:max-w-5xl sm:text-center sm:text-[clamp(2.65rem,5.5vw,5.35rem)] sm:leading-[0.9]">
-              <span>English that </span>
+              <span>Break the </span>
               <span className="text-[#c9842f]">
                 <AnimatePresence mode="wait">
                   <motion.span
@@ -367,9 +357,9 @@ export default function LandingPage() {
             </h1>
 
             <p className="mt-6 max-w-[340px] text-balance text-lg font-semibold leading-7 text-[#33406f] sm:max-w-[34rem] sm:text-[1.35rem] sm:leading-8">
-              Read content you care about, understand the difficult parts with
-              Atlas, save what matters, and bring it into review and live
-              conversation.
+              Learn English with content made specifically for you
+              <br></br>
+              based on your interests and level.
             </p>
 
             <div className="mt-7 flex w-full max-w-[340px] flex-col items-center justify-center gap-3 sm:w-auto sm:max-w-none sm:flex-row">
@@ -410,7 +400,7 @@ export default function LandingPage() {
           <div className="mt-7 grid w-full max-w-[340px] grid-cols-1 gap-3 rounded-[26px] border border-[#1a2b5e]/10 bg-white/70 p-3 text-left shadow-[0_20px_54px_rgba(26,43,94,0.12)] backdrop-blur-xl sm:mt-10 sm:max-w-[680px] sm:grid-cols-3">
             {[
               ["80%", "familiar enough to keep reading"],
-              ["20%", "new language explained in context"],
+              ["20%", "new vocab explained in context"],
               ["1 flow", "read, ask, save, review, speak"],
             ].map(([value, label]) => (
               <div

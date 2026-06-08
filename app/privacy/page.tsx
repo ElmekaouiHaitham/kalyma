@@ -81,7 +81,7 @@ export default function PrivacyPolicy() {
               </h2>
               <p>
                 If you have any questions or concerns about this Privacy Policy,
-                please contact us at support@kalyma.
+                please contact us at contact@kalyma.academy
               </p>
             </section>
           </div>
