@@ -1,10 +1,85 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, ArrowRight, Loader2, Sparkles } from "lucide-react";
+import { Check, ArrowRight, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/app/providers";
+
+function AuthBrandMark({ compact = false }: { compact?: boolean }) {
+  return (
+    <Image
+      src="/logo%20with%20word.webp"
+      alt="Kalyma"
+      width={compact ? 132 : 150}
+      height={compact ? 42 : 48}
+      priority
+      className={compact ? "h-auto w-[142px] object-contain" : "h-auto w-[166px] object-contain"}
+    />
+  );
+}
+
+function AuthIllustration({ className = "" }: { className?: string }) {
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      <Image
+        src="/onboarding/welcome-illustration.png"
+        alt=""
+        width={670}
+        height={555}
+        priority
+        unoptimized
+        className="h-full w-full object-contain"
+      />
+    </div>
+  );
+}
+
+function AuthFrame({
+  eyebrow,
+  children,
+}: {
+  eyebrow: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="min-h-screen bg-[#fffdf7]">
+      <div className="hidden min-h-screen grid-cols-[37%_63%] md:grid">
+        <aside className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f3dda9]">
+          <div className="absolute inset-0 opacity-[0.18] [background-image:radial-gradient(#c99d48_0.7px,transparent_0.7px)] [background-size:6px_6px]" />
+          <AuthIllustration className="relative z-10 h-[40vh] max-h-[360px] w-[68%] max-w-[360px]" />
+        </aside>
+
+        <main className="flex min-h-screen flex-col bg-[#fffdf7] px-[6%] py-7 text-[#17265d]">
+          <header className="flex items-center justify-between">
+            <AuthBrandMark compact />
+            <p className="text-xs font-medium uppercase tracking-[0.04em] text-[#1d2130]">
+              {eyebrow}
+            </p>
+          </header>
+          <div className="flex flex-1 items-center justify-center py-6">
+            <div className="w-full max-w-[440px]">{children}</div>
+          </div>
+        </main>
+      </div>
+
+      <div className="flex min-h-screen flex-col bg-[#fffdf7] md:hidden">
+        <div className="bg-[#fffdf7] px-6 py-6">
+          <header className="flex items-center justify-between">
+            <AuthBrandMark />
+            <p className="text-xs font-medium uppercase tracking-[0.04em] text-[#1d2130]">
+              {eyebrow}
+            </p>
+          </header>
+        </div>
+
+        <main className="flex-1 bg-[#fffdf7] px-5 pb-7 pt-6 text-[#17265d]">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
 
 function AuthTransitionScreen({
   title,
@@ -14,59 +89,52 @@ function AuthTransitionScreen({
   message: string;
 }) {
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-6 bg-[#f7f2ea]">
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute left-1/2 top-1/2 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#c9a84c]/15 blur-3xl" />
-        <div className="absolute bottom-[-12%] right-[-8%] h-[420px] w-[420px] rounded-full bg-[#1a2b5e]/10 blur-3xl animate-blob" />
-      </div>
-
+    <AuthFrame eyebrow="Access">
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 w-full max-w-sm text-center"
+        className="rounded-[16px] border-2 border-[#17265d] bg-[#fff8df] p-4 text-center"
       >
         <motion.div
-          animate={{ scale: [1, 1.04, 1], rotate: [0, 1.5, -1.5, 0] }}
+          animate={{ scale: [1, 1.04, 1] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="mx-auto mb-7 grid h-24 w-24 place-items-center rounded-[32px] bg-white p-5 shadow-2xl shadow-[#1a2b5e]/10"
+          className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-full border-2 border-[#17265d] bg-[#f2dda9] p-3"
         >
           <Image
             src="/logo.png"
             alt="kalyma"
-            width={76}
-            height={76}
+            width={48}
+            height={48}
             className="h-full w-full object-contain"
             priority
           />
         </motion.div>
 
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#1a2b5e]/10 bg-white/80 px-3 py-1.5 text-xs font-bold text-[#1a2b5e] shadow-sm">
-          <Sparkles size={14} />
+        <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#8b6d2e]">
           Personalizing
-        </div>
-
-        <h1 className="font-outfit text-3xl font-bold text-[#1a2b5e]">
+        </p>
+        <h1 className="mt-2 text-[clamp(1.5rem,6vw,1.9rem)] font-black leading-tight tracking-[-0.03em] text-[#17265d] md:text-[30px]">
           {title}
         </h1>
-        <p className="mt-3 text-sm font-medium leading-6 text-[#4a5568]">
+        <p className="mt-2 text-[13px] font-medium leading-[1.45] text-[#394260] md:text-[14px]">
           {message}
         </p>
 
-        <div className="mt-9 overflow-hidden rounded-full bg-white shadow-inner">
+        <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-white/70 shadow-[inset_0_0_0_1px_rgba(25,42,98,0.02)]">
           <motion.div
-            className="h-2 rounded-full bg-gradient-to-r from-[#1a2b5e] via-[#2d4080] to-[#c9a84c]"
+            className="h-full rounded-full bg-gradient-to-r from-[#17265d] to-[#b79646]"
             initial={{ x: "-100%" }}
             animate={{ x: "100%" }}
             transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
           />
         </div>
 
-        <div className="mt-7 flex items-center justify-center gap-2 text-xs font-bold text-[#9aa5b1]">
-          <Loader2 size={15} className="animate-spin" />
+        <div className="mt-4 flex items-center justify-center gap-2 text-xs font-bold text-[#394260]">
+          <Loader2 size={13} className="animate-spin" />
           Taking you to your home
         </div>
       </motion.div>
-    </div>
+    </AuthFrame>
   );
 }
 
@@ -224,74 +292,41 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-6 bg-[#f7f2ea]">
-      {/* Decorative background elements */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-5%] left-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-br from-[#1a2b5e]/10 to-[#c9a84c]/5 blur-3xl" />
-        <div
-          className="absolute bottom-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-[#c9a84c]/10 to-[#1a2b5e]/5 blur-3xl animate-blob"
-          style={{ animationDelay: "4s" }}
-        />
-      </div>
-
-      <div className="relative z-10 w-full max-w-md">
-        {/* Logo */}
+    <AuthFrame eyebrow={isLogin ? "Log in" : "Sign up"}>
+      <div className="w-full">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <div className="w-16 h-16 relative">
-              <Image
-                src="/logo.png"
-                alt="Logo"
-                fill
-                className="object-contain"
-              />
-            </div>
-            <div className="text-left">
-              <div className="text-2xl font-bold leading-tight font-outfit text-[#1a2b5e]">
-                kalyma
-              </div>
-              <div className="text-xs font-bold text-[#9aa5b1] uppercase tracking-widest">
-                Speak with confidence
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Card */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1 }}
-          className="bg-white/80 backdrop-blur-xl p-8 rounded-[32px] border border-white shadow-2xl shadow-[#1a2b5e]/10"
+          className="rounded-[16px] border-2 border-[#17265d] bg-[#fff8df] p-4"
         >
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-[#1a2b5e] font-outfit mb-2">
-              {isLogin ? "Welcome Back" : "Create Account"}
+          <div className="mb-5">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#8b6d2e]">
+              {isLogin ? "Welcome back" : "Create account"}
+            </p>
+            <h1 className="mt-1.5 text-[clamp(1.5rem,6vw,1.9rem)] font-black leading-tight tracking-[-0.03em] text-[#17265d] md:text-[30px]">
+              {isLogin ? "Log in to Kalyma" : "Start learning with Kalyma"}
             </h1>
-            <p className="text-[#4a5568] text-sm">
+            <p className="mt-2 text-[13px] font-medium leading-[1.45] text-[#394260] md:text-[14px]">
               {isLogin
-                ? "Log in to continue your journey."
-                : "Join thousands of learners mastering English."}
+                ? "Continue your reading, review, and speaking plan."
+                : "Create your account and set up your learning path."}
             </p>
           </div>
 
-          <form onSubmit={handleAuth} className="space-y-4 mb-6">
+          <form onSubmit={handleAuth} className="mb-4 space-y-3">
             {error && (
-              <div className="p-4 rounded-xl bg-red-50 text-red-600 text-sm font-medium border border-red-100">
+              <div className="rounded-lg border-2 border-red-700 bg-red-50 p-3 text-xs font-bold text-red-700">
                 <div>{error}</div>
                 {error.includes("verify") && lastSignedUpEmail && (
                   <button
                     type="button"
                     disabled={resendLoading}
                     onClick={handleResendEmail}
-                    className="mt-2 text-sm font-bold text-[#1a2b5e] underline flex items-center gap-1 hover:opacity-80 disabled:opacity-50"
+                    className="mt-2 flex items-center gap-1 text-xs font-extrabold text-[#17265d] underline hover:opacity-80 disabled:opacity-50"
                   >
                     {resendLoading && (
-                      <Loader2 size={14} className="animate-spin" />
+                      <Loader2 size={12} className="animate-spin" />
                     )}
                     Resend confirmation email
                   </button>
@@ -299,9 +334,9 @@ export default function AuthPage() {
               </div>
             )}
             {successMessage && (
-              <div className="p-4 rounded-xl bg-green-50 text-green-700 text-sm font-medium border border-green-200">
+              <div className="rounded-lg border-2 border-[#17265d] bg-[#fffdf7] p-3 text-xs font-bold text-[#17265d]">
                 <div className="flex items-start gap-2">
-                  <Check size={18} className="mt-0.5 shrink-0" />
+                  <Check size={15} className="mt-0.5 shrink-0" />
                   <span>{successMessage}</span>
                 </div>
                 {lastSignedUpEmail && (
@@ -309,10 +344,10 @@ export default function AuthPage() {
                     type="button"
                     disabled={resendLoading}
                     onClick={handleResendEmail}
-                    className="mt-2 ml-6 text-sm font-bold text-[#1a2b5e] underline flex items-center gap-1 hover:opacity-80 disabled:opacity-50"
+                    className="mt-2 ml-5 flex items-center gap-1 text-xs font-extrabold text-[#17265d] underline hover:opacity-80 disabled:opacity-50"
                   >
                     {resendLoading && (
-                      <Loader2 size={14} className="animate-spin" />
+                      <Loader2 size={12} className="animate-spin" />
                     )}
                     Resend confirmation email
                   </button>
@@ -326,7 +361,7 @@ export default function AuthPage() {
               placeholder="Email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-4 rounded-2xl border-2 border-[#1a2b5e]/10 text-[#1a2b5e] focus:border-[#1a2b5e] focus:outline-none transition-colors"
+              className="h-10 w-full rounded-lg border-2 border-[#17265d] bg-[#fffdf7] px-3 text-[13px] font-medium text-[#17265d] outline-none transition placeholder:text-[#7d7f86] focus:shadow-[0_0_0_3px_rgba(23,38,93,0.12)] md:h-10 md:px-3 md:text-[14px]"
             />
             <input
               type="password"
@@ -334,22 +369,22 @@ export default function AuthPage() {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-4 rounded-2xl border-2 border-[#1a2b5e]/10 text-[#1a2b5e] focus:border-[#1a2b5e] focus:outline-none transition-colors"
+              className="h-10 w-full rounded-lg border-2 border-[#17265d] bg-[#fffdf7] px-3 text-[13px] font-medium text-[#17265d] outline-none transition placeholder:text-[#7d7f86] focus:shadow-[0_0_0_3px_rgba(23,38,93,0.12)] md:h-10 md:px-3 md:text-[14px]"
             />
 
             {!isLogin && (
-              <label className="flex items-start gap-3 mt-4 mb-2 cursor-pointer">
+              <label className="mt-3 mb-1 flex cursor-pointer items-start gap-2">
                 <input
                   type="checkbox"
                   required
-                  className="mt-1 w-4 h-4 rounded border-[#1a2b5e]/20 text-[#1a2b5e] focus:ring-[#1a2b5e]"
+                  className="mt-1 h-3.5 w-3.5 rounded border-[#17265d] text-[#17265d] focus:ring-[#17265d]"
                 />
-                <span className="text-sm text-[#4a5568]">
+                <span className="text-xs font-semibold leading-5 text-[#394260]">
                   I agree to the{" "}
                   <a
                     href="/terms"
                     target="_blank"
-                    className="text-[#1a2b5e] font-bold hover:underline"
+                    className="font-extrabold text-[#17265d] hover:underline"
                   >
                     Terms of Service
                   </a>{" "}
@@ -357,7 +392,7 @@ export default function AuthPage() {
                   <a
                     href="/privacy"
                     target="_blank"
-                    className="text-[#1a2b5e] font-bold hover:underline"
+                    className="font-extrabold text-[#17265d] hover:underline"
                   >
                     Privacy Policy
                   </a>
@@ -369,11 +404,11 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={loading}
-              className="group w-full py-4 rounded-2xl bg-[#1a2b5e] text-white font-bold text-lg shadow-xl shadow-[#1a2b5e]/20 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:hover:scale-100"
+              className="group flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#17265d] px-4 text-[13px] font-extrabold text-white shadow-[0_8px_16px_rgba(23,38,93,0.14)] transition hover:-translate-y-0.5 disabled:translate-y-0 disabled:cursor-wait disabled:opacity-70 md:text-[14px]"
             >
               {loading ? (
                 <>
-                  <Loader2 size={20} className="animate-spin" />
+                  <Loader2 size={16} className="animate-spin" />
                   {isLogin ? "Logging in..." : "Creating account..."}
                 </>
               ) : isLogin ? (
@@ -383,31 +418,31 @@ export default function AuthPage() {
               )}
               {!loading && (
                 <ArrowRight
-                  size={20}
+                  size={16}
                   className="group-hover:translate-x-1 transition-transform"
                 />
               )}
             </button>
           </form>
 
-          <div className="flex items-center gap-4 mb-6">
-            <div className="flex-1 h-px bg-[#1a2b5e]/10" />
-            <span className="text-xs font-bold text-[#9aa5b1] uppercase tracking-widest">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="h-px flex-1 bg-[#17265d]/20" />
+            <span className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#8b6d2e]">
               or
             </span>
-            <div className="flex-1 h-px bg-[#1a2b5e]/10" />
+            <div className="h-px flex-1 bg-[#17265d]/20" />
           </div>
 
           <button
             type="button"
             onClick={handleGoogleAuth}
             disabled={loading}
-            className="w-full py-4 rounded-2xl border-2 border-[#1a2b5e]/10 text-[#1a2b5e] font-bold text-lg transition-all hover:bg-[#1a2b5e]/5 flex items-center justify-center gap-3 disabled:opacity-70"
+            className="flex h-10 w-full items-center justify-center gap-2.5 rounded-lg border-2 border-[#17265d] bg-[#fffdf7] px-3 text-[13px] font-extrabold text-[#17265d] transition hover:bg-[#f7efd8] disabled:opacity-70 md:text-[14px]"
           >
             <svg
               viewBox="0 0 24 24"
-              width="24"
-              height="24"
+              width="19"
+              height="19"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
@@ -429,7 +464,7 @@ export default function AuthPage() {
             </svg>
             {loading ? (
               <>
-                <Loader2 size={18} className="animate-spin" />
+                <Loader2 size={15} className="animate-spin" />
                 Connecting...
               </>
             ) : (
@@ -437,7 +472,7 @@ export default function AuthPage() {
             )}
           </button>
 
-          <p className="text-center mt-6 text-sm text-[#4a5568] font-medium">
+          <p className="mt-4 text-center text-xs font-semibold text-[#394260]">
             {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
             <button
               type="button"
@@ -446,25 +481,24 @@ export default function AuthPage() {
                 setError(null);
                 setSuccessMessage(null);
               }}
-              className="text-[#1a2b5e] font-bold hover:underline"
+              className="font-extrabold text-[#17265d] hover:underline"
             >
               {isLogin ? "Sign up" : "Log in"}
             </button>
           </p>
         </motion.div>
 
-        {/* Footer */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="text-center mt-8 text-xs text-[#9aa5b1] font-medium"
+          className="mt-4 text-center text-[11px] font-semibold text-[#394260]"
         >
           By joining, you agree to our{" "}
           <a
             href="/terms"
             target="_blank"
-            className="underline cursor-pointer text-[#1a2b5e]"
+            className="cursor-pointer text-[#17265d] underline"
           >
             Terms
           </a>{" "}
@@ -472,12 +506,12 @@ export default function AuthPage() {
           <a
             href="/privacy"
             target="_blank"
-            className="underline cursor-pointer text-[#1a2b5e]"
+            className="cursor-pointer text-[#17265d] underline"
           >
             Privacy Policy
           </a>
         </motion.p>
       </div>
-    </div>
+    </AuthFrame>
   );
 }

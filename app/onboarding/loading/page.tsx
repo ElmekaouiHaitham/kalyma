@@ -1,16 +1,86 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Globe } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 const MESSAGES = [
-  "Analyzing your preferences…",
-  "Curating personalized articles…",
-  "Tuning your AI companion…",
-  "Setting up live sessions…",
+  "Analyzing your preferences...",
+  "Curating personalized articles...",
+  "Tuning your AI companion...",
+  "Setting up live sessions...",
   "Almost ready!",
 ];
+
+function LoadingBrandMark({ compact = false }: { compact?: boolean }) {
+  return (
+    <Image
+      src="/logo%20with%20word.webp"
+      alt="Kalyma"
+      width={compact ? 132 : 150}
+      height={compact ? 42 : 48}
+      priority
+      className={compact ? "h-auto w-[142px] object-contain" : "h-auto w-[166px] object-contain"}
+    />
+  );
+}
+
+function LoadingIllustration({ className = "" }: { className?: string }) {
+  return (
+    <div className={`relative overflow-hidden ${className}`}>
+      <Image
+        src="/onboarding/planning-illustration.png"
+        alt=""
+        width={670}
+        height={555}
+        priority
+        unoptimized
+        className="h-full w-full object-contain"
+      />
+    </div>
+  );
+}
+
+function LoadingFrame({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-[#fffdf7]">
+      <div className="hidden min-h-screen grid-cols-[37%_63%] md:grid">
+        <aside className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f3dda9]">
+          <div className="absolute inset-0 opacity-[0.18] [background-image:radial-gradient(#c99d48_0.7px,transparent_0.7px)] [background-size:6px_6px]" />
+          <LoadingIllustration className="relative z-10 h-[40vh] max-h-[360px] w-[68%] max-w-[360px]" />
+        </aside>
+
+        <main className="flex min-h-screen flex-col bg-[#fffdf7] px-[6%] py-7 text-[#17265d]">
+          <header className="flex items-center justify-between">
+            <LoadingBrandMark compact />
+            <p className="text-xs font-medium uppercase tracking-[0.04em] text-[#1d2130]">
+              Setup
+            </p>
+          </header>
+          <div className="flex flex-1 items-center justify-center py-6">
+            <div className="w-full max-w-[440px]">{children}</div>
+          </div>
+        </main>
+      </div>
+
+      <div className="flex min-h-screen flex-col bg-[#fffdf7] md:hidden">
+        <div className="bg-[#fffdf7] px-6 py-6">
+          <header className="flex items-center justify-between">
+            <LoadingBrandMark />
+            <p className="text-xs font-medium uppercase tracking-[0.04em] text-[#1d2130]">
+              Setup
+            </p>
+          </header>
+        </div>
+
+        <main className="flex-1 bg-[#fffdf7] px-5 pb-7 pt-6 text-[#17265d]">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
 
 export default function LoadingPage() {
   const [progress, setProgress] = useState(0);
@@ -40,71 +110,51 @@ export default function LoadingPage() {
   }, [router]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f7f2ea]">
-      {/* Background glow */}
-      <div className="fixed inset-0 flex items-center justify-center pointer-events-none">
-        <div
-          className="w-[500px] h-[500px] rounded-full opacity-30 animate-pulse blur-3xl"
-          style={{
-            background:
-              "radial-gradient(circle, rgba(201,168,76,0.15) 0%, transparent 70%)",
-          }}
-        />
-      </div>
-
-      <div className="relative z-10 text-center px-8 max-w-sm">
-        {/* Animated logo */}
-        <motion.div
-          animate={{ scale: [1, 1.05, 1], rotate: [0, 2, -2, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="inline-flex items-center justify-center w-24 h-24 rounded-[32px] mb-8 bg-white shadow-2xl shadow-[#1a2b5e]/10 p-5"
-        >
-          <img
-            src="/logo.png"
-            alt="kalyma"
-            className="w-full h-full object-contain"
-          />
-        </motion.div>
-
-        <h1 className="text-3xl font-bold mb-3 font-outfit text-[#1a2b5e]">
-          Building Your Experience
+    <LoadingFrame>
+      <motion.section
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-[16px] border-2 border-[#17265d] bg-[#fff8df] p-4 text-center"
+      >
+        <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#8b6d2e]">
+          Building your experience
+        </p>
+        <h1 className="mt-2 text-[clamp(1.5rem,6vw,1.9rem)] font-black leading-tight tracking-[-0.03em] text-[#17265d] md:text-[30px]">
+          Preparing Kalyma
         </h1>
 
-        {/* Animated message */}
         <motion.p
           key={msgIndex}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
-          className="text-sm mb-10 font-medium text-[#4a5568] h-5"
+          className="mt-2 min-h-5 text-[13px] font-medium leading-[1.45] text-[#394260] md:text-[14px]"
         >
           {MESSAGES[msgIndex]}
         </motion.p>
 
-        {/* Progress bar */}
-        <div className="w-full rounded-full h-2 mb-4 overflow-hidden bg-[#1a2b5e]/5">
+        <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-white/70 shadow-[inset_0_0_0_1px_rgba(25,42,98,0.02)]">
           <motion.div
-            className="h-full rounded-full bg-gradient-to-r from-[#1a2b5e] to-[#c9a84c]"
+            className="h-full rounded-full bg-gradient-to-r from-[#17265d] to-[#b79646]"
             style={{ width: `${progress}%` }}
             transition={{ duration: 0.1 }}
           />
         </div>
-        <p className="text-xs font-black text-[#1a2b5e] tracking-widest uppercase">
-          {progress}% Complete
+        <p className="mt-2 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#8b6d2e]">
+          {progress}% complete
         </p>
 
-        {/* Dots loader */}
-        <div className="flex justify-center gap-2 mt-8 pb-40">
+        <div className="mt-5 flex justify-center gap-1.5">
           {[0, 1, 2].map((i) => (
             <motion.div
               key={i}
-              animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
+              animate={{ scale: [1, 1.4, 1], opacity: [0.35, 1, 0.35] }}
               transition={{ duration: 1, delay: i * 0.2, repeat: Infinity }}
-              className="w-2.5 h-2.5 rounded-full bg-[#c9a84c]"
+              className="h-2 w-2 rounded-full bg-[#17265d]"
             />
           ))}
         </div>
-      </div>
-    </div>
+      </motion.section>
+    </LoadingFrame>
   );
 }
