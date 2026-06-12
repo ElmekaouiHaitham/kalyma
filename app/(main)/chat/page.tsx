@@ -8,6 +8,7 @@ import {
   Copy,
   Loader2,
   Menu,
+  MessageSquareText,
   Mic,
   Plus,
   Send,
@@ -15,21 +16,101 @@ import {
   ThumbsDown,
   ThumbsUp,
   Volume2,
+  X,
 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "@/app/providers";
-import { useAtlasChat } from "@/hooks/useAtlasChat";
+import { useAtlasChat, type ChatMessage } from "@/hooks/useAtlasChat";
+
+type ApiConversation = {
+  id: string;
+  user_id: string;
+  context_type: "article" | "book_chapter" | "news" | "session" | "general";
+  context_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type ApiMessage = {
+  id: string;
+  conversation_id: string;
+  role: "user" | "assistant";
+  content: string;
+  tokens_used?: number | null;
+  created_at: string;
+};
+
+type ConversationListItem = ApiConversation & {
+  title: string;
+  messageCount: number;
+};
+
+const GENERAL_CONTEXT =
+  "General English learning conversation. Be helpful, encouraging, and friendly.";
+
+function createConversationContextId() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
+    const random = Math.floor(Math.random() * 16);
+    const value = char === "x" ? random : (random & 0x3) | 0x8;
+    return value.toString(16);
+  });
+}
+
+function compactText(text: string, maxLength = 52) {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  if (normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, maxLength - 1).trim()}...`;
+}
+
+function titleFromMessages(messages: ApiMessage[]) {
+  const firstUserMessage = messages.find((message) => message.role === "user");
+  const fallbackMessage = messages[0];
+  return compactText(firstUserMessage?.content || fallbackMessage?.content || "New chat");
+}
+
+function formatConversationDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const now = new Date();
+  if (date.toDateString() === now.toDateString()) {
+    return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  }
+
+  return date.toLocaleDateString([], { month: "short", day: "numeric" });
+}
 
 export default function ChatPage() {
-  const { user } = useAuth();
-  const { messages, isTyping, sendMessage, clearMessages, autoSaveToDeck } = useAtlasChat({
+  const { user, session } = useAuth();
+  const [activeContextId, setActiveContextId] = useState<string | null>(() =>
+    createConversationContextId(),
+  );
+  const {
+    messages,
+    setMessages,
+    isTyping,
+    sendMessage,
+    clearMessages,
+    autoSaveToDeck,
+  } = useAtlasChat({
     context_type: "general",
-    context_content: "General English learning conversation. Be helpful, encouraging, and friendly.",
+    context_id: activeContextId,
+    context_content: GENERAL_CONTEXT,
   });
 
   const [input, setInput] = useState("");
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<ConversationListItem[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [loadingConversationId, setLoadingConversationId] = useState<string | null>(null);
   const [hoveredMsg, setHoveredMsg] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
@@ -207,7 +288,7 @@ export default function ChatPage() {
         .atlas-messages {
           flex: 1;
           overflow-y: auto;
-          padding: 8px 24px 132px;
+          padding: 23px 24px 132px;
           scrollbar-width: thin;
           scrollbar-color: rgba(0, 0, 0, 0.16) transparent;
         }
@@ -485,7 +566,7 @@ export default function ChatPage() {
           }
 
           .atlas-messages {
-            padding-top: 8px;
+            padding-top: 23px;
             padding-bottom: 150px;
           }
 
@@ -541,7 +622,7 @@ export default function ChatPage() {
           }
 
           .atlas-messages {
-            padding: 0 31px calc(116px + env(safe-area-inset-bottom));
+            padding: 15px 31px calc(116px + env(safe-area-inset-bottom));
           }
 
           .atlas-memory-pill {
@@ -628,7 +709,6 @@ export default function ChatPage() {
         }
       `}</style>
 
-      <div className="atlas-mobile-statusbar" aria-hidden="true" />
 
       <div className="atlas-chat-topbar" style={{ position: 'relative' }}>
         {/* Left: hamburger */}
