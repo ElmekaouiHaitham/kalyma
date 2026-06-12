@@ -49,18 +49,6 @@ type ConversationListItem = ApiConversation & {
 const GENERAL_CONTEXT =
   "General English learning conversation. Be helpful, encouraging, and friendly.";
 
-function createConversationContextId() {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
-    const random = Math.floor(Math.random() * 16);
-    const value = char === "x" ? random : (random & 0x3) | 0x8;
-    return value.toString(16);
-  });
-}
-
 function compactText(text: string, maxLength = 52) {
   const normalized = text.replace(/\s+/g, " ").trim();
   if (normalized.length <= maxLength) return normalized;
@@ -87,9 +75,7 @@ function formatConversationDate(value: string) {
 
 export default function ChatPage() {
   const { user, session } = useAuth();
-  const [activeContextId, setActiveContextId] = useState<string | null>(() =>
-    createConversationContextId(),
-  );
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const {
     messages,
     setMessages,
@@ -98,9 +84,11 @@ export default function ChatPage() {
     clearMessages,
     autoSaveToDeck,
   } = useAtlasChat({
+    conversation_id: activeConversationId,
     context_type: "general",
-    context_id: activeContextId,
+    context_id: null,
     context_content: GENERAL_CONTEXT,
+    onConversationId: setActiveConversationId,
   });
 
   const [input, setInput] = useState("");
@@ -108,7 +96,6 @@ export default function ChatPage() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [conversations, setConversations] = useState<ConversationListItem[]>([]);
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [loadingConversationId, setLoadingConversationId] = useState<string | null>(null);
   const [hoveredMsg, setHoveredMsg] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -184,9 +171,7 @@ export default function ChatPage() {
         setConversations(enriched);
 
         const active = enriched.find(
-          (conversation) =>
-            conversation.id === activeConversationId ||
-            (!!activeContextId && conversation.context_id === activeContextId),
+          (conversation) => conversation.id === activeConversationId,
         );
 
         if (active && active.id !== activeConversationId) {
@@ -199,7 +184,6 @@ export default function ChatPage() {
       }
     },
     [
-      activeContextId,
       activeConversationId,
       fetchConversationMessages,
       session?.access_token,
@@ -272,7 +256,6 @@ export default function ChatPage() {
   };
 
   const handleNewConversation = () => {
-    setActiveContextId(createConversationContextId());
     setActiveConversationId(null);
     setHistoryOpen(false);
     setSaveFeedback(null);
@@ -301,7 +284,6 @@ export default function ChatPage() {
 
       setMessages(mappedMessages);
       setActiveConversationId(conversation.id);
-      setActiveContextId(conversation.context_id);
       setHistoryOpen(false);
       setInput("");
       setSaveFeedback(null);
@@ -1091,8 +1073,7 @@ export default function ChatPage() {
                 ) : (
                   conversations.map((conversation) => {
                     const isActive =
-                      conversation.id === activeConversationId ||
-                      (!!activeContextId && conversation.context_id === activeContextId);
+                      conversation.id === activeConversationId;
 
                     return (
                       <button

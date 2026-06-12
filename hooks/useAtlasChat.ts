@@ -15,12 +15,20 @@ export type AutoSaveResult = {
 };
 
 interface UseAtlasChatProps {
+  conversation_id?: string | null;
   context_type: "general" | "news" | "article" | "session";
   context_id?: string | null;
   context_content: string;
+  onConversationId?: (conversationId: string) => void;
 }
 
-export function useAtlasChat({ context_type, context_id, context_content }: UseAtlasChatProps) {
+export function useAtlasChat({
+  conversation_id,
+  context_type,
+  context_id,
+  context_content,
+  onConversationId,
+}: UseAtlasChatProps) {
   const { session } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -64,6 +72,7 @@ export function useAtlasChat({ context_type, context_id, context_content }: UseA
           Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
+          conversation_id,
           context_type,
           context_id,
           context_content,
@@ -103,6 +112,9 @@ export function useAtlasChat({ context_type, context_id, context_content }: UseA
                   const data = JSON.parse(dataStr);
                   if (data.error) {
                      throw new Error(data.error);
+                  }
+                  if (typeof data.conversation_id === "string") {
+                    onConversationId?.(data.conversation_id);
                   }
                   if (data.text) {
                     assistantMessage += data.text;
