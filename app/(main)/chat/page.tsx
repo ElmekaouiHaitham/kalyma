@@ -18,10 +18,15 @@ import {
   Volume2,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "@/app/providers";
-import { useAtlasChat, type ChatMessage } from "@/hooks/useAtlasChat";
+import {
+  useAtlasChat,
+  type AtlasCorrection,
+  type ChatMessage,
+  type CorrectionIssue,
+} from "@/hooks/useAtlasChat";
 import { speakSelectedText } from "@/lib/speech";
 import {
   createBrowserSpeechRecognition,
@@ -45,6 +50,7 @@ type ApiMessage = {
   conversation_id: string;
   role: "user" | "assistant";
   content: string;
+  correction?: AtlasCorrection | null;
   tokens_used?: number | null;
   created_at: string;
 };
@@ -75,6 +81,20 @@ function formatConversationDate(value: string) {
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
+function sortedIssues(issues: CorrectionIssue[]) {
+  return [...issues].sort((first, second) => first.start - second.start);
+}
+
+function correctionModeLabel(correction: AtlasCorrection) {
+  const labels: Record<AtlasCorrection["mode"], string> = {
+    light: "Light check",
+    detailed: "Detailed check",
+    native: "Native refinement",
+  };
+
+  return `${labels[correction.mode]} - Level ${correction.level}`;
+}
+
 export default function ChatPage() {
   const { user, session } = useAuth();
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
@@ -90,6 +110,7 @@ export default function ChatPage() {
     context_type: "general",
     context_id: null,
     context_content: GENERAL_CONTEXT,
+    enableCorrections: true,
     onConversationId: setActiveConversationId,
   });
 
@@ -109,6 +130,7 @@ export default function ChatPage() {
     status: "saved" | "error";
     message: string;
   } | null>(null);
+  const [activeCorrectionIssue, setActiveCorrectionIssue] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
@@ -304,6 +326,7 @@ export default function ChatPage() {
     setActiveConversationId(null);
     setHistoryOpen(false);
     setSaveFeedback(null);
+    setActiveCorrectionIssue(null);
     clearMessages();
     setInput("");
     setVoiceInputError(null);
@@ -325,8 +348,11 @@ export default function ChatPage() {
       const conversationMessages = await fetchConversationMessages(conversation.id);
       const mappedMessages: ChatMessage[] = conversationMessages.map((message) => ({
         id: message.id,
+        serverId: message.id,
         role: message.role === "assistant" ? "ai" : "user",
         content: message.content,
+        correction: message.correction ?? null,
+        correctionStatus: message.correction ? "complete" : undefined,
         ts: new Date(message.created_at),
       }));
 
@@ -335,6 +361,7 @@ export default function ChatPage() {
       setHistoryOpen(false);
       setInput("");
       setSaveFeedback(null);
+      setActiveCorrectionIssue(null);
       setVoiceInputError(null);
       recognitionRef.current?.abort();
       setIsListening(false);
@@ -344,6 +371,139 @@ export default function ChatPage() {
     } finally {
       setLoadingConversationId(null);
     }
+  };
+
+  const renderOriginalWithIssues = (messageId: string, correction: AtlasCorrection) => {
+    const parts: ReactNode[] = [];
+    let cursor = 0;
+
+    sortedIssues(correction.issues).forEach((issue) => {
+      const activeKey = `${messageId}:${issue.id}`;
+      const isActive = activeCorrectionIssue === activeKey;
+
+      if (issue.start > cursor) {
+        parts.push(
+          <span key={`${issue.id}-before`}>
+            {correction.original_text.slice(cursor, issue.start)}
+          </span>,
+        );
+      }
+
+      parts.push(
+        <span className="atlas-correction-issue-wrap" key={issue.id}>
+          <button
+            className="atlas-correction-issue"
+            type="button"
+            onClick={() => setActiveCorrectionIssue(isActive ? null : activeKey)}
+          >
+            {correction.original_text.slice(issue.start, issue.end)}
+          </button>
+          {isActive && (
+            <span className="atlas-correction-popover" role="status">
+              <span className="atlas-correction-popover-title">
+                {issue.category}
+              </span>
+              <span>{issue.explanation}</span>
+              <span className="atlas-correction-replacement">
+                Use: {issue.corrected_text}
+              </span>
+            </span>
+          )}
+        </span>,
+      );
+
+      cursor = issue.end;
+    });
+
+    if (cursor < correction.original_text.length) {
+      parts.push(
+        <span key="after-last">
+          {correction.original_text.slice(cursor)}
+        </span>,
+      );
+    }
+
+    return parts;
+  };
+
+  const renderCorrectedWithIssues = (correction: AtlasCorrection) => {
+    const parts: ReactNode[] = [];
+    let cursor = 0;
+
+    sortedIssues(correction.issues).forEach((issue) => {
+      if (issue.start > cursor) {
+        parts.push(
+          <span key={`${issue.id}-correct-before`}>
+            {correction.original_text.slice(cursor, issue.start)}
+          </span>,
+        );
+      }
+
+      parts.push(
+        <span className="atlas-correction-fixed" key={`${issue.id}-correct`}>
+          {issue.corrected_text}
+        </span>,
+      );
+
+      cursor = issue.end;
+    });
+
+    if (cursor < correction.original_text.length) {
+      parts.push(
+        <span key="correct-after-last">
+          {correction.original_text.slice(cursor)}
+        </span>,
+      );
+    }
+
+    return parts;
+  };
+
+  const renderCorrectionPanel = (message: ChatMessage) => {
+    if (message.role !== "user") return null;
+
+    if (message.correctionStatus === "pending") {
+      return (
+        <div className="atlas-correction-card atlas-correction-status" role="status">
+          <Loader2 size={13} className="animate-spin" />
+          Checking language...
+        </div>
+      );
+    }
+
+    if (message.correctionStatus === "error") {
+      return (
+        <div className="atlas-correction-card atlas-correction-error" role="status">
+          <AlertCircle size={13} />
+          Could not check language.
+        </div>
+      );
+    }
+
+    if (message.correctionStatus !== "complete" || !message.correction) return null;
+
+    if (!message.correction.has_corrections) {
+      return (
+        <div className="atlas-correction-card atlas-correction-clean" role="status">
+          <CheckCircle2 size={13} />
+          Looks good.
+        </div>
+      );
+    }
+
+    return (
+      <div className="atlas-correction-card">
+        <div className="atlas-correction-header">
+          {correctionModeLabel(message.correction)}
+        </div>
+        <div className="atlas-correction-line">
+          {renderOriginalWithIssues(message.id, message.correction)}
+        </div>
+        <div className="atlas-correction-line corrected">
+          {renderCorrectedWithIssues(message.correction)}
+        </div>
+      </div>
+    );
   };
 
   useEffect(() => {
@@ -730,6 +890,122 @@ export default function ChatPage() {
           white-space: pre-wrap;
         }
 
+        .atlas-user-message-stack {
+          display: flex;
+          max-width: min(92%, 620px);
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 8px;
+        }
+
+        .atlas-user-message-stack .atlas-bubble-user {
+          max-width: 100%;
+        }
+
+        .atlas-correction-card {
+          width: min(100%, 520px);
+          border-left: 3px solid #d9dee8;
+          background: #fbfbfb;
+          padding: 10px 12px;
+          color: #303030;
+          font-size: 12px;
+          line-height: 1.45;
+          text-align: left;
+          box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+        }
+
+        .atlas-correction-status,
+        .atlas-correction-clean,
+        .atlas-correction-error {
+          display: inline-flex;
+          width: auto;
+          align-items: center;
+          gap: 7px;
+          font-weight: 700;
+        }
+
+        .atlas-correction-clean {
+          border-left-color: #2e7d4f;
+          color: #147a3a;
+        }
+
+        .atlas-correction-error {
+          border-left-color: #c1121f;
+          color: #b4232b;
+        }
+
+        .atlas-correction-header {
+          margin-bottom: 7px;
+          color: #606060;
+          font-size: 11px;
+          font-weight: 800;
+        }
+
+        .atlas-correction-line {
+          white-space: pre-wrap;
+        }
+
+        .atlas-correction-line.corrected {
+          margin-top: 7px;
+          padding-top: 7px;
+          border-top: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .atlas-correction-issue-wrap {
+          position: relative;
+          display: inline-block;
+        }
+
+        .atlas-correction-issue {
+          border: 0;
+          border-radius: 4px;
+          background: rgba(193, 18, 31, 0.08);
+          color: #b4232b;
+          padding: 0 2px;
+          font: inherit;
+          text-decoration: underline;
+          text-decoration-color: rgba(180, 35, 43, 0.55);
+          text-decoration-thickness: 2px;
+          text-underline-offset: 3px;
+          cursor: pointer;
+        }
+
+        .atlas-correction-fixed {
+          border-radius: 4px;
+          background: rgba(20, 122, 58, 0.1);
+          color: #147a3a;
+          padding: 0 2px;
+          font-weight: 800;
+        }
+
+        .atlas-correction-popover {
+          position: absolute;
+          right: 0;
+          bottom: calc(100% + 8px);
+          z-index: 90;
+          display: grid;
+          width: min(270px, calc(100vw - 48px));
+          gap: 5px;
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          border-radius: 8px;
+          background: #ffffff;
+          padding: 10px;
+          color: #202020;
+          box-shadow: 0 14px 36px rgba(0, 0, 0, 0.14);
+        }
+
+        .atlas-correction-popover-title {
+          color: #6a6a6a;
+          font-size: 11px;
+          font-weight: 800;
+          text-transform: capitalize;
+        }
+
+        .atlas-correction-replacement {
+          color: #147a3a;
+          font-weight: 800;
+        }
+
         .atlas-bubble-ai {
           max-width: 760px;
           color: #111111;
@@ -994,6 +1270,20 @@ export default function ChatPage() {
             font-size: 15.3px;
           }
 
+          .atlas-user-message-stack {
+            max-width: 100%;
+          }
+
+          .atlas-correction-card {
+            max-width: min(100%, 340px);
+            font-size: 12px;
+          }
+
+          .atlas-correction-popover {
+            right: auto;
+            left: 0;
+          }
+
           .atlas-bubble-ai {
             font-size: 15.3px;
             line-height: 1.56;
@@ -1215,7 +1505,10 @@ export default function ChatPage() {
                       onMouseLeave={() => setHoveredMsg(null)}
                     >
                       {message.role === "user" ? (
-                        <div className="atlas-bubble-user">{message.content}</div>
+                        <div className="atlas-user-message-stack">
+                          <div className="atlas-bubble-user">{message.content}</div>
+                          {renderCorrectionPanel(message)}
+                        </div>
                       ) : (
                         <>
                           <div className="atlas-bubble-ai overflow-hidden">

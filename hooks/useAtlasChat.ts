@@ -4,9 +4,12 @@ import { useAuth } from "@/app/providers";
 
 export type ChatMessage = {
   id: string;
+  serverId?: string;
   role: "user" | "ai";
   content: string;
   ts: Date;
+  correction?: AtlasCorrection | null;
+  correctionStatus?: "pending" | "complete" | "error";
 };
 
 export type AutoSaveResult = {
@@ -14,11 +17,32 @@ export type AutoSaveResult = {
   error?: string;
 };
 
+export type CorrectionIssue = {
+  id: string;
+  start: number;
+  end: number;
+  original_text: string;
+  corrected_text: string;
+  category: string;
+  severity: "minor" | "medium" | "blocking";
+  explanation: string;
+};
+
+export type AtlasCorrection = {
+  mode: "light" | "detailed" | "native";
+  level: number;
+  original_text: string;
+  corrected_text: string;
+  has_corrections: boolean;
+  issues: CorrectionIssue[];
+};
+
 interface UseAtlasChatProps {
   conversation_id?: string | null;
   context_type: "general" | "news" | "article" | "session";
   context_id?: string | null;
   context_content: string;
+  enableCorrections?: boolean;
   onConversationId?: (conversationId: string) => void;
 }
 
@@ -27,6 +51,7 @@ export function useAtlasChat({
   context_type,
   context_id,
   context_content,
+  enableCorrections = false,
   onConversationId,
 }: UseAtlasChatProps) {
   const { session } = useAuth();
@@ -42,6 +67,55 @@ export function useAtlasChat({
   const clearMessages = () => {
     setMessages([]);
     setError(null);
+  };
+
+  const requestCorrection = async (localMessageId: string, serverMessageId: string) => {
+    if (!enableCorrections || !session?.access_token) return;
+
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === localMessageId
+          ? { ...msg, serverId: serverMessageId, correctionStatus: "pending" }
+          : msg,
+      ),
+    );
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/ai/messages/${serverMessageId}/correction`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        },
+      );
+
+      if (!response.ok) throw new Error("Could not check this message.");
+
+      const correction = (await response.json()) as AtlasCorrection;
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === localMessageId
+            ? {
+                ...msg,
+                serverId: serverMessageId,
+                correction,
+                correctionStatus: "complete",
+              }
+            : msg,
+        ),
+      );
+    } catch (err: unknown) {
+      console.error("Correction failed:", err);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === localMessageId
+            ? { ...msg, serverId: serverMessageId, correctionStatus: "error" }
+            : msg,
+        ),
+      );
+    }
   };
 
   const sendMessage = async (text: string) => {
@@ -115,6 +189,9 @@ export function useAtlasChat({
                   }
                   if (typeof data.conversation_id === "string") {
                     onConversationId?.(data.conversation_id);
+                  }
+                  if (typeof data.user_message_id === "string") {
+                    void requestCorrection(userMsgId, data.user_message_id);
                   }
                   if (data.text) {
                     assistantMessage += data.text;
