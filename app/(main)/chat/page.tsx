@@ -493,9 +493,6 @@ export default function ChatPage() {
 
     return (
       <div className="atlas-correction-card">
-        <div className="atlas-correction-header">
-          {correctionModeLabel(message.correction)}
-        </div>
         <div className="atlas-correction-line">
           {renderOriginalWithIssues(message.id, message.correction)}
         </div>
