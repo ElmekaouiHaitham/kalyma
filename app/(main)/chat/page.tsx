@@ -19,16 +19,17 @@ import {
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { useAuth } from "@/app/providers";
 import { useAtlasChat } from "@/hooks/useAtlasChat";
 
 export default function ChatPage() {
+  const { user } = useAuth();
   const { messages, isTyping, sendMessage, clearMessages, autoSaveToDeck } = useAtlasChat({
     context_type: "general",
     context_content: "General English learning conversation. Be helpful, encouraging, and friendly.",
   });
 
   const [input, setInput] = useState("");
-  const [started, setStarted] = useState(false);
   const [hoveredMsg, setHoveredMsg] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
@@ -39,6 +40,8 @@ export default function ChatPage() {
   } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const firstName = user?.full_name?.trim().split(/\s+/)[0] || "there";
+  const hasConversation = messages.length > 0 || isTyping;
 
   const handleAutoSave = async (aiMsgId: string, aiText: string) => {
     const msgIndex = messages.findIndex((message) => message.id === aiMsgId);
@@ -94,13 +97,11 @@ export default function ChatPage() {
 
     setInput("");
     resetTextareaHeight();
-    setStarted(true);
     sendMessage(text);
   };
 
   const handleNewConversation = () => {
     clearMessages();
-    setStarted(false);
     setInput("");
     resetTextareaHeight();
   };
@@ -116,7 +117,11 @@ export default function ChatPage() {
           overflow: hidden;
           background: #ffffff;
           color: #111111;
-          font-family: Arial, Helvetica, sans-serif;
+          font-family: "Inter", "Outfit", system-ui, sans-serif;
+        }
+
+        .atlas-mobile-statusbar {
+          display: none;
         }
 
         .atlas-chat-topbar {
@@ -129,7 +134,35 @@ export default function ChatPage() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 24px 24px 12px;
+          padding: 22px 24px 0;
+        }
+
+        .atlas-brand-lockup {
+          pointer-events: none;
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          display: flex;
+          transform: translate(-50%, -50%);
+          align-items: center;
+          gap: 8px;
+        }
+
+        .atlas-brand-logo {
+          width: 30px;
+          height: 30px;
+          flex-shrink: 0;
+          overflow: hidden;
+          border-radius: 999px;
+          background: #ffffff;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .atlas-brand-title {
+          color: #111111;
+          font-size: 15px;
+          font-weight: 700;
+          letter-spacing: 0;
         }
 
         .atlas-top-group {
@@ -165,10 +198,16 @@ export default function ChatPage() {
           display: none;
         }
 
+        .atlas-left-menu {
+          pointer-events: auto;
+          display: inline-flex;
+          align-items: center;
+        }
+
         .atlas-messages {
           flex: 1;
           overflow-y: auto;
-          padding: 72px 24px 132px;
+          padding: 8px 24px 132px;
           scrollbar-width: thin;
           scrollbar-color: rgba(0, 0, 0, 0.16) transparent;
         }
@@ -242,6 +281,20 @@ export default function ChatPage() {
           color: #666666;
         }
 
+        .atlas-empty-question {
+          margin-top: 18px;
+          color: #111111;
+          font-family: "Playfair Display", Georgia, serif;
+          font-size: 30px;
+          font-weight: 600;
+          line-height: 1.18;
+          letter-spacing: 0;
+        }
+
+        .atlas-empty-mobile {
+          display: none;
+        }
+
         .atlas-msg-row {
           display: flex;
           flex-direction: column;
@@ -258,7 +311,7 @@ export default function ChatPage() {
           background: #f1f1f1;
           padding: 15px 22px;
           color: #111111;
-          font-size: 18px;
+          font-size: 14.4px;
           line-height: 1.45;
           white-space: pre-wrap;
         }
@@ -266,8 +319,8 @@ export default function ChatPage() {
         .atlas-bubble-ai {
           max-width: 760px;
           color: #111111;
-          font-size: 14px;
-          line-height: 1.62;
+          font-size: 14.4px;
+          line-height: 1.58;
         }
 
         .atlas-bubble-ai p {
@@ -428,11 +481,11 @@ export default function ChatPage() {
 
         @media (min-width: 768px) {
           .atlas-chat-topbar {
-            padding: 26px 34px 12px;
+            padding: 22px 34px 0;
           }
 
           .atlas-messages {
-            padding-top: 72px;
+            padding-top: 8px;
             padding-bottom: 150px;
           }
 
@@ -452,13 +505,30 @@ export default function ChatPage() {
             height: 100%;
           }
 
+          .atlas-mobile-statusbar {
+            display: block;
+            flex: 0 0 calc(44px + env(safe-area-inset-top));
+            background: #1a2b5e;
+          }
+
           .atlas-chat-topbar {
             justify-content: flex-end;
-            padding: 18px 22px 10px 70px;
+            padding: 18px 30px 0 86px;
           }
 
           .atlas-left-menu {
             display: none;
+          }
+
+          .atlas-brand-lockup {
+            display: none;
+          }
+
+          .atlas-top-group {
+            display: inline-flex;
+            gap: 12px;
+            padding: 0 8px;
+            border-radius: 28px;
           }
 
           .atlas-mobile-group-menu {
@@ -466,12 +536,12 @@ export default function ChatPage() {
           }
 
           .atlas-chat-topbar .atlas-icon-button {
-            width: 44px;
-            height: 44px;
+            width: 48px;
+            height: 48px;
           }
 
           .atlas-messages {
-            padding: 104px 31px calc(110px + env(safe-area-inset-bottom));
+            padding: 0 31px calc(116px + env(safe-area-inset-bottom));
           }
 
           .atlas-memory-pill {
@@ -488,12 +558,12 @@ export default function ChatPage() {
             max-width: 86%;
             border-radius: 26px;
             padding: 14px 18px;
-            font-size: 18px;
+            font-size: 15.3px;
           }
 
           .atlas-bubble-ai {
-            font-size: 13.5px;
-            line-height: 1.58;
+            font-size: 15.3px;
+            line-height: 1.56;
           }
 
           .atlas-msg-actions {
@@ -502,20 +572,25 @@ export default function ChatPage() {
           }
 
           .atlas-empty {
-            min-height: calc(100vh - 280px);
+            min-height: calc(100dvh - 232px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
           }
 
-          .atlas-empty-icon {
-            width: 84px;
-            height: 84px;
+          .atlas-empty-desktop {
+            display: none;
           }
 
-          .atlas-empty h1 {
-            font-size: 31px;
+          .atlas-empty-mobile {
+            display: block;
           }
 
-          .atlas-empty p {
-            font-size: 15px;
+          .atlas-empty-mobile h1 {
+            margin: 0;
+            color: #111111;
+            font-family: "Playfair Display", Georgia, serif;
+            font-size: 34px;
+            font-weight: 600;
+            line-height: 1.15;
+            letter-spacing: 0;
           }
 
           .atlas-input-area {
@@ -546,27 +621,29 @@ export default function ChatPage() {
 
           .atlas-voice-button,
           .atlas-send-btn {
-            width: 40px;
-            height: 40px;
-            flex-basis: 40px;
+            width: 48px;
+            height: 48px;
+            flex-basis: 48px;
           }
         }
       `}</style>
 
+      <div className="atlas-mobile-statusbar" aria-hidden="true" />
+
       <div className="atlas-chat-topbar" style={{ position: 'relative' }}>
         {/* Left: hamburger */}
-        <div className="atlas-left-menu" style={{ display: 'inline-flex', alignItems: 'center', pointerEvents: 'auto' }}>
+        <div className="atlas-left-menu">
           <button className="atlas-icon-button" type="button" aria-label="Open chat menu">
             <Menu size={30} strokeWidth={2.5} />
           </button>
         </div>
 
         {/* Center: Atlas logo + title */}
-        <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', display: 'flex', alignItems: 'center', gap: '8px', pointerEvents: 'none' }}>
-          <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', background: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', flexShrink: 0 }}>
+        <div className="atlas-brand-lockup">
+          <div className="atlas-brand-logo">
             <Image src="/atlas-logo.png" alt="Atlas AI" width={30} height={30} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
-          <span style={{ fontSize: '15px', fontWeight: 700, color: '#111111', letterSpacing: '-0.01em' }}>Atlas AI</span>
+          <span className="atlas-brand-title">Atlas AI</span>
         </div>
 
         {/* Right: new chat + mobile menu */}
@@ -587,8 +664,18 @@ export default function ChatPage() {
 
       <div className="atlas-messages">
         <div className="atlas-thread">
+          {!hasConversation && (
+            <div className="atlas-empty">
+              <div className="atlas-empty-desktop">
+                <div className="atlas-empty-question">What do you want to discuss today?</div>
+              </div>
+              <div className="atlas-empty-mobile">
+                <h1>Hello, {firstName}</h1>
+              </div>
+            </div>
+          )}
 
-          {started && (
+          {hasConversation && (
             <>
               {messages.map((message) => {
                   const isLatestMessage = messages[messages.length - 1]?.id === message.id;

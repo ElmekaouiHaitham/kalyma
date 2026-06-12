@@ -145,7 +145,7 @@ function ArticleCard({
             </div>
           ) : (
             <div className="flex items-center justify-between text-[13px] font-medium" style={{ color: ink }}>
-              <span className="capitalize">{article.difficulty}</span>
+              <span className="capitalize"></span>
               <ChevronRight
                 size={16}
                 className="transition-transform group-hover:translate-x-1"

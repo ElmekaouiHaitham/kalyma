@@ -423,33 +423,6 @@ export default function ProfilePage() {
 
                 <div>
                   <span className="mb-2 block text-xs font-extrabold uppercase tracking-[0.12em] text-[#6d6d80]">
-                    Proficiency Level
-                  </span>
-                  <div className="grid grid-cols-2 gap-2">
-                    {PROFICIENCY_LEVELS.filter((level) =>
-                      ["A1", "B1", "B2", "C1"].includes(level.code),
-                    ).map((level) => {
-                      const active = selectedLevel === level.code;
-                      return (
-                        <button
-                          key={level.code}
-                          onClick={() => setSelectedLevel(level.code)}
-                          className="rounded-[16px] border px-3 py-3 text-xs font-extrabold transition-all hover:border-[#aeb5c9] hover:bg-[#f4efe7]"
-                          style={{
-                            borderColor: active ? "#aeb5c9" : "#e6d9c9",
-                            background: active ? "#ece7fb" : "white",
-                            color: active ? "#41329c" : "#6d6d80",
-                          }}
-                        >
-                          {level.code} - {level.label.split("-")[0]}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div>
-                  <span className="mb-2 block text-xs font-extrabold uppercase tracking-[0.12em] text-[#6d6d80]">
                     Learning Pace
                   </span>
                   <div className="grid grid-cols-2 gap-2">

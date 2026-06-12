@@ -249,16 +249,6 @@ export default function ReaderPage() {
         {/* Meta */}
         <div className="mb-5 flex flex-wrap items-center gap-2">
           <span
-            className="rounded-full px-3 py-1.5 text-xs font-extrabold capitalize"
-            style={{
-              background: "#edf8f0",
-              color: "#168244",
-              border: "1px solid #cfead7",
-            }}
-          >
-            {article.difficulty}
-          </span>
-          <span
             className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs font-semibold uppercase text-[#667084]"
             style={{ border: "1px solid #e6d9c9" }}
           >
