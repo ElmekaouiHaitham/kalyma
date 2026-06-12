@@ -12,15 +12,16 @@ import {
   CheckCircle,
   Loader2,
   CheckCircle2,
+  Square,
   Volume2,
 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/app/providers";
 import SaveWordModal from "@/components/SaveWordModal";
+import { useBrowserSpeech } from "@/hooks/useBrowserSpeech";
 import { useAtlasChat } from "@/hooks/useAtlasChat";
 import { getSelectionBubblePosition, type SelectionBubblePlacement } from "@/lib/selectionBubble";
-import { speakSelectedText } from "@/lib/speech";
 import ReactMarkdown from "react-markdown";
 
 interface ArticleDetail {
@@ -39,6 +40,7 @@ export default function ReaderPage() {
   const params = useParams();
   const id = params.id as string;
   const { session, refreshUser } = useAuth();
+  const { isSpeaking, speak, stop } = useBrowserSpeech();
 
   const [article, setArticle] = useState<ArticleDetail | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -78,6 +80,7 @@ export default function ReaderPage() {
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [saveWord, setSaveWord] = useState("");
   const [saveContext, setSaveContext] = useState("");
+  const selectionSpeechId = "article-selection";
 
   useEffect(() => {
     if (!session?.access_token || !id) return;
@@ -143,6 +146,7 @@ export default function ReaderPage() {
   const handleTextSelection = useCallback(() => {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed || !selection.toString().trim()) {
+      stop();
       setSelectionBubble(null);
       return;
     }
@@ -160,9 +164,10 @@ export default function ReaderPage() {
       text,
       ...position,
     });
-  }, []);
+  }, [stop]);
 
   const askAIAboutSelection = (text: string) => {
+    stop();
     setSelectionBubble(null);
     window.getSelection()?.removeAllRanges();
     setPanelOpen(true);
@@ -393,12 +398,20 @@ export default function ReaderPage() {
               />
               <button
                 type="button"
-                onClick={() => speakSelectedText(selectionBubble.text)}
-                aria-label="Listen to selected text"
-                title="Listen"
+                onClick={() => speak(selectionSpeechId, selectionBubble.text)}
+                aria-label={
+                  isSpeaking(selectionSpeechId)
+                    ? "Stop reading selected text"
+                    : "Listen to selected text"
+                }
+                title={isSpeaking(selectionSpeechId) ? "Stop" : "Listen"}
                 className="flex h-7 w-7 items-center justify-center rounded-full text-[#1a2b5e] transition-colors hover:bg-[#f7f2ea]"
               >
-                <Volume2 size={14} />
+                {isSpeaking(selectionSpeechId) ? (
+                  <Square size={12} fill="currentColor" />
+                ) : (
+                  <Volume2 size={14} />
+                )}
               </button>
               <div
                 className="w-px h-5"
@@ -406,6 +419,7 @@ export default function ReaderPage() {
               />
               <button
                 onClick={() => {
+                  stop();
                   setSaveWord(selectionBubble.text);
                   setSaveContext(selectionBubble.text);
                   setSaveModalOpen(true);
@@ -418,7 +432,10 @@ export default function ReaderPage() {
                 Save
               </button>
               <button
-                onClick={() => setSelectionBubble(null)}
+                onClick={() => {
+                  stop();
+                  setSelectionBubble(null);
+                }}
                 className="px-2 text-[#9aa5b1] hover:text-[#1a2b5e] transition-colors"
               >
                 <X size={14} />

@@ -12,6 +12,7 @@ import {
   Mic,
   Plus,
   Send,
+  Square,
   SquarePen,
   ThumbsDown,
   ThumbsUp,
@@ -21,13 +22,13 @@ import {
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "@/app/providers";
+import { useBrowserSpeech } from "@/hooks/useBrowserSpeech";
 import {
   useAtlasChat,
   type AtlasCorrection,
   type ChatMessage,
   type CorrectionIssue,
 } from "@/hooks/useAtlasChat";
-import { speakSelectedText } from "@/lib/speech";
 import {
   createBrowserSpeechRecognition,
   type BrowserSpeechRecognition,
@@ -97,6 +98,7 @@ function correctionModeLabel(correction: AtlasCorrection) {
 
 export default function ChatPage() {
   const { user, session } = useAuth();
+  const { isSpeaking, speak } = useBrowserSpeech();
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const {
     messages,
@@ -1490,6 +1492,7 @@ export default function ChatPage() {
                   const isPendingAiResponse = message.role === "ai" && isTyping && isLatestMessage;
                   const canShowActions =
                     message.role === "ai" && message.content.trim().length > 0 && !isPendingAiResponse;
+                  const speechId = `chat-message-${message.id}`;
 
                   return (
                     <motion.div
@@ -1526,11 +1529,19 @@ export default function ChatPage() {
                                 <button
                                   className="atlas-action-icon"
                                   type="button"
-                                  aria-label="Read aloud"
-                                  title="Read aloud"
-                                  onClick={() => speakSelectedText(message.content)}
+                                  aria-label={
+                                    isSpeaking(speechId)
+                                      ? "Stop reading response"
+                                      : "Read response aloud"
+                                  }
+                                  title={isSpeaking(speechId) ? "Stop" : "Read aloud"}
+                                  onClick={() => speak(speechId, message.content)}
                                 >
-                                  <Volume2 size={23} strokeWidth={2} />
+                                  {isSpeaking(speechId) ? (
+                                    <Square size={18} fill="currentColor" />
+                                  ) : (
+                                    <Volume2 size={23} strokeWidth={2} />
+                                  )}
                                 </button>
                                 <button
                                   className="atlas-action-icon disabled:cursor-wait disabled:opacity-50"

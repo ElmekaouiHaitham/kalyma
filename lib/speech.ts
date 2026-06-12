@@ -10,6 +10,12 @@ const PREFERRED_ENGLISH_VOICE_PARTS = [
   "natural",
 ];
 
+export type SpeakSelectedTextOptions = {
+  onEnd?: () => void;
+  onError?: () => void;
+  onStart?: () => void;
+};
+
 function getLearningVoice(voices: SpeechSynthesisVoice[]) {
   const englishVoices = voices.filter((voice) =>
     voice.lang.toLowerCase().startsWith("en"),
@@ -25,7 +31,15 @@ function getLearningVoice(voices: SpeechSynthesisVoice[]) {
   );
 }
 
-export function speakSelectedText(text: string) {
+export function stopSpeaking() {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+}
+
+export function speakSelectedText(text: string, options: SpeakSelectedTextOptions = {}) {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) {
     return false;
   }
@@ -39,6 +53,12 @@ export function speakSelectedText(text: string) {
   utterance.rate = wordCount <= 3 ? 0.82 : 0.9;
   utterance.pitch = 1;
   utterance.volume = 1;
+  utterance.onstart = () => options.onStart?.();
+  utterance.onend = () => options.onEnd?.();
+  utterance.onerror = () => {
+    options.onError?.();
+    options.onEnd?.();
+  };
 
   const voice = getLearningVoice(window.speechSynthesis.getVoices());
   if (voice) {
@@ -46,7 +66,7 @@ export function speakSelectedText(text: string) {
     utterance.lang = voice.lang || utterance.lang;
   }
 
-  window.speechSynthesis.cancel();
+  stopSpeaking();
   window.speechSynthesis.speak(utterance);
   return true;
 }
