@@ -159,10 +159,15 @@ export default function MainLayout({
             className={cn(
               "fixed z-[70] grid place-items-center rounded-full border bg-white text-[#17172f] shadow-[0_10px_26px_rgba(31,27,23,0.12)] transition-colors hover:bg-[#f4efe7] md:hidden",
               pathname === "/chat"
-                ? "left-[30px] top-[58px] h-[52px] w-[52px]"
+                ? ""
                 : "left-4 top-4 h-11 w-11",
             )}
-            style={{ borderColor: "#eee6dd" }}
+            style={{
+              borderColor: "#eee6dd",
+              ...(pathname === "/chat"
+                ? { left: 30, top: 18, width: 48, height: 48 }
+                : {}),
+            }}
           >
             <ArrowLeft className="h-5 w-5" />
           </button>

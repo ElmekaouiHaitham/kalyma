@@ -18,7 +18,6 @@ import {
   Volume2,
   X,
 } from "lucide-react";
-import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "@/app/providers";
@@ -124,6 +123,89 @@ export default function ChatPage() {
   const firstName = user?.full_name?.trim().split(/\s+/)[0] || "there";
   const hasConversation = messages.length > 0 || isTyping;
 
+  const fetchConversationMessages = useCallback(
+    async (conversationId: string) => {
+      if (!session?.access_token) throw new Error("Missing session");
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/ai/conversations/${conversationId}/messages`,
+        {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        },
+      );
+
+      if (!response.ok) throw new Error("Could not load chat messages");
+      return (await response.json()) as ApiMessage[];
+    },
+    [session?.access_token],
+  );
+
+  const refreshConversations = useCallback(
+    async (quiet = false) => {
+      if (!session?.access_token) return;
+
+      if (!quiet) setHistoryLoading(true);
+      setHistoryError(null);
+
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/conversations`, {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+
+        if (!response.ok) throw new Error("Could not load chats");
+
+        const rows = ((await response.json()) as ApiConversation[]).filter(
+          (conversation) => conversation.context_type === "general",
+        );
+
+        const enriched = await Promise.all(
+          rows.map(async (conversation) => {
+            try {
+              const conversationMessages = await fetchConversationMessages(conversation.id);
+              return {
+                ...conversation,
+                title: titleFromMessages(conversationMessages),
+                messageCount: conversationMessages.length,
+              };
+            } catch {
+              return {
+                ...conversation,
+                title: "New chat",
+                messageCount: 0,
+              };
+            }
+          }),
+        );
+
+        setConversations(enriched);
+
+        const active = enriched.find(
+          (conversation) =>
+            conversation.id === activeConversationId ||
+            (!!activeContextId && conversation.context_id === activeContextId),
+        );
+
+        if (active && active.id !== activeConversationId) {
+          setActiveConversationId(active.id);
+        }
+      } catch {
+        setHistoryError("Could not load chats.");
+      } finally {
+        if (!quiet) setHistoryLoading(false);
+      }
+    },
+    [
+      activeContextId,
+      activeConversationId,
+      fetchConversationMessages,
+      session?.access_token,
+    ],
+  );
+
   const handleAutoSave = async (aiMsgId: string, aiText: string) => {
     const msgIndex = messages.findIndex((message) => message.id === aiMsgId);
     let question = "General chat";
@@ -159,6 +241,14 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
+  useEffect(() => {
+    void refreshConversations(true);
+  }, [refreshConversations]);
+
+  useEffect(() => {
+    if (historyOpen) void refreshConversations(true);
+  }, [historyOpen, refreshConversations]);
+
   const resetTextareaHeight = () => {
     if (textareaRef.current) textareaRef.current.style.height = "auto";
   };
@@ -178,13 +268,49 @@ export default function ChatPage() {
 
     setInput("");
     resetTextareaHeight();
-    sendMessage(text);
+    void sendMessage(text).then(() => refreshConversations(true));
   };
 
   const handleNewConversation = () => {
+    setActiveContextId(createConversationContextId());
+    setActiveConversationId(null);
+    setHistoryOpen(false);
+    setSaveFeedback(null);
     clearMessages();
     setInput("");
     resetTextareaHeight();
+  };
+
+  const handleOpenHistory = () => {
+    setHistoryOpen(true);
+    void refreshConversations(false);
+  };
+
+  const handleLoadConversation = async (conversation: ConversationListItem) => {
+    setLoadingConversationId(conversation.id);
+    setHistoryError(null);
+
+    try {
+      const conversationMessages = await fetchConversationMessages(conversation.id);
+      const mappedMessages: ChatMessage[] = conversationMessages.map((message) => ({
+        id: message.id,
+        role: message.role === "assistant" ? "ai" : "user",
+        content: message.content,
+        ts: new Date(message.created_at),
+      }));
+
+      setMessages(mappedMessages);
+      setActiveConversationId(conversation.id);
+      setActiveContextId(conversation.context_id);
+      setHistoryOpen(false);
+      setInput("");
+      setSaveFeedback(null);
+      resetTextareaHeight();
+    } catch {
+      setHistoryError("Could not load this chat.");
+    } finally {
+      setLoadingConversationId(null);
+    }
   };
 
   return (
@@ -285,10 +411,177 @@ export default function ChatPage() {
           align-items: center;
         }
 
+        .atlas-history-backdrop {
+          position: absolute;
+          inset: 0;
+          z-index: 70;
+          border: 0;
+          background: rgba(17, 17, 17, 0.14);
+          cursor: default;
+        }
+
+        .atlas-history-panel {
+          position: absolute;
+          inset: 0 auto 0 0;
+          z-index: 80;
+          display: flex;
+          width: min(360px, calc(100vw - 28px));
+          flex-direction: column;
+          border-right: 1px solid rgba(0, 0, 0, 0.08);
+          background: #ffffff;
+          padding: 20px 14px;
+          box-shadow: 20px 0 60px rgba(0, 0, 0, 0.14);
+        }
+
+        .atlas-history-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 0 4px 14px;
+        }
+
+        .atlas-history-title {
+          margin: 0;
+          color: #111111;
+          font-size: 20px;
+          font-weight: 760;
+          line-height: 1.2;
+          letter-spacing: 0;
+        }
+
+        .atlas-history-close {
+          display: grid;
+          width: 38px;
+          height: 38px;
+          place-items: center;
+          border: 0;
+          border-radius: 999px;
+          background: transparent;
+          color: #111111;
+          cursor: pointer;
+          transition: background 160ms ease;
+        }
+
+        .atlas-history-close:hover {
+          background: #f2f2f2;
+        }
+
+        .atlas-history-new {
+          display: flex;
+          width: 100%;
+          align-items: center;
+          gap: 10px;
+          border: 1px solid rgba(0, 0, 0, 0.08);
+          border-radius: 16px;
+          background: #ffffff;
+          padding: 12px 14px;
+          color: #111111;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: background 160ms ease, border-color 160ms ease;
+        }
+
+        .atlas-history-new:hover {
+          border-color: rgba(0, 0, 0, 0.14);
+          background: #f7f7f7;
+        }
+
+        .atlas-history-list {
+          display: flex;
+          min-height: 0;
+          flex: 1;
+          flex-direction: column;
+          gap: 6px;
+          overflow-y: auto;
+          padding: 14px 0 4px;
+        }
+
+        .atlas-history-item {
+          display: grid;
+          grid-template-columns: 30px minmax(0, 1fr) auto;
+          width: 100%;
+          align-items: center;
+          gap: 10px;
+          border: 0;
+          border-radius: 14px;
+          background: transparent;
+          padding: 10px;
+          color: #111111;
+          text-align: left;
+          cursor: pointer;
+          transition: background 160ms ease;
+        }
+
+        .atlas-history-item:hover,
+        .atlas-history-item.active {
+          background: #f4f4f4;
+        }
+
+        .atlas-history-item:disabled {
+          cursor: wait;
+          opacity: 0.72;
+        }
+
+        .atlas-history-icon {
+          display: grid;
+          width: 30px;
+          height: 30px;
+          place-items: center;
+          border-radius: 999px;
+          background: #ffffff;
+          box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+          color: #111111;
+        }
+
+        .atlas-history-copy {
+          min-width: 0;
+        }
+
+        .atlas-history-name {
+          display: block;
+          overflow: hidden;
+          color: #111111;
+          font-size: 13px;
+          font-weight: 700;
+          line-height: 1.25;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .atlas-history-meta {
+          display: block;
+          margin-top: 3px;
+          color: #757575;
+          font-size: 11px;
+          font-weight: 600;
+          line-height: 1.2;
+        }
+
+        .atlas-history-date {
+          color: #8a8a8a;
+          font-size: 11px;
+          font-weight: 700;
+          white-space: nowrap;
+        }
+
+        .atlas-history-state {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 22px 10px;
+          color: #707070;
+          font-size: 13px;
+          font-weight: 650;
+          text-align: center;
+        }
+
         .atlas-messages {
           flex: 1;
           overflow-y: auto;
-          padding: 23px 24px 132px;
+          padding: 30px 24px 132px;
           scrollbar-width: thin;
           scrollbar-color: rgba(0, 0, 0, 0.16) transparent;
         }
@@ -566,7 +859,7 @@ export default function ChatPage() {
           }
 
           .atlas-messages {
-            padding-top: 23px;
+            padding-top: 30px;
             padding-bottom: 150px;
           }
 
@@ -584,6 +877,11 @@ export default function ChatPage() {
         @media (max-width: 767px) {
           .atlas-chat-root {
             height: 100%;
+          }
+
+          .atlas-history-panel {
+            width: min(330px, calc(100vw - 24px));
+            padding-top: calc(18px + env(safe-area-inset-top));
           }
 
           .atlas-mobile-statusbar {
@@ -622,7 +920,7 @@ export default function ChatPage() {
           }
 
           .atlas-messages {
-            padding: 15px 31px calc(116px + env(safe-area-inset-bottom));
+            padding: 30px 31px calc(116px + env(safe-area-inset-bottom));
           }
 
           .atlas-memory-pill {
@@ -713,18 +1011,11 @@ export default function ChatPage() {
       <div className="atlas-chat-topbar" style={{ position: 'relative' }}>
         {/* Left: hamburger */}
         <div className="atlas-left-menu">
-          <button className="atlas-icon-button" type="button" aria-label="Open chat menu">
+          <button className="atlas-icon-button" type="button" aria-label="Open chat menu" onClick={handleOpenHistory}>
             <Menu size={30} strokeWidth={2.5} />
           </button>
         </div>
 
-        {/* Center: Atlas logo + title */}
-        <div className="atlas-brand-lockup">
-          <div className="atlas-brand-logo">
-            <Image src="/atlas-logo.png" alt="Atlas AI" width={30} height={30} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          </div>
-          <span className="atlas-brand-title">Atlas AI</span>
-        </div>
 
         {/* Right: new chat + mobile menu */}
         <div className="atlas-top-group">
@@ -736,11 +1027,108 @@ export default function ChatPage() {
           >
             <SquarePen size={27} strokeWidth={2.4} />
           </button>
-          <button className="atlas-icon-button atlas-mobile-group-menu" type="button" aria-label="Open chat menu">
+          <button
+            className="atlas-icon-button atlas-mobile-group-menu"
+            type="button"
+            aria-label="Open chat menu"
+            onClick={handleOpenHistory}
+          >
             <Menu size={27} strokeWidth={2.5} />
           </button>
         </div>
       </div>
+
+      <AnimatePresence>
+        {historyOpen && (
+          <>
+            <motion.button
+              className="atlas-history-backdrop"
+              type="button"
+              aria-label="Close chat history"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.16 }}
+              onClick={() => setHistoryOpen(false)}
+            />
+            <motion.aside
+              className="atlas-history-panel"
+              aria-label="Chat history"
+              initial={{ x: -24, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -24, opacity: 0 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+            >
+              <div className="atlas-history-header">
+                <h2 className="atlas-history-title">Chats</h2>
+                <button
+                  className="atlas-history-close"
+                  type="button"
+                  aria-label="Close chat history"
+                  onClick={() => setHistoryOpen(false)}
+                >
+                  <X size={21} strokeWidth={2.2} />
+                </button>
+              </div>
+
+              <button className="atlas-history-new" type="button" onClick={handleNewConversation}>
+                <SquarePen size={19} strokeWidth={2.2} />
+                New chat
+              </button>
+
+              <div className="atlas-history-list">
+                {historyLoading ? (
+                  <div className="atlas-history-state" role="status">
+                    <Loader2 size={16} className="animate-spin" />
+                    Loading chats...
+                  </div>
+                ) : historyError ? (
+                  <div className="atlas-history-state" role="status">
+                    {historyError}
+                  </div>
+                ) : conversations.length === 0 ? (
+                  <div className="atlas-history-state">No saved chats yet.</div>
+                ) : (
+                  conversations.map((conversation) => {
+                    const isActive =
+                      conversation.id === activeConversationId ||
+                      (!!activeContextId && conversation.context_id === activeContextId);
+
+                    return (
+                      <button
+                        key={conversation.id}
+                        className={`atlas-history-item ${isActive ? "active" : ""}`}
+                        type="button"
+                        aria-current={isActive ? "true" : undefined}
+                        title={conversation.title}
+                        disabled={loadingConversationId === conversation.id}
+                        onClick={() => handleLoadConversation(conversation)}
+                      >
+                        <span className="atlas-history-icon" aria-hidden="true">
+                          {loadingConversationId === conversation.id ? (
+                            <Loader2 size={15} className="animate-spin" />
+                          ) : (
+                            <MessageSquareText size={15} strokeWidth={2.2} />
+                          )}
+                        </span>
+                        <span className="atlas-history-copy">
+                          <span className="atlas-history-name">{conversation.title}</span>
+                          <span className="atlas-history-meta">
+                            {conversation.messageCount} {conversation.messageCount === 1 ? "message" : "messages"}
+                          </span>
+                        </span>
+                        <span className="atlas-history-date">
+                          {formatConversationDate(conversation.updated_at)}
+                        </span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
 
       <div className="atlas-messages">
         <div className="atlas-thread">
