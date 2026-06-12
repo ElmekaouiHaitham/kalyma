@@ -1,32 +1,70 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, BookMarked, CheckCircle2, Loader2 } from "lucide-react";
 import { useAuth } from "@/app/providers";
+
+export type ReviewItemType = "word" | "phrase" | "sentence" | "concept";
 
 interface SaveWordModalProps {
   isOpen: boolean;
   onClose: () => void;
   prefillWord?: string;
+  prefillType?: ReviewItemType;
   context?: string;
   sourceType?: "article" | "news" | "book" | "session" | "general";
   sourceId?: string | null;
+}
+
+const REVIEW_TYPE_OPTIONS: Array<{ value: ReviewItemType; label: string }> = [
+  { value: "word", label: "Word" },
+  { value: "phrase", label: "Phrase" },
+  { value: "sentence", label: "Sentence" },
+  { value: "concept", label: "Concept" },
+];
+
+function inferReviewItemType(text: string): ReviewItemType {
+  const normalized = text.trim();
+  if (!normalized) return "word";
+
+  const words = normalized.match(/[A-Za-z0-9]+(?:['-][A-Za-z0-9]+)?/g) ?? [];
+  if (words.length <= 1) return "word";
+
+  const looksLikeSentence =
+    words.length >= 8 || /[.!?]["')\]]*$/.test(normalized) || /[,;:]/.test(normalized);
+
+  return looksLikeSentence ? "sentence" : "phrase";
 }
 
 export default function SaveWordModal({ 
   isOpen, 
   onClose, 
   prefillWord = "",
+  prefillType,
   context = "",
   sourceType = "general",
   sourceId = null
 }: SaveWordModalProps) {
   const { session } = useAuth();
   const [word, setWord] = useState(prefillWord);
+  const [itemType, setItemType] = useState<ReviewItemType>(
+    prefillType ?? inferReviewItemType(prefillWord),
+  );
   const [definition, setDefinition] = useState("");
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    setWord(prefillWord);
+    setItemType(prefillType ?? inferReviewItemType(prefillWord));
+    setDefinition("");
+    setSaved(false);
+    setLoading(false);
+    setError("");
+  }, [isOpen, prefillWord, prefillType]);
 
   const handleSave = async () => {
     if (!word.trim() || !session?.access_token) return;
@@ -44,7 +82,7 @@ export default function SaveWordModal({
           content: word,
           translation: definition,
           context: context,
-          type: "word", // Simplified, could be dynamic
+          type: itemType,
           source_type: sourceType === "general" ? null : sourceType,
           source_id: sourceId || null,
         }),
@@ -67,17 +105,8 @@ export default function SaveWordModal({
     }
   };
 
-  // Reset fields when opening with a new prefill
-  const handleOpen = () => {
-    setWord(prefillWord);
-    setDefinition("");
-    setSaved(false);
-    setLoading(false);
-    setError("");
-  };
-
   return (
-    <AnimatePresence onExitComplete={handleOpen}>
+    <AnimatePresence>
       {isOpen && (
         <>
           {/* Backdrop */}
@@ -179,6 +208,38 @@ export default function SaveWordModal({
                     }}
                     autoFocus
                   />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold mb-1.5" style={{ color: "#4a5568" }}>
+                    Review Type
+                  </label>
+                  <div
+                    className="grid grid-cols-4 overflow-hidden rounded-xl"
+                    style={{
+                      background: "#f7f2ea",
+                      border: "1.5px solid rgba(26,43,94,0.12)",
+                    }}
+                  >
+                    {REVIEW_TYPE_OPTIONS.map((option) => {
+                      const selected = itemType === option.value;
+
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setItemType(option.value)}
+                          className="px-2 py-2 text-[11px] font-bold transition-colors"
+                          style={{
+                            background: selected ? "#1a2b5e" : "transparent",
+                            color: selected ? "#ffffff" : "#4a5568",
+                          }}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div>

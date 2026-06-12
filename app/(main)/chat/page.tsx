@@ -30,6 +30,9 @@ type ApiConversation = {
   context_id: string | null;
   created_at: string;
   updated_at: string;
+  title?: string | null;
+  last_message_preview?: string | null;
+  message_count?: number | null;
 };
 
 type ApiMessage = {
@@ -53,12 +56,6 @@ function compactText(text: string, maxLength = 52) {
   const normalized = text.replace(/\s+/g, " ").trim();
   if (normalized.length <= maxLength) return normalized;
   return `${normalized.slice(0, maxLength - 1).trim()}...`;
-}
-
-function titleFromMessages(messages: ApiMessage[]) {
-  const firstUserMessage = messages.find((message) => message.role === "user");
-  const fallbackMessage = messages[0];
-  return compactText(firstUserMessage?.content || fallbackMessage?.content || "New chat");
 }
 
 function formatConversationDate(value: string) {
@@ -149,45 +146,22 @@ export default function ChatPage() {
           (conversation) => conversation.context_type === "general",
         );
 
-        const enriched = await Promise.all(
-          rows.map(async (conversation) => {
-            try {
-              const conversationMessages = await fetchConversationMessages(conversation.id);
-              return {
-                ...conversation,
-                title: titleFromMessages(conversationMessages),
-                messageCount: conversationMessages.length,
-              };
-            } catch {
-              return {
-                ...conversation,
-                title: "New chat",
-                messageCount: 0,
-              };
-            }
-          }),
-        );
+        const enriched = rows.map((conversation) => ({
+          ...conversation,
+          title: compactText(
+            conversation.title || conversation.last_message_preview || "New chat",
+          ),
+          messageCount: conversation.message_count || 0,
+        }));
 
         setConversations(enriched);
-
-        const active = enriched.find(
-          (conversation) => conversation.id === activeConversationId,
-        );
-
-        if (active && active.id !== activeConversationId) {
-          setActiveConversationId(active.id);
-        }
       } catch {
         setHistoryError("Could not load chats.");
       } finally {
         if (!quiet) setHistoryLoading(false);
       }
     },
-    [
-      activeConversationId,
-      fetchConversationMessages,
-      session?.access_token,
-    ],
+    [session?.access_token],
   );
 
   const handleAutoSave = async (aiMsgId: string, aiText: string) => {
@@ -229,10 +203,6 @@ export default function ChatPage() {
     void refreshConversations(true);
   }, [refreshConversations]);
 
-  useEffect(() => {
-    if (historyOpen) void refreshConversations(true);
-  }, [historyOpen, refreshConversations]);
-
   const resetTextareaHeight = () => {
     if (textareaRef.current) textareaRef.current.style.height = "auto";
   };
@@ -266,7 +236,7 @@ export default function ChatPage() {
 
   const handleOpenHistory = () => {
     setHistoryOpen(true);
-    void refreshConversations(false);
+    void refreshConversations(conversations.length > 0);
   };
 
   const handleLoadConversation = async (conversation: ConversationListItem) => {

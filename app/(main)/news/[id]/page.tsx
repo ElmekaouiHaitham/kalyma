@@ -15,6 +15,7 @@ import {
   Loader2,
   CheckCircle2,
   Newspaper,
+  Volume2,
 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
@@ -22,6 +23,8 @@ import { useAuth } from "@/app/providers";
 import SaveWordModal from "@/components/SaveWordModal";
 import ReactMarkdown from "react-markdown";
 import { useAtlasChat } from "@/hooks/useAtlasChat";
+import { getSelectionBubblePosition, type SelectionBubblePlacement } from "@/lib/selectionBubble";
+import { speakSelectedText } from "@/lib/speech";
 
 interface NewsDetail {
   id: string;
@@ -78,6 +81,7 @@ export default function NewsDetailPage() {
     text: string;
     x: number;
     y: number;
+    placement: SelectionBubblePlacement;
   } | null>(null);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [saveWord, setSaveWord] = useState("");
@@ -149,11 +153,15 @@ export default function NewsDetailPage() {
     }
     const text = selection.toString().trim();
     const range = selection.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
+    const position = getSelectionBubblePosition(range);
+    if (!position) {
+      setSelectionBubble(null);
+      return;
+    }
+
     setSelectionBubble({
       text,
-      x: rect.left + rect.width / 2,
-      y: rect.top - 8,
+      ...position,
     });
   }, []);
 
@@ -389,15 +397,16 @@ export default function NewsDetailPage() {
             exit={{ opacity: 0, scale: 0.9 }}
             className="fixed z-50 flex items-center gap-1 rounded-full px-2 py-1.5 shadow-2xl"
             style={{
-              left: Math.min(
-                selectionBubble.x,
-                typeof window !== "undefined" ? window.innerWidth - 210 : 0,
-              ),
+              left: selectionBubble.x,
               top: selectionBubble.y,
-              transform: "translate(-50%, -100%)",
+              transform:
+                selectionBubble.placement === "above"
+                  ? "translate(-50%, -100%)"
+                  : "translate(-50%, 0)",
               background: "#ffffff",
               border: "1px solid rgba(26,43,94,0.1)",
               boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+              maxWidth: "calc(100vw - 24px)",
             }}
           >
             <button
@@ -412,6 +421,19 @@ export default function NewsDetailPage() {
                 className="object-cover rounded-full"
               />
               Ask Atlas
+            </button>
+            <div
+              className="w-px h-5"
+              style={{ background: "rgba(26,43,94,0.1)" }}
+            />
+            <button
+              type="button"
+              onClick={() => speakSelectedText(selectionBubble.text)}
+              aria-label="Listen to selected text"
+              title="Listen"
+              className="flex h-7 w-7 items-center justify-center rounded-full text-[#1a2b5e] transition-colors hover:bg-[#f7f2ea]"
+            >
+              <Volume2 size={14} />
             </button>
             <div
               className="w-px h-5"
