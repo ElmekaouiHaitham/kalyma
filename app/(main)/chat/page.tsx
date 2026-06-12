@@ -22,6 +22,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { useAuth } from "@/app/providers";
 import { useAtlasChat, type ChatMessage } from "@/hooks/useAtlasChat";
+import { speakSelectedText } from "@/lib/speech";
+import {
+  createBrowserSpeechRecognition,
+  type BrowserSpeechRecognition,
+} from "@/lib/speechRecognition";
 
 type ApiConversation = {
   id: string;
@@ -89,6 +94,8 @@ export default function ChatPage() {
   });
 
   const [input, setInput] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const [voiceInputError, setVoiceInputError] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
@@ -104,6 +111,8 @@ export default function ChatPage() {
   } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const dictationBaseRef = useRef("");
   const firstName = user?.full_name?.trim().split(/\s+/)[0] || "there";
   const hasConversation = messages.length > 0 || isTyping;
 
@@ -207,12 +216,76 @@ export default function ChatPage() {
     if (textareaRef.current) textareaRef.current.style.height = "auto";
   };
 
+  const fitTextareaToContent = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 180)}px`;
+  };
+
   const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(event.target.value);
-    const textarea = textareaRef.current;
-    if (textarea) {
-      textarea.style.height = "auto";
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 180)}px`;
+    fitTextareaToContent();
+  };
+
+  const handleVoiceInput = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = createBrowserSpeechRecognition();
+    if (!recognition) {
+      setVoiceInputError("Voice input is not supported in this browser.");
+      return;
+    }
+
+    dictationBaseRef.current = input.trim();
+    setVoiceInputError(null);
+    setIsListening(true);
+
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+    recognition.maxAlternatives = 1;
+    recognition.onresult = (event) => {
+      let transcript = "";
+
+      for (let index = 0; index < event.results.length; index++) {
+        transcript += event.results[index][0]?.transcript ?? "";
+      }
+
+      const spokenText = transcript.trim();
+      const baseText = dictationBaseRef.current;
+      const nextInput = [baseText, spokenText].filter(Boolean).join(" ");
+
+      setInput(nextInput);
+      window.requestAnimationFrame(fitTextareaToContent);
+    };
+    recognition.onerror = (event) => {
+      setVoiceInputError(
+        event.error === "not-allowed"
+          ? "Microphone access was blocked."
+          : "Could not capture voice input.",
+      );
+      setIsListening(false);
+    };
+    recognition.onend = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+      textareaRef.current?.focus();
+    };
+
+    recognitionRef.current = recognition;
+
+    try {
+      recognition.start();
+    } catch {
+      setVoiceInputError("Voice input could not start.");
+      setIsListening(false);
+      recognitionRef.current = null;
     }
   };
 
@@ -220,6 +293,8 @@ export default function ChatPage() {
     const text = input.trim();
     if (!text) return;
 
+    recognitionRef.current?.abort();
+    setIsListening(false);
     setInput("");
     resetTextareaHeight();
     void sendMessage(text).then(() => refreshConversations(true));
@@ -231,6 +306,9 @@ export default function ChatPage() {
     setSaveFeedback(null);
     clearMessages();
     setInput("");
+    setVoiceInputError(null);
+    recognitionRef.current?.abort();
+    setIsListening(false);
     resetTextareaHeight();
   };
 
@@ -257,6 +335,9 @@ export default function ChatPage() {
       setHistoryOpen(false);
       setInput("");
       setSaveFeedback(null);
+      setVoiceInputError(null);
+      recognitionRef.current?.abort();
+      setIsListening(false);
       resetTextareaHeight();
     } catch {
       setHistoryError("Could not load this chat.");
@@ -264,6 +345,13 @@ export default function ChatPage() {
       setLoadingConversationId(null);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.abort();
+      window.speechSynthesis?.cancel();
+    };
+  }, []);
 
   return (
     <div className="atlas-chat-root">
@@ -789,6 +877,11 @@ export default function ChatPage() {
           color: #ffffff;
         }
 
+        .atlas-voice-button.listening {
+          background: #1a2b5e;
+          box-shadow: 0 0 0 4px rgba(26, 43, 94, 0.14);
+        }
+
         .atlas-send-btn {
           background: #111111;
           color: #ffffff;
@@ -803,6 +896,15 @@ export default function ChatPage() {
         .atlas-send-btn:disabled {
           cursor: default;
           opacity: 0.35;
+        }
+
+        .atlas-voice-error {
+          width: min(100%, 720px);
+          margin: 8px auto 0;
+          color: #b42318;
+          font-size: 12px;
+          font-weight: 700;
+          text-align: center;
         }
 
         @media (min-width: 768px) {
@@ -1131,7 +1233,13 @@ export default function ChatPage() {
                                 <button className="atlas-action-icon" type="button" aria-label="Bad response">
                                   <ThumbsDown size={22} strokeWidth={2} />
                                 </button>
-                                <button className="atlas-action-icon" type="button" aria-label="Read aloud">
+                                <button
+                                  className="atlas-action-icon"
+                                  type="button"
+                                  aria-label="Read aloud"
+                                  title="Read aloud"
+                                  onClick={() => speakSelectedText(message.content)}
+                                >
                                   <Volume2 size={23} strokeWidth={2} />
                                 </button>
                                 <button
@@ -1239,16 +1347,31 @@ export default function ChatPage() {
               }
             }}
           />
-          {input.trim() ? (
-            <button className="atlas-send-btn" type="button" onClick={handleSend} aria-label="Send message">
-              <Send size={21} strokeWidth={2.4} />
-            </button>
-          ) : (
-            <button className="atlas-voice-button" type="button" aria-label="Voice input">
-              <Mic size={24} strokeWidth={2.4} />
-            </button>
-          )}
+          <button
+            className={`atlas-voice-button ${isListening ? "listening" : ""}`}
+            type="button"
+            aria-label={isListening ? "Stop voice input" : "Voice input"}
+            aria-pressed={isListening}
+            title={isListening ? "Stop voice input" : "Voice input"}
+            onClick={handleVoiceInput}
+          >
+            <Mic size={24} strokeWidth={2.4} />
+          </button>
+          <button
+            className="atlas-send-btn"
+            type="button"
+            onClick={handleSend}
+            aria-label="Send message"
+            disabled={!input.trim() || isTyping}
+          >
+            <Send size={21} strokeWidth={2.4} />
+          </button>
         </div>
+        {voiceInputError && (
+          <div className="atlas-voice-error" role="status" aria-live="polite">
+            {voiceInputError}
+          </div>
+        )}
       </div>
     </div>
   );
