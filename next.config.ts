@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         hostname: "upload.wikimedia.org",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "gdb.voanews.com",
+        pathname: "/**",
+      },
     ],
   },
 };

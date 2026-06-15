@@ -19,6 +19,9 @@ import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/app/providers";
 import SaveWordModal from "@/components/SaveWordModal";
+import ReaderVocabularyText, {
+  type ReaderVocabularyNote,
+} from "@/components/ReaderVocabularyText";
 import { useBrowserSpeech } from "@/hooks/useBrowserSpeech";
 import { useAtlasChat } from "@/hooks/useAtlasChat";
 import { getSelectionBubblePosition, type SelectionBubblePlacement } from "@/lib/selectionBubble";
@@ -33,6 +36,7 @@ interface ArticleDetail {
   difficulty: string;
   reading_time_mins: number;
   thumbnail_url?: string;
+  vocabulary_notes?: ReaderVocabularyNote[];
 }
 
 export default function ReaderPage() {
@@ -174,6 +178,19 @@ export default function ReaderPage() {
     sendMessage(`What does this mean in the context of the text: "${text}"?`);
   };
 
+  const saveVocabularyNote = (note: ReaderVocabularyNote) => {
+    stop();
+    setSelectionBubble(null);
+    setSaveWord(note.text);
+    setSaveContext(
+      [note.explanation, note.example_sentence, note.difficulty_reason]
+        .filter(Boolean)
+        .join("\n"),
+    );
+    setSaveModalOpen(true);
+    window.getSelection()?.removeAllRanges();
+  };
+
   const handleAutoSave = async (aiMsgId: string, aiText: string) => {
     const msgIndex = chatMessages.findIndex(m => m.id === aiMsgId);
     let question = "Contextual question";
@@ -225,8 +242,6 @@ export default function ReaderPage() {
       </div>
     );
   }
-
-  const paragraphs = article.body?.split("\n\n").filter(Boolean) ?? [];
 
   return (
     <div className="min-h-screen bg-[#f7f2ea] text-[#17172f]">
@@ -324,11 +339,12 @@ export default function ReaderPage() {
           onMouseUp={handleTextSelection}
           onTouchEnd={handleTextSelection}
         >
-          {paragraphs.map((para, pIdx) => (
-            <p key={pIdx}>
-              {para}
-            </p>
-          ))}
+          <ReaderVocabularyText
+            body={article.body}
+            notes={article.vocabulary_notes}
+            onAsk={askAIAboutSelection}
+            onSave={saveVocabularyNote}
+          />
         </div>
 
         {/* Completion Area */}

@@ -22,6 +22,9 @@ import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/app/providers";
 import SaveWordModal from "@/components/SaveWordModal";
+import ReaderVocabularyText, {
+  type ReaderVocabularyNote,
+} from "@/components/ReaderVocabularyText";
 import ReactMarkdown from "react-markdown";
 import { useBrowserSpeech } from "@/hooks/useBrowserSpeech";
 import { useAtlasChat } from "@/hooks/useAtlasChat";
@@ -36,6 +39,7 @@ interface NewsDetail {
   source_name?: string;
   thumbnail_url?: string;
   published_at: string;
+  vocabulary_notes?: ReaderVocabularyNote[];
 }
 
 export default function NewsDetailPage() {
@@ -177,6 +181,19 @@ export default function NewsDetailPage() {
     sendMessage(`What does this mean: "${text}"?`);
   };
 
+  const saveVocabularyNote = (note: ReaderVocabularyNote) => {
+    stop();
+    setSelectionBubble(null);
+    setSaveWord(note.text);
+    setSaveContext(
+      [note.explanation, note.example_sentence, note.difficulty_reason]
+        .filter(Boolean)
+        .join("\n"),
+    );
+    setSaveModalOpen(true);
+    window.getSelection()?.removeAllRanges();
+  };
+
   const handleAutoSave = async (aiMsgId: string, aiText: string) => {
     const msgIndex = chatMessages.findIndex((m) => m.id === aiMsgId);
     let question = "Contextual question";
@@ -229,8 +246,8 @@ export default function NewsDetailPage() {
     );
   }
 
-  const paragraphs = news.body?.split("\n\n").filter(Boolean) ?? [news.summary];
-  const readingTime = Math.ceil(paragraphs.join(" ").split(" ").length / 200);
+  const body = news.body || news.summary;
+  const readingTime = Math.ceil(body.split(/\s+/).filter(Boolean).length / 200);
 
   return (
     <div
@@ -336,9 +353,12 @@ export default function NewsDetailPage() {
           onMouseUp={handleTextSelection}
           onTouchEnd={handleTextSelection}
         >
-          {paragraphs.map((para: string, i: number) => (
-            <p key={i}>{para}</p>
-          ))}
+          <ReaderVocabularyText
+            body={body}
+            notes={news.vocabulary_notes}
+            onAsk={askAIAboutSelection}
+            onSave={saveVocabularyNote}
+          />
         </article>
 
         {/* Completion Area */}
