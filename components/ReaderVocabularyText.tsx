@@ -25,8 +25,6 @@ interface ReaderVocabularyTextProps {
 
 interface ActiveNote {
   note: ReaderVocabularyNote;
-  x: number;
-  y: number;
 }
 
 interface ParsedTextNode {
@@ -103,11 +101,6 @@ function paragraphRanges(body: string) {
     cursor = safeStart + text.length;
     return { text, start: safeStart, end: safeStart + text.length };
   });
-}
-
-function clampBubbleX(x: number) {
-  if (typeof window === "undefined") return x;
-  return Math.max(16, Math.min(x, window.innerWidth - 16));
 }
 
 export function stripReaderMarkup(value: string) {
@@ -380,13 +373,8 @@ export default function ReaderVocabularyText({
           className="inline rounded-[2px] px-0.5 font-black text-[#0f7a3d] underline decoration-[#22c55e]/55 decoration-2 underline-offset-[3px] transition-colors hover:text-[#075f2c] hover:decoration-[#075f2c] focus:outline-none focus:ring-2 focus:ring-[#22c55e]/35"
           onClick={(event) => {
             event.stopPropagation();
-            const rect = event.currentTarget.getBoundingClientRect();
             setSaveError(null);
-            setActiveNote({
-              note: chunk,
-              x: clampBubbleX(rect.left + rect.width / 2),
-              y: Math.max(72, rect.top - 10),
-            });
+            setActiveNote({ note: chunk });
           }}
         >
           {displayReaderText(body.slice(chunk.start_offset, chunk.end_offset))}
@@ -503,11 +491,11 @@ export default function ReaderVocabularyText({
 
       {activeNote && (
         <div
-          className="fixed z-50 w-[min(320px,calc(100vw-32px))] rounded-2xl bg-white p-4 text-left shadow-2xl"
+          className="fixed z-50 max-h-[min(420px,calc(100vh-48px))] w-[min(340px,calc(100vw-32px))] overflow-y-auto rounded-2xl bg-white p-4 text-left shadow-2xl"
           style={{
-            left: activeNote.x,
-            top: activeNote.y,
-            transform: "translate(-50%, -100%)",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -50%)",
             border: "1px solid rgba(26,43,94,0.1)",
             boxShadow: "0 18px 50px rgba(26,43,94,0.18)",
           }}
