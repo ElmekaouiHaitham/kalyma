@@ -20,6 +20,7 @@ import Image from "next/image";
 import { useAuth } from "@/app/providers";
 import SaveWordModal from "@/components/SaveWordModal";
 import ReaderVocabularyText, {
+  stripReaderMarkup,
   type ReaderVocabularyNote,
 } from "@/components/ReaderVocabularyText";
 import { useBrowserSpeech } from "@/hooks/useBrowserSpeech";
@@ -178,17 +179,46 @@ export default function ReaderPage() {
     sendMessage(`What does this mean in the context of the text: "${text}"?`);
   };
 
-  const saveVocabularyNote = (note: ReaderVocabularyNote) => {
+  const saveVocabularyNote = async (note: ReaderVocabularyNote) => {
+    if (!session?.access_token) {
+      throw new Error("You need to sign in before saving.");
+    }
+
     stop();
     setSelectionBubble(null);
-    setSaveWord(note.text);
-    setSaveContext(
-      [note.explanation, note.example_sentence, note.difficulty_reason]
-        .filter(Boolean)
-        .join("\n"),
-    );
-    setSaveModalOpen(true);
     window.getSelection()?.removeAllRanges();
+
+    const content = stripReaderMarkup(note.text).trim();
+    const translation = stripReaderMarkup(note.explanation).trim();
+    const context = [note.example_sentence, note.difficulty_reason]
+      .filter(Boolean)
+      .map((value) => stripReaderMarkup(String(value)).trim())
+      .filter(Boolean)
+      .join("\n");
+
+    if (!content) {
+      throw new Error("Nothing to save.");
+    }
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/review/items`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        content,
+        translation,
+        context,
+        type: note.item_type,
+        source_type: "article",
+        source_id: id,
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to save item");
+    }
   };
 
   const handleAutoSave = async (aiMsgId: string, aiText: string) => {
@@ -292,11 +322,9 @@ export default function ReaderPage() {
           {article.title}
         </h1>
         {article.summary && (
-          <p
-            className="mb-8 max-w-[64ch] border-l-4 border-[#c9842f] pl-4 text-[17px] font-medium leading-[1.65] text-[#667084] sm:text-[19px]"
-          >
-            {article.summary}
-          </p>
+          <div className="reader-summary-html mb-8 max-w-[64ch] border-l-4 border-[#c9842f] pl-4 text-[17px] font-medium leading-[1.65] text-[#667084] sm:text-[19px]">
+            <ReaderVocabularyText body={article.summary} />
+          </div>
         )}
 
         {/* Hero image */}
