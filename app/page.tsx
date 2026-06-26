@@ -277,9 +277,82 @@ function ProductIcon({
   );
 }
 
-export default function LandingPage() {
+function CountdownTimer() {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    const targetDate = new Date("2026-06-30T22:48:49Z").getTime();
+    const timer = setInterval(() => {
+      const now = new Date().getTime();
+      const distance = targetDate - now;
+
+      if (distance < 0) {
+        setTimeLeft("Offer expired");
+        clearInterval(timer);
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  if (!timeLeft) return null;
+
+  return (
+    <div className="mt-4 flex items-center justify-center gap-2 rounded-full border border-[#c9842f]/20 bg-[#fbf5e8] px-4 py-2 text-[13px] font-bold text-[#c9842f]">
+      <Sparkles size={16} />
+      Free offer ends in: {timeLeft}
+    </div>
+  );
+}
+
+function DarkCountdownTimer() {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    const targetDate = new Date("2026-06-30T22:48:49Z").getTime();
+    const timer = setInterval(() => {
+      const now = new Date().getTime();
+      const distance = targetDate - now;
+
+      if (distance < 0) {
+        setTimeLeft("Offer expired");
+        clearInterval(timer);
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  if (!timeLeft) return null;
+
+  return (
+    <div className="mt-2 flex w-max items-center justify-center gap-2 self-center rounded-full border border-[#f3d27b]/20 bg-[#f3d27b]/10 px-4 py-2 text-[13px] font-bold text-[#f3d27b] sm:mt-0 lg:mt-2 lg:self-start">
+      <Sparkles size={16} />
+      Offer ends in: {timeLeft}
+    </div>
+  );
+}
+
+function HeroAnimatedText() {
   const shouldReduceMotion = useReducedMotion();
   const [wordIndex, setWordIndex] = useState(0);
+
   const words = [
     "intermediate level",
     "Fear of speaking",
@@ -293,6 +366,27 @@ export default function LandingPage() {
     }, 2500);
     return () => clearInterval(interval);
   }, []);
+
+  return (
+    <span className="text-[#c9842f] grid [grid-template-areas:'stack'] place-items-center">
+      <AnimatePresence>
+        <motion.span
+          key={wordIndex}
+          initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -15 }}
+          transition={{ duration: 0.25 }}
+          className="[grid-area:stack] whitespace-nowrap"
+        >
+          {words[wordIndex]}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+}
+
+export default function LandingPage() {
+  const shouldReduceMotion = useReducedMotion();
 
   return (
     <main
@@ -346,28 +440,7 @@ export default function LandingPage() {
           <div className="relative z-10 flex w-full max-w-[360px] flex-col items-center sm:max-w-[940px]">
             <h1 className="flex w-full max-w-[360px] flex-col items-center text-balance text-[2.6rem] font-semibold leading-[0.91] tracking-[-0.035em] text-[#111735] sm:max-w-5xl sm:text-center sm:text-[clamp(2.65rem,5.5vw,5.35rem)] sm:leading-[0.9]">
               <span>Break the </span>
-              <span className="text-[#c9842f]">
-                <AnimatePresence mode="wait">
-                  <motion.span
-                    key={wordIndex}
-                    initial={
-                      shouldReduceMotion
-                        ? { opacity: 0 }
-                        : { opacity: 0, y: 15 }
-                    }
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={
-                      shouldReduceMotion
-                        ? { opacity: 0 }
-                        : { opacity: 0, y: -15 }
-                    }
-                    transition={{ duration: 0.25 }}
-                    className="inline-block"
-                  >
-                    {words[wordIndex]}
-                  </motion.span>
-                </AnimatePresence>
-              </span>
+              <HeroAnimatedText />
             </h1>
 
             <p className="mt-6 max-w-[340px] text-balance text-lg font-semibold leading-7 text-[#33406f] sm:max-w-[34rem] sm:text-[1.35rem] sm:leading-8">
@@ -381,7 +454,7 @@ export default function LandingPage() {
                 href="/auth"
                 className="group inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#1a2b5e] px-7 text-base font-bold text-white shadow-[0_20px_45px_rgba(26,43,94,0.22)] transition hover:-translate-y-0.5 hover:bg-[#101844] sm:w-auto"
               >
-                Start learning
+                Try it for free
                 <ArrowRight
                   size={19}
                   className="transition-transform group-hover:translate-x-1"
@@ -394,6 +467,7 @@ export default function LandingPage() {
                 See the loop
               </a>
             </div>
+            <CountdownTimer />
           </div>
 
           <div className="mt-12 w-full max-w-[340px] lg:hidden">
@@ -716,12 +790,13 @@ export default function LandingPage() {
               href="/auth"
               className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#c9842f] px-8 text-base font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#d8a350]"
             >
-              Create account
+              Try it for free
               <ArrowRight
                 size={19}
                 className="transition-transform group-hover:translate-x-1"
               />
             </Link>
+            <DarkCountdownTimer />
             <AddToHomeButton variant="dark" className="min-h-12" />
           </div>
         </div>
