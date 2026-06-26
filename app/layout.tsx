@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "./providers";
 import PWARegister from "./PWARegister";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   applicationName: "kalyma",
@@ -65,8 +66,10 @@ export default function RootLayout({
         <AuthProvider>
           <PWARegister />
           {children}
+          <Analytics />
         </AuthProvider>
       </body>
     </html>
   );
 }
+

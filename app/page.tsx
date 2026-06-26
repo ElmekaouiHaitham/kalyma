@@ -25,7 +25,12 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState, useEffect, type ComponentType, type ReactNode } from "react";
+import React, {
+  useState,
+  useEffect,
+  type ComponentType,
+  type ReactNode,
+} from "react";
 
 import AddToHomeButton from "@/components/AddToHomeButton";
 import Floating, { FloatingElement } from "@/components/ui/parallax-floating";
@@ -35,7 +40,7 @@ type IconComponent = ComponentType<{ size?: number; className?: string }>;
 const heroScreens = [
   {
     type: "laptop" as const,
-    src: "/landing/reader-desktop.png",
+    src: "/landing/news-desktop.png",
     alt: "Kalyma reader showing a level-matched article with Atlas guidance",
     className:
       "left-[2%] top-[31%] hidden w-[220px] -rotate-[7deg] lg:block xl:w-[270px]",
@@ -44,7 +49,7 @@ const heroScreens = [
   },
   {
     type: "laptop" as const,
-    src: "/landing/home-desktop.png",
+    src: "/landing/atlas-desktop.png",
     alt: "Kalyma dashboard with daily progress and learning tasks",
     className:
       "right-[2%] top-[31%] hidden w-[240px] rotate-[5deg] lg:block xl:w-[290px]",
@@ -220,11 +225,7 @@ function PhoneMockup({
   );
 }
 
-function FloatingMockup({
-  screen,
-}: {
-  screen: (typeof heroScreens)[number];
-}) {
+function FloatingMockup({ screen }: { screen: (typeof heroScreens)[number] }) {
   const shouldReduceMotion = useReducedMotion();
   const Mockup = screen.type === "phone" ? PhoneMockup : LaptopMockup;
 
@@ -279,7 +280,12 @@ function ProductIcon({
 export default function LandingPage() {
   const shouldReduceMotion = useReducedMotion();
   const [wordIndex, setWordIndex] = useState(0);
-  const words = ["intermediate level", "Fear of speaking", 'Pattern', 'Existing limits'];
+  const words = [
+    "intermediate level",
+    "Fear of speaking",
+    "Pattern",
+    "Existing limits",
+  ];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -344,9 +350,17 @@ export default function LandingPage() {
                 <AnimatePresence mode="wait">
                   <motion.span
                     key={wordIndex}
-                    initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 15 }}
+                    initial={
+                      shouldReduceMotion
+                        ? { opacity: 0 }
+                        : { opacity: 0, y: 15 }
+                    }
                     animate={{ opacity: 1, y: 0 }}
-                    exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -15 }}
+                    exit={
+                      shouldReduceMotion
+                        ? { opacity: 0 }
+                        : { opacity: 0, y: -15 }
+                    }
                     transition={{ duration: 0.25 }}
                     className="inline-block"
                   >
@@ -385,7 +399,7 @@ export default function LandingPage() {
           <div className="mt-12 w-full max-w-[340px] lg:hidden">
             <div className="relative mx-auto flex h-[260px] items-end justify-center">
               <LaptopMockup
-                src="/landing/reader-desktop.png"
+                src="/landing/news-desktop.png"
                 alt="Kalyma reader preview"
                 className="w-[280px]"
               />
@@ -485,7 +499,7 @@ export default function LandingPage() {
                           <span>{item}</span>
                           <ArrowRight size={15} className="text-[#f3d27b]" />
                         </div>
-                      )
+                      ),
                     )}
                   </div>
                 </div>
@@ -531,7 +545,7 @@ export default function LandingPage() {
                       >
                         {item}
                       </span>
-                    )
+                    ),
                   )}
                 </div>
               </div>
@@ -626,8 +640,8 @@ export default function LandingPage() {
                 ))}
               </div>
               <p className="border-t border-white/10 pt-4 text-base font-semibold leading-6 text-white/62">
-                One interaction turns a confusing passage into an explanation,
-                a saved memory, and future practice.
+                One interaction turns a confusing passage into an explanation, a
+                saved memory, and future practice.
               </p>
             </div>
           </div>
@@ -645,42 +659,44 @@ export default function LandingPage() {
           </div>
 
           <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {featureCards.map(({ icon: Icon, title, text, accent, chips }, index) => (
-              <motion.article
-                key={title}
-                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ duration: 0.35, delay: index * 0.04 }}
-                className="group relative flex min-h-[300px] flex-col overflow-hidden rounded-[28px] border border-[#101844]/10 bg-white/78 p-5 shadow-[0_20px_54px_rgba(16,24,68,0.08)] backdrop-blur-xl"
-              >
-                <span className="absolute -right-8 -top-8 text-[7.5rem] font-semibold leading-none text-[#1a2b5e]/[0.04] transition group-hover:text-[#c9842f]/10">
-                  {accent}
-                </span>
-                <div className="relative flex items-start justify-between gap-4">
-                  <ProductIcon icon={Icon} />
-                  <span className="rounded-full bg-[#fbf5e8] px-3 py-1 text-sm font-bold text-[#c9842f]">
+            {featureCards.map(
+              ({ icon: Icon, title, text, accent, chips }, index) => (
+                <motion.article
+                  key={title}
+                  initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 18 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.35, delay: index * 0.04 }}
+                  className="group relative flex min-h-[300px] flex-col overflow-hidden rounded-[28px] border border-[#101844]/10 bg-white/78 p-5 shadow-[0_20px_54px_rgba(16,24,68,0.08)] backdrop-blur-xl"
+                >
+                  <span className="absolute -right-8 -top-8 text-[7.5rem] font-semibold leading-none text-[#1a2b5e]/[0.04] transition group-hover:text-[#c9842f]/10">
                     {accent}
                   </span>
-                </div>
-                <h3 className="relative mt-8 text-3xl font-semibold leading-tight">
-                  {title}
-                </h3>
-                <p className="relative mt-3 text-base font-semibold leading-7 text-[#4a5568]">
-                  {text}
-                </p>
-                <div className="relative mt-auto flex flex-wrap gap-2 pt-6">
-                  {chips.map((chip) => (
-                    <span
-                      key={chip}
-                      className="rounded-full border border-[#101844]/10 bg-[#fffaf2] px-3 py-1.5 text-sm font-bold text-[#33406f]"
-                    >
-                      {chip}
+                  <div className="relative flex items-start justify-between gap-4">
+                    <ProductIcon icon={Icon} />
+                    <span className="rounded-full bg-[#fbf5e8] px-3 py-1 text-sm font-bold text-[#c9842f]">
+                      {accent}
                     </span>
-                  ))}
-                </div>
-              </motion.article>
-            ))}
+                  </div>
+                  <h3 className="relative mt-8 text-3xl font-semibold leading-tight">
+                    {title}
+                  </h3>
+                  <p className="relative mt-3 text-base font-semibold leading-7 text-[#4a5568]">
+                    {text}
+                  </p>
+                  <div className="relative mt-auto flex flex-wrap gap-2 pt-6">
+                    {chips.map((chip) => (
+                      <span
+                        key={chip}
+                        className="rounded-full border border-[#101844]/10 bg-[#fffaf2] px-3 py-1.5 text-sm font-bold text-[#33406f]"
+                      >
+                        {chip}
+                      </span>
+                    ))}
+                  </div>
+                </motion.article>
+              ),
+            )}
           </div>
         </div>
       </section>
@@ -790,7 +806,9 @@ export default function LandingPage() {
 
         <div className="relative mx-auto mt-10 flex max-w-7xl flex-col justify-between gap-3 border-t border-white/12 pt-6 text-sm font-semibold text-white/52 sm:flex-row">
           <p>&copy; 2026 Kalyma. Speak with confidence.</p>
-          <p>Personalized reading, Atlas AI, spaced repetition, live practice.</p>
+          <p>
+            Personalized reading, Atlas AI, spaced repetition, live practice.
+          </p>
         </div>
       </footer>
     </main>
