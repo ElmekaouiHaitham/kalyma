@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { BookOpen, ChevronRight, Clock } from "lucide-react";
+import { BookOpen, ChevronRight, Clock, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/app/providers";
@@ -15,6 +15,7 @@ interface Article {
   difficulty: "beginner" | "intermediate" | "advanced";
   reading_time_mins: number;
   thumbnail_url?: string;
+  is_locked?: boolean;
 }
 
 interface StartedArticle {
@@ -76,7 +77,7 @@ function ArticleCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.05 + index * 0.05 }}
       onClick={onClick}
-      className="group flex w-full flex-col overflow-hidden rounded-[22px] border bg-white text-left transition-all hover:-translate-y-0.5 hover:shadow-md"
+      className={`group flex w-full flex-col overflow-hidden rounded-[22px] border bg-white text-left transition-all ${article.is_locked ? 'opacity-80 hover:shadow-none' : 'hover:-translate-y-0.5 hover:shadow-md'}`}
       style={{
         borderColor: border,
         boxShadow: "0 1px 4px rgba(31,27,23,0.06)",
@@ -107,6 +108,15 @@ function ArticleCard({
           <Clock size={10} />
           {article.reading_time_mins} min
         </span>
+        {/* Lock Overlay */}
+        {article.is_locked && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+            <div className="flex flex-col items-center gap-2 rounded-xl bg-white/90 px-4 py-3 text-center shadow-lg backdrop-blur-md">
+              <Lock size={24} className="text-[#c9842f]" />
+              <span className="text-[12px] font-bold uppercase tracking-wider text-[#1a2b5e]">Pro Only</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Body */}
@@ -261,7 +271,13 @@ export default function ArticlesPage() {
                   key={article.id}
                   article={article}
                   index={index}
-                  onClick={() => router.push(`/library/${article.id}`)}
+                  onClick={() => {
+                    if (article.is_locked) {
+                      router.push("/profile");
+                    } else {
+                      router.push(`/library/${article.id}`);
+                    }
+                  }}
                 />
               ))}
             </div>

@@ -139,7 +139,7 @@ function AuthTransitionScreen({
 }
 
 export default function AuthPage() {
-  const { session, user, isLoading: authLoading } = useAuth();
+  const { session, user, isLoading: authLoading, refreshUser } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -184,20 +184,25 @@ export default function AuthPage() {
           }
         } else {
           setHandoffLoading(true);
+          await refreshUser(true);
         }
-        // On success, AuthProvider will detect session and redirect automatically
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
         });
         if (error) setError(formatAuthError(error.message));
         else {
-          setSuccessMessage(
-            "Account created safely! Please check your inbox to verify your email.",
-          );
-          setLastSignedUpEmail(email);
-          setIsLogin(true);
+          if (data?.session) {
+            setHandoffLoading(true);
+            await refreshUser(true);
+          } else {
+            setSuccessMessage(
+              "Account created safely! Please check your inbox to verify your email.",
+            );
+            setLastSignedUpEmail(email);
+            setIsLogin(true);
+          }
         }
       }
     } catch (err: unknown) {

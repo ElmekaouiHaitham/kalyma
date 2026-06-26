@@ -34,7 +34,7 @@ interface AuthContextType {
   session: Session | null;
   user: UserProfile | null;
   isLoading: boolean;
-  refreshUser: () => Promise<void>;
+  refreshUser: (redirect?: boolean) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -133,10 +133,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const refreshUser = async () => {
+  const refreshUser = async (redirect: boolean = false) => {
     const currentSession = session ?? (await supabase.auth.getSession()).data.session;
     if (!currentSession) return;
-    await verifyUserWithBackend(currentSession, { force: true, redirect: false });
+    await verifyUserWithBackend(currentSession, { force: true, redirect });
   };
 
   const signOut = async () => {

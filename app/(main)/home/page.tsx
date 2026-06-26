@@ -17,6 +17,7 @@ import {
 
 type XpHistoryEntry = {
   reason: string;
+  amount: number;
   created_at: string;
 };
 
@@ -176,14 +177,7 @@ export default function HomePage() {
     return now.getTime() - d.getTime() <= 7 * 24 * 60 * 60 * 1000;
   };
 
-  const articleReadsThisWeek = xpHistory.filter(
-    (h) => h.reason === "article_completed" && isThisWeek(h.created_at),
-  ).length;
-  const targetFreq = user?.preferences?.article_frequency || 2;
-  const progressPercent = Math.min(
-    100,
-    Math.round((articleReadsThisWeek / Math.max(targetFreq, 1)) * 100),
-  );
+
 
   const hasArticleToday = xpHistory.some(
     (h) => h.reason === "article_completed" && isToday(h.created_at),
@@ -200,7 +194,7 @@ export default function HomePage() {
       id: "article",
       label: "Read an Article",
       icon: <BookOpen className="h-3 w-3" />,
-      xp: 10,
+      xp: 30,
       route: "/articles",
       done: hasArticleToday,
     },
@@ -208,7 +202,7 @@ export default function HomePage() {
       id: "speak",
       label: "Review Session",
       icon: <Repeat2 className="h-3 w-3" />,
-      xp: 10,
+      xp: 15,
       route: "/practice",
       done: hasReviewToday,
     },
@@ -223,6 +217,12 @@ export default function HomePage() {
   ];
 
   const doneCount = TASKS.filter((t) => t.done).length;
+  const progressPercent = Math.round((doneCount / TASKS.length) * 100);
+
+  const xpEarnedToday = xpHistory
+    .filter((h) => isToday(h.created_at))
+    .reduce((total, h) => total + h.amount, 0);
+
   const streakCount = user?.streak_count || 0;
 
   return (
@@ -299,7 +299,7 @@ export default function HomePage() {
               </div>
               <p className="mt-0.5 text-[11px] text-[#667084]">
                 {doneCount} of {TASKS.length} tasks ·{" "}
-                <span className="text-[#c9842f] font-semibold">30 XP</span>
+                <span className="text-[#c9842f] font-semibold">{xpEarnedToday} XP earned</span>
               </p>
             </div>
           </div>

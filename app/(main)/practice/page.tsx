@@ -346,7 +346,16 @@ export default function PracticePage() {
   }, [fetchReviewData]);
 
   const currentCard = deck[currentIndex];
-  const quizChoices = currentCard?.item.quiz_choices ?? [];
+  const quizChoices = useMemo(() => {
+    const choices = currentCard?.item.quiz_choices ?? [];
+    if (choices.length <= 1) return choices;
+    const shuffled = [...choices];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }, [currentCard?.item.quiz_choices]);
   const isQuiz =
     currentCard?.item.review_mode === "quiz" &&
     Boolean(currentCard?.item.quiz_question) &&
@@ -574,21 +583,32 @@ export default function PracticePage() {
                             onClick={() => handleChoiceSelect(choice, index)}
                             className={cn(
                               "flex items-start gap-3 rounded-lg border-2 p-3 text-left transition disabled:cursor-default",
-                              isSelected
-                                ? "border-[#17265d] bg-[#dfe5fb]"
-                                : "border-[#17265d] bg-[#fffdf7] hover:bg-[#f7efd8]",
-                              isAnswered && choice.is_correct && !isSelected && "bg-[#fffdf7]",
+                              !isAnswered && isSelected && "border-[#17265d] bg-[#dfe5fb]",
+                              !isAnswered && !isSelected && "border-[#17265d] bg-[#fffdf7] hover:bg-[#f7efd8]",
+                              isAnswered && choice.is_correct && "border-emerald-500 bg-emerald-50 text-emerald-900",
+                              isAnswered && !choice.is_correct && isSelected && "border-red-500 bg-red-50 text-red-900",
+                              isAnswered && !choice.is_correct && !isSelected && "border-[#17265d]/30 bg-[#fffdf7] opacity-60",
                             )}
                           >
                             <span
                               className={cn(
-                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-black",
-                                isSelected ? "bg-[#17265d] text-white" : "bg-[#f2dda9] text-[#17265d]",
+                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-black transition-colors",
+                                !isAnswered && isSelected && "bg-[#17265d] text-white",
+                                !isAnswered && !isSelected && "bg-[#f2dda9] text-[#17265d]",
+                                isAnswered && choice.is_correct && "bg-emerald-500 text-white",
+                                isAnswered && !choice.is_correct && isSelected && "bg-red-500 text-white",
+                                isAnswered && !choice.is_correct && !isSelected && "bg-[#f2dda9] text-[#17265d]",
                               )}
                             >
                               {String.fromCharCode(65 + index)}
                             </span>
-                            <span className="text-[14px] font-semibold leading-6 text-[#1d2130]">
+                            <span className={cn(
+                              "text-[14px] font-semibold leading-6",
+                              !isAnswered && "text-[#1d2130]",
+                              isAnswered && choice.is_correct && "text-emerald-900",
+                              isAnswered && !choice.is_correct && isSelected && "text-red-900",
+                              isAnswered && !choice.is_correct && !isSelected && "text-[#1d2130]",
+                            )}>
                               {choice.text}
                             </span>
                           </button>

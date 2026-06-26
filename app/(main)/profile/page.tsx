@@ -90,7 +90,33 @@ export default function ProfilePage() {
   const [selectedPace, setSelectedPace] = useState<string | null>(null);
   const [articleFrequency, setArticleFrequency] = useState<number>(2);
   const [isEditingName, setIsEditingName] = useState(false);
+  const [timeLeft, setTimeLeft] = useState("");
   const nameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // 4 days from 2026-06-26
+    const targetDate = new Date("2026-06-30T22:48:49Z").getTime();
+    
+    const timer = setInterval(() => {
+      const now = new Date().getTime();
+      const distance = targetDate - now;
+
+      if (distance < 0) {
+        setTimeLeft("Offer expired");
+        clearInterval(timer);
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      setTimeLeft(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (!session) return;
@@ -384,9 +410,14 @@ export default function ProfilePage() {
                 ))}
               </div>
               <button className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#202b67] px-5 py-4 text-sm font-extrabold text-white transition-colors hover:bg-[#121a46]">
-                Upgrade to Premium
+                Try it for free
                 <ChevronRight size={18} />
               </button>
+              {timeLeft && (
+                <div className="mt-3 text-center text-xs font-bold text-[#ef4444]">
+                  Free offer ends in: {timeLeft}
+                </div>
+              )}
             </motion.section>
 
             <motion.section
