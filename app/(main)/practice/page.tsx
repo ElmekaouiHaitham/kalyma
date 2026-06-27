@@ -383,10 +383,7 @@ export default function PracticePage() {
       });
 
       if (!res.ok) throw new Error("Failed to submit rating");
-      const result = await res.json();
-      if (result?.streak_changed || result?.unlocked_achievements?.length) {
-        await refreshUser();
-      }
+      await refreshUser();
       const scoreKey = ratingToScoreKey(rating);
       setScores((prev) => ({ ...prev, [scoreKey]: prev[scoreKey] + 1 }));
       return true;

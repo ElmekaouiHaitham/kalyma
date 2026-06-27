@@ -17,6 +17,7 @@ import {
   Newspaper,
   Square,
   Volume2,
+  Lightbulb,
 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
@@ -376,6 +377,22 @@ export default function NewsDetailPage() {
           )}
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/20 to-transparent" />
         </div>
+
+        {/* Vocabulary interaction tip */}
+        <div
+          className="mb-8 flex items-start gap-3 rounded-[18px] bg-white p-4 text-sm shadow-sm"
+          style={{ border: "1px solid #e6d9c9" }}
+        >
+          <Lightbulb
+            className="mt-0.5 h-4 w-4 shrink-0 text-[#c9842f]"
+            aria-hidden
+          />
+          <p className="leading-relaxed text-[#667084]">
+            <strong className="font-semibold text-[#c9842f]">Tip:</strong>{" "}
+            Highlight any text to ask Atlas for explanations or save vocabulary!
+          </p>
+        </div>
+
 
         {/* Article content */}
         <article
