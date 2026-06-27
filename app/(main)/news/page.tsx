@@ -167,15 +167,9 @@ export default function NewsPage() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.97 }}
                       transition={{ delay: idx * 0.05 }}
-                      className={`group flex min-h-[390px] cursor-pointer flex-col overflow-hidden rounded-[22px] bg-[#171717] transition-all duration-300 ${item.is_locked ? 'opacity-80' : 'hover:-translate-y-0.5'}`}
+                      className="group flex min-h-[390px] cursor-pointer flex-col overflow-hidden rounded-[22px] bg-[#171717] transition-all duration-300 hover:-translate-y-0.5"
                       style={{ borderLeft: `4px solid ${cs.border}` }}
-                      onClick={() => {
-                        if (item.is_locked) {
-                          router.push("/profile");
-                        } else {
-                          router.push(`/news/${item.id}`);
-                        }
-                      }}
+                      onClick={() => router.push(`/news/${item.id}`)}
                     >
                       <div className="relative h-[190px] w-full shrink-0 overflow-hidden bg-[#232323] sm:h-[270px]">
                         {item.thumbnail_url ? (
@@ -194,14 +188,6 @@ export default function NewsPage() {
                               className="h-12 w-12"
                               style={{ color: cs.text }}
                             />
-                          </div>
-                        )}
-                        {item.is_locked && (
-                          <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
-                            <div className="flex flex-col items-center gap-2 rounded-xl bg-white/90 px-4 py-3 text-center shadow-lg backdrop-blur-md">
-                              <Lock size={24} className="text-[#c9842f]" />
-                              <span className="text-[12px] font-bold uppercase tracking-wider text-[#1a2b5e]">Pro Only</span>
-                            </div>
                           </div>
                         )}
                       </div>
