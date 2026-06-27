@@ -48,6 +48,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning style={{ colorScheme: "light" }}>
       <head>
         <meta name="color-scheme" content="light" />
+        <meta
+          name="facebook-domain-verification"
+          content="63eyqlnagpil93ilnconhtj6nh19t6"
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
