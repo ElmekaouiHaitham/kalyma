@@ -143,6 +143,7 @@ export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [handoffLoading, setHandoffLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -187,6 +188,10 @@ export default function AuthPage() {
           await refreshUser(true);
         }
       } else {
+        if (password !== confirmPassword) {
+          setError("Passwords do not match.");
+          return;
+        }
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -371,11 +376,21 @@ export default function AuthPage() {
             <input
               type="password"
               required
-              placeholder="Password"
+              placeholder={isLogin ? "Password" : "Create a password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="h-10 w-full rounded-lg border-2 border-[#17265d] bg-[#fffdf7] px-3 text-[13px] font-medium text-[#17265d] outline-none transition placeholder:text-[#7d7f86] focus:shadow-[0_0_0_3px_rgba(23,38,93,0.12)] md:h-10 md:px-3 md:text-[14px]"
             />
+            {!isLogin && (
+              <input
+                type="password"
+                required
+                placeholder="Confirm password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="h-10 w-full rounded-lg border-2 border-[#17265d] bg-[#fffdf7] px-3 text-[13px] font-medium text-[#17265d] outline-none transition placeholder:text-[#7d7f86] focus:shadow-[0_0_0_3px_rgba(23,38,93,0.12)] md:h-10 md:px-3 md:text-[14px]"
+              />
+            )}
 
             {!isLogin && (
               <label className="mt-3 mb-1 flex cursor-pointer items-start gap-2">
@@ -485,6 +500,7 @@ export default function AuthPage() {
                 setIsLogin(!isLogin);
                 setError(null);
                 setSuccessMessage(null);
+                setConfirmPassword("");
               }}
               className="font-extrabold text-[#17265d] underline"
             >
