@@ -478,7 +478,7 @@ export default function AuthPage() {
           </button>
 
           <p className="mt-4 text-center text-xs font-semibold text-[#394260]">
-            <span className="underline">{isLogin ? "Don't have an account?" : "Already have an account?"}</span>{" "}
+            {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
             <button
               type="button"
               onClick={() => {
@@ -486,7 +486,7 @@ export default function AuthPage() {
                 setError(null);
                 setSuccessMessage(null);
               }}
-              className="font-extrabold text-[#17265d] hover:underline"
+              className="font-extrabold text-[#17265d] underline"
             >
               {isLogin ? "Create a new account" : "Log in"}
             </button>
