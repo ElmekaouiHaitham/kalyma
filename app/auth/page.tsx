@@ -478,7 +478,7 @@ export default function AuthPage() {
           </button>
 
           <p className="mt-4 text-center text-xs font-semibold text-[#394260]">
-            {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
+            <span className="underline">{isLogin ? "Don't have an account?" : "Already have an account?"}</span>{" "}
             <button
               type="button"
               onClick={() => {
