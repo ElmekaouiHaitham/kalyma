@@ -488,7 +488,7 @@ export default function AuthPage() {
               }}
               className="font-extrabold text-[#17265d] hover:underline"
             >
-              {isLogin ? "Sign up" : "Log in"}
+              {isLogin ? "Create a new account" : "Log in"}
             </button>
           </p>
         </motion.div>
