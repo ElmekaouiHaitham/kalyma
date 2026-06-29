@@ -487,8 +487,8 @@ export default function LandingPage() {
 
           <div className="mt-7 grid w-full max-w-[340px] grid-cols-1 gap-3 rounded-[26px] border border-[#1a2b5e]/10 bg-white/70 p-3 text-left shadow-[0_20px_54px_rgba(26,43,94,0.12)] backdrop-blur-xl sm:mt-10 sm:max-w-[680px] sm:grid-cols-3">
             {[
-              ["80%", "familiar enough to keep reading"],
-              ["20%", "new vocab explained in context"],
+              ["90%", "familiar enough to keep reading"],
+              ["10%", "new vocab explained in context"],
               ["1 flow", "read, ask, save, review, speak"],
             ].map(([value, label]) => (
               <div

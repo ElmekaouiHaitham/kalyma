@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  ArrowLeft,
   CheckCircle2,
   Loader2,
   Lock,
@@ -101,6 +102,7 @@ export default function NewsPage() {
         <NewsHeader
           isRefreshing={false}
           menuOpen={false}
+          onBack={() => router.back()}
           onAllNews={() => router.push("/news/all-news")}
           onMenuOpenChange={() => undefined}
           onRefresh={() => undefined}
@@ -137,6 +139,7 @@ export default function NewsPage() {
       <NewsHeader
         isRefreshing={isRefreshing}
         menuOpen={menuOpen}
+        onBack={() => router.back()}
         onAllNews={() => router.push("/news/all-news")}
         onMenuOpenChange={setMenuOpen}
         onRefresh={() => fetchNews(true)}
@@ -327,12 +330,14 @@ export default function NewsPage() {
 function NewsHeader({
   isRefreshing,
   menuOpen,
+  onBack,
   onAllNews,
   onMenuOpenChange,
   onRefresh,
 }: {
   isRefreshing: boolean;
   menuOpen: boolean;
+  onBack: () => void;
   onAllNews: () => void;
   onMenuOpenChange: (open: boolean) => void;
   onRefresh: () => void;
@@ -340,6 +345,15 @@ function NewsHeader({
   return (
     <header className="sticky top-0 z-30 border-b border-[#e6d9c9] bg-[#f7f2ea]/95 backdrop-blur-xl">
       <div className="mx-auto flex h-20 w-full max-w-[1464px] items-center px-6 lg:h-28 lg:px-8 xl:px-10">
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label="Back"
+          className="mr-3 inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-semibold text-[#667084] transition-colors hover:bg-white/70 hover:text-[#16265c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2f80ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#f7f2ea] sm:mr-4"
+        >
+          <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+          <span className="hidden sm:inline">Back</span>
+        </button>
         <h1
           className="text-[31px] font-semibold leading-none text-[#16265c] sm:text-[34px]"
           style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
