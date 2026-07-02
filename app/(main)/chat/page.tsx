@@ -127,6 +127,10 @@ export default function ChatPage() {
   const [hoveredMsg, setHoveredMsg] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const [messageFeedback, setMessageFeedback] = useState<
+    Record<string, "liked" | "disliked">
+  >({});
   const [saveFeedback, setSaveFeedback] = useState<{
     id: string;
     status: "saved" | "error";
@@ -226,6 +230,30 @@ export default function ChatPage() {
         message: result.error || "Could not save this to practice.",
       });
     }
+  };
+
+  const handleCopyResponse = async (messageId: string, content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedMessageId(messageId);
+      window.setTimeout(() => {
+        setCopiedMessageId((currentId) => (currentId === messageId ? null : currentId));
+      }, 1800);
+    } catch {
+      setCopiedMessageId(null);
+    }
+  };
+
+  const handleMessageFeedback = (messageId: string, feedback: "liked" | "disliked") => {
+    setMessageFeedback((current) => {
+      const next = { ...current };
+      if (next[messageId] === feedback) {
+        delete next[messageId];
+      } else {
+        next[messageId] = feedback;
+      }
+      return next;
+    });
   };
 
   useEffect(() => {
@@ -328,6 +356,8 @@ export default function ChatPage() {
     setActiveConversationId(null);
     setHistoryOpen(false);
     setSaveFeedback(null);
+    setCopiedMessageId(null);
+    setMessageFeedback({});
     setActiveCorrectionIssue(null);
     clearMessages();
     setInput("");
@@ -1058,6 +1088,18 @@ export default function ChatPage() {
           transform: translateY(-1px);
         }
 
+        .atlas-action-icon.copied {
+          color: #16835d;
+        }
+
+        .atlas-action-icon.liked {
+          color: #2563eb;
+        }
+
+        .atlas-action-icon.disliked {
+          color: #dc3545;
+        }
+
         .atlas-typing {
           display: inline-flex;
           align-items: center;
@@ -1517,14 +1559,44 @@ export default function ChatPage() {
                           {canShowActions && (
                             <>
                               <div className={`atlas-msg-actions ${hoveredMsg === message.id ? "visible" : ""}`}>
-                                <button className="atlas-action-icon" type="button" aria-label="Copy response">
-                                  <Copy size={22} strokeWidth={2} />
+                                <button
+                                  className={`atlas-action-icon ${copiedMessageId === message.id ? "copied" : ""}`}
+                                  type="button"
+                                  aria-label={copiedMessageId === message.id ? "Response copied" : "Copy response"}
+                                  title={copiedMessageId === message.id ? "Copied" : "Copy response"}
+                                  onClick={() => void handleCopyResponse(message.id, message.content)}
+                                >
+                                  {copiedMessageId === message.id ? (
+                                    <CheckCircle2 size={22} strokeWidth={2} />
+                                  ) : (
+                                    <Copy size={22} strokeWidth={2} />
+                                  )}
                                 </button>
-                                <button className="atlas-action-icon" type="button" aria-label="Good response">
-                                  <ThumbsUp size={22} strokeWidth={2} />
+                                <button
+                                  className={`atlas-action-icon ${messageFeedback[message.id] === "liked" ? "liked" : ""}`}
+                                  type="button"
+                                  aria-label="Good response"
+                                  aria-pressed={messageFeedback[message.id] === "liked"}
+                                  onClick={() => handleMessageFeedback(message.id, "liked")}
+                                >
+                                  <ThumbsUp
+                                    size={22}
+                                    strokeWidth={2}
+                                    fill={messageFeedback[message.id] === "liked" ? "currentColor" : "none"}
+                                  />
                                 </button>
-                                <button className="atlas-action-icon" type="button" aria-label="Bad response">
-                                  <ThumbsDown size={22} strokeWidth={2} />
+                                <button
+                                  className={`atlas-action-icon ${messageFeedback[message.id] === "disliked" ? "disliked" : ""}`}
+                                  type="button"
+                                  aria-label="Bad response"
+                                  aria-pressed={messageFeedback[message.id] === "disliked"}
+                                  onClick={() => handleMessageFeedback(message.id, "disliked")}
+                                >
+                                  <ThumbsDown
+                                    size={22}
+                                    strokeWidth={2}
+                                    fill={messageFeedback[message.id] === "disliked" ? "currentColor" : "none"}
+                                  />
                                 </button>
                                 <button
                                   className="atlas-action-icon"
