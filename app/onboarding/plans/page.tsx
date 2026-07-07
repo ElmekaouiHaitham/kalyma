@@ -6,15 +6,22 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 const FREE_FEATURES = [
-  "Personalized reading feed",
-  "Contextual word explanations",
+  "1 article a week",
+  "Customizable learning pace",
   "Vocabulary review",
+  "1 news articles a day",
+  "3 Atlas AI chats a day",
 ];
 
 const PRO_FEATURES = [
   "Everything in Free",
-  "Atlas AI practice",
-  "Live learning sessions",
+  "Unlimited articles",
+  "Unlimited learning pace",
+  "Unlimited news articles a day",
+  "unlimited Atlas AI chats",
+  "Access to new features",
+  "Upcomming live classes",
+  "Public speaking cup"
 ];
 
 function BrandMark() {
