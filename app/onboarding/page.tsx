@@ -567,7 +567,7 @@ export default function OnboardingPage() {
       return;
     }
     if (step === 6) {
-      router.push("/home");
+      router.push("/onboarding/plans");
       return;
     }
     setStep((prev) => prev + 1);
