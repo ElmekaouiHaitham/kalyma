@@ -281,7 +281,7 @@ function CountdownTimer() {
   const [timeLeft, setTimeLeft] = useState("");
 
   useEffect(() => {
-    const targetDate = new Date("2026-07-03T18:37:23Z").getTime();
+    const targetDate = new Date("2026-07-12T23:59:59+01:00").getTime();
     const timer = setInterval(() => {
       const now = new Date().getTime();
       const distance = targetDate - now;
@@ -317,7 +317,7 @@ function DarkCountdownTimer() {
   const [timeLeft, setTimeLeft] = useState("");
 
   useEffect(() => {
-    const targetDate = new Date("2026-07-03T18:37:23Z").getTime();
+    const targetDate = new Date("2026-07-12T23:59:59+01:00").getTime();
     const timer = setInterval(() => {
       const now = new Date().getTime();
       const distance = targetDate - now;
