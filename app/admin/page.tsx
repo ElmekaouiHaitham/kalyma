@@ -7,36 +7,48 @@ import { motion } from 'framer-motion';
 
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { MetricCard } from '@/components/admin/MetricCard';
-import { fetchAdminDashboardData } from '@/lib/admin-api';
+import { useAuth } from '@/app/providers';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
+  const { session, isLoading: authLoading } = useAuth();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        const dashboardData = await fetchAdminDashboardData();
-        setData(dashboardData);
-      } catch (err: any) {
-        console.error(err);
-        if (err.message.includes("Access denied")) {
-          setError("You do not have administrator privileges.");
-        } else if (err.message.includes("No authentication token")) {
-          router.push("/auth/signin"); // Assuming a signin route exists
-        } else {
-          setError("Failed to load dashboard data. Ensure backend is running.");
-        }
-      } finally {
-        setLoading(false);
-      }
+    if (authLoading) return;
+    if (!session) {
+      router.push("/auth");
+      return;
     }
-    loadData();
-  }, [router]);
 
-  if (loading) {
+    const headers = { Authorization: `Bearer ${session.access_token}` };
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/dashboard`, { headers })
+      .then(async (res) => {
+        if (!res.ok) {
+          if (res.status === 403) {
+            throw new Error("You do not have administrator privileges.");
+          }
+          const text = await res.text();
+          throw new Error(text || `Request failed with status ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((dashboardData) => {
+        setData(dashboardData);
+      })
+      .catch((err) => {
+        console.error("Admin dashboard error:", err);
+        setError(err.message);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [session, authLoading, router]);
+
+  if (authLoading || loading) {
     return (
       <AdminLayout>
         <div className="flex h-[60vh] items-center justify-center">
