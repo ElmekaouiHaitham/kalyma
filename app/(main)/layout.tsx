@@ -22,8 +22,8 @@ const NAV_ITEMS = [
   { label: "Articles", icon: FileText, href: "/articles" },
   { label: "Practice", icon: GraduationCap, href: "/practice" },
   { label: "Atlas AI", icon: Sparkles, href: "/chat", atlas: true },
-  { label: "Live Sessions", icon: Radio, href: "/live" },
-  { label: "News", icon: Newspaper, href: "/news" },
+  // { label: "Live Sessions", icon: Radio, href: "/live" },
+  // { label: "News", icon: Newspaper, href: "/news" },
   { label: "Leaderboard", icon: Trophy, href: "/leaderboard" },
   { label: "Profile Settings", icon: Settings, href: "/profile", profile: true },
 ];
