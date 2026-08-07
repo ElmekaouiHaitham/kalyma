@@ -11,6 +11,8 @@ import {
   FileText,
   GraduationCap,
   Trophy,
+  Calendar,
+  Award,
 } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/app/providers";
@@ -19,6 +21,8 @@ import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { label: "Home", icon: Home, href: "/home" },
+  { label: "Sessions", icon: Calendar, href: "/sessions" },
+  { label: "Debate", icon: Award, href: "/debate" },
   { label: "Articles", icon: FileText, href: "/articles" },
   { label: "Practice", icon: GraduationCap, href: "/practice" },
   { label: "Atlas AI", icon: Sparkles, href: "/chat", atlas: true },
