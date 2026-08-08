@@ -1,7 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { 
+  Loader2,
   Trophy, 
   User, 
   CalendarDays, 
@@ -12,6 +15,22 @@ import {
 } from "lucide-react";
 
 export default function DebatePage() {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] gap-3 mt-20">
+        <Loader2 className="w-10 h-10 text-[#021541] animate-spin" />
+        <p className="font-medium text-[#45464f] animate-pulse">Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <main className="max-w-7xl mx-auto px-5 md:px-10 pt-20 pb-8 md:py-12 flex flex-col gap-8 md:gap-10 text-[#1a1c1a]">
       {/* Page Header */}
@@ -36,7 +55,7 @@ export default function DebatePage() {
             </h1>
           </div>
           <p className="text-[14px] md:text-[16px] leading-[20px] md:leading-[24px] text-[#45464f] md:ml-[72px]">
-            Season 4 • Gold Tier • 12 Days Remaining
+            • 12 Days Remaining
           </p>
         </div>
         {/* Decorative element (Desktop) */}
@@ -52,8 +71,7 @@ export default function DebatePage() {
             
             {/* Desktop Header */}
             <div className="hidden md:flex bg-[#021541] text-[#ffffff] p-5 border-b-[1.5px] border-[#021541] justify-between items-center">
-              <h2 className="font-bold text-[24px] leading-[32px]">La Liga Rankings</h2>
-              <span className="font-semibold text-[14px] bg-white/20 px-3 py-1 rounded-full">Top 3 Promote</span>
+              <h2 className="font-bold text-[24px] leading-[32px]">Rankings</h2>
             </div>
             
             {/* Mobile Header */}
@@ -80,12 +98,12 @@ export default function DebatePage() {
                     </td>
                     <td className="p-2 md:p-4 flex items-center gap-3 flex-1 md:flex-none">
                       <img 
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdcrcHJHf9SbPL8uCMnwQvGgmilpFFm7tnCGYPlS0UW2hi-GoZ4HJSucrifTZr6gOG3VmJ8O5YIL2mZMkvRlqFL76kqPfUXIX3nskn2hk5PTLz3e1bd2FhptAl0UcuYwyBY5ei_FEvlv8UX4sQ7u87JvFe5bXjBi4ZqsTrRjrNZnV_iV8JbJh4g8m02jb0fEH6vqi6-Z0A0e-MDN-4MwCojFtRfatyegLdaHuWdE5PJbhPNNcvppiB" 
-                        alt="Alex Chen" 
+                        src="/profile_haitham.jpg" 
+                        alt="Haitham Elmekaoui" 
                         className="w-10 h-10 md:w-8 md:h-8 rounded-full border border-[#021541] object-cover" 
                       />
                       <div className="flex flex-col md:block">
-                        <span className="font-bold text-[#021541] md:text-[#1a1c1a] text-[14px] md:text-[16px]">Alex Chen</span>
+                        <span className="font-bold text-[#021541] md:text-[#1a1c1a] text-[14px] md:text-[16px]">Haitham Elmekaoui</span>
                         <span className="md:hidden text-[12px] text-[#45464f]">1240 pts</span>
                       </div>
                     </td>
@@ -108,12 +126,12 @@ export default function DebatePage() {
                     </td>
                     <td className="p-2 md:p-4 flex items-center gap-3 flex-1 md:flex-none">
                       <img 
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDu4KgePdc0J6x_iLFRaEl11UjkiwIYYhXzj0Bl0Z7mLl20xDMFsf5Y9jbLGKj1mgvNwwq83zmSmYRC6YhmDbnsaxG6daoW_YXNhlTpTJ-yj94ffNQv7npSNp8I-bDgF6XNA7R7AuXZY9vM1ZfgqpNwtI1SC-7oieOAINkxLRoP2ffcoykFAOUuzx8YU5P3g3y_UYo9k0oq0GA8Q6Z26gJgkAzfJCs-YyZJXeKk7GEO1AxrQebnupjf" 
-                        alt="You" 
+                        src="/profile_zhiri.jpg"      
+                        alt="Zhiri Mohamed" 
                         className="w-10 h-10 md:w-8 md:h-8 rounded-full border-2 border-[#021541] object-cover" 
                       />
                       <div className="flex flex-col md:block">
-                        <span className="font-bold text-[#021541] text-[14px] md:text-[16px]">You</span>
+                        <span className="font-bold text-[#021541] text-[14px] md:text-[16px]">Zhiri Mohamed</span>
                         <span className="md:hidden text-[12px] text-[#45464f]">1180 pts</span>
                       </div>
                     </td>
@@ -130,7 +148,7 @@ export default function DebatePage() {
                   </tr>
 
                   {/* Row 3 */}
-                  <tr className="flex md:table-row justify-between items-center bg-transparent hover:bg-[#f4f3f1] transition-colors p-2 md:p-0 rounded-lg md:rounded-none">
+                  {/* <tr className="flex md:table-row justify-between items-center bg-transparent hover:bg-[#f4f3f1] transition-colors p-2 md:p-0 rounded-lg md:rounded-none">
                     <td className="p-2 md:p-4 text-center font-bold text-[#45464f] md:w-16 flex items-center md:table-cell md:font-normal">
                       <span className="w-4 text-center inline-block">3</span>
                     </td>
@@ -155,10 +173,10 @@ export default function DebatePage() {
                         <div className="w-2 h-2 md:w-6 md:h-6 rounded-full bg-[#c5c6d0] md:bg-[#4ade80] flex items-center justify-center text-white text-[10px] md:text-xs font-bold"><span className="hidden md:inline">W</span></div>
                       </div>
                     </td>
-                  </tr>
+                  </tr> */}
 
                   {/* Row 4 (Desktop only essentially) */}
-                  <tr className="hidden md:table-row hover:bg-[#f4f3f1] transition-colors text-[#757680]">
+                  {/* <tr className="hidden md:table-row hover:bg-[#f4f3f1] transition-colors text-[#757680]">
                     <td className="p-4 text-center w-16">4</td>
                     <td className="p-4 flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-[#e9e8e5] border border-[#c5c6d0] flex items-center justify-center">
@@ -176,7 +194,7 @@ export default function DebatePage() {
                         <div className="w-6 h-6 rounded-full bg-[#f87171] flex items-center justify-center text-white text-xs font-bold">L</div>
                       </div>
                     </td>
-                  </tr>
+                  </tr> */}
 
                 </tbody>
               </table>
@@ -218,18 +236,20 @@ export default function DebatePage() {
               <div className="flex items-center gap-3 z-10 mt-1 md:mt-0 bg-transparent md:bg-[#f4f3f1] p-0 md:p-3 rounded-xl">
                 <img 
                   className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-[#021541] object-cover" 
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzq_zdPphhkMQMFr8Vlu0_wcjIX8oG1sl71CTpyqlyjtkvSwIZXA0-xHhb8wVRBzeXGa1Joj1FXEDN-UaKpYUYqxVm18o5fia1BUP9GpcQLKr3Jxd_XrxFiygfDGcs9Q9j7AL23d8a6xpUc-pl5QLw8A4Cms4r6_rJPV79M1u_qcvmSQRMFHctBbHxisFukaNoSMhPJvAwbz5DYnSTBXNUc7YpO0ZCT0yDRQj7Qc41avwIye78bVxe" 
-                  alt="Jury" 
+                  src="/profile_haitham.jpg" 
+                  alt="Opponent" 
                 />
                 <div>
-                  <p className="font-semibold text-[12px] text-[#757680]">JURY MENTOR</p>
-                  <p className="font-bold text-[14px] text-[#021541] md:text-[#1a1c1a]">Dr. Elena Rostova</p>
+                  <p className="font-semibold text-[12px] text-[#757680]">Opponent</p>
+                  <p className="font-bold text-[14px] text-[#021541] md:text-[#1a1c1a]">Haitham Elmekaoui</p>
                 </div>
               </div>
               
-              <button className="cursor-pointer w-full bg-[#021541] text-[#ffffff] font-semibold text-[14px] py-2.5 md:py-3 rounded-xl shadow-[0_4px_12px_rgba(2,21,65,0.08)] active:translate-y-1 active:shadow-none transition-all mt-1 md:mt-2">
-                Prepare Arguments
-              </button>
+              <Link href="/debate/details" className="block w-full mt-1 md:mt-2">
+                <button className="cursor-pointer w-full bg-[#021541] text-[#ffffff] font-semibold text-[14px] py-2.5 md:py-3 rounded-xl shadow-[0_4px_12px_rgba(2,21,65,0.08)] active:translate-y-1 active:shadow-none transition-all">
+                  View Details
+                </button>
+              </Link>
             </div>
           </section>
 
@@ -246,12 +266,10 @@ export default function DebatePage() {
             <div className="flex flex-col gap-3 md:gap-4">
               
               {/* History Card 1 */}
-              <div className="bg-[#ffffff] border-[1.5px] border-[#c5c6d0] rounded-2xl p-4 md:p-5 hover:border-[#021541] transition-colors cursor-pointer group flex flex-col gap-2 md:gap-0">
+              {/* <div className="bg-[#ffffff] border-[1.5px] border-[#c5c6d0] rounded-2xl p-4 md:p-5 hover:border-[#021541] transition-colors cursor-pointer group flex flex-col gap-2 md:gap-0">
                 <div className="flex justify-between items-center md:items-start mb-1 md:mb-2">
                   <h4 className="font-semibold text-[16px] md:font-bold md:text-[18px] text-[#021541] md:text-[#1a1c1a] group-hover:text-[#021541] transition-colors">Universal Basic Income</h4>
-                  {/* Desktop Date */}
                   <span className="hidden md:inline font-semibold text-[12px] text-[#757680]">OCT 12</span>
-                  {/* Mobile Badge */}
                   <div className="md:hidden flex items-center gap-1 bg-[#fed65b] px-2 py-1 rounded-md">
                     <Star className="w-3 h-3 text-[#745c00] fill-current" />
                     <span className="font-semibold text-[12px] text-[#745c00]">8.5/10</span>
@@ -261,7 +279,6 @@ export default function DebatePage() {
                 <p className="md:hidden text-[14px] text-[#45464f] line-clamp-2">Strong opening statement, but rebuttal needed more factual grounding.</p>
 
                 <div className="flex items-center justify-between mt-1 md:mt-4">
-                  {/* Desktop Stars */}
                   <div className="hidden md:flex text-[#fed65b]">
                     <Star className="w-5 h-5 fill-current" />
                     <Star className="w-5 h-5 fill-current" />
@@ -273,7 +290,7 @@ export default function DebatePage() {
                     View Feedback <ArrowRight className="w-4 h-4 md:hidden" />
                   </button>
                 </div>
-              </div>
+              </div> */}
 
               {/* History Card 2 */}
               <div className="bg-[#ffffff] border-[1.5px] border-[#c5c6d0] rounded-2xl p-4 md:p-5 hover:border-[#021541] transition-colors cursor-pointer group flex flex-col gap-2 md:gap-0 opacity-100 md:opacity-100">
@@ -300,9 +317,11 @@ export default function DebatePage() {
                     <Star className="w-5 h-5 text-[#c5c6d0]" />
                     <Star className="w-5 h-5 text-[#c5c6d0]" />
                   </div>
-                  <button className="text-[#021541] font-semibold text-[14px] flex items-center gap-1 hover:text-[#735c00] md:hover:underline transition-colors mt-2 md:mt-0 p-0 md:p-0">
-                    View Feedback <ArrowRight className="w-4 h-4 md:hidden" />
-                  </button>
+                  <Link href="/debate/feedback">
+                    <button className="text-[#021541] font-semibold text-[14px] flex items-center gap-1 hover:text-[#735c00] md:hover:underline transition-colors mt-2 md:mt-0 p-0 md:p-0">
+                      View Feedback <ArrowRight className="w-4 h-4 md:hidden" />
+                    </button>
+                  </Link>
                 </div>
               </div>
 
