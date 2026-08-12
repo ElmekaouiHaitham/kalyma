@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, Users, BookOpen, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, BookOpen, Settings, LogOut, Video } from 'lucide-react';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -24,6 +24,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           <NavItem href="/admin" icon={<LayoutDashboard size={20} />} label="Dashboard" active />
           <NavItem href="/admin/users" icon={<Users size={20} />} label="Users" />
           <NavItem href="/admin/content" icon={<BookOpen size={20} />} label="Content" />
+          <NavItem href="/admin/sessions" icon={<Video size={20} />} label="Sessions" />
           <NavItem href="/admin/settings" icon={<Settings size={20} />} label="Settings" />
         </nav>
         

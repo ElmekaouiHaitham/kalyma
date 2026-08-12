@@ -71,12 +71,23 @@ export default function AdminDashboardPage() {
 
   if (error) {
     return (
-      <AdminLayout>
-        <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-6 rounded-xl backdrop-blur-sm">
-          <h2 className="text-xl font-bold mb-2">Access Error</h2>
-          <p>{error}</p>
+      <div className="min-h-screen bg-[#f7f2ea] flex flex-col items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgba(26,43,94,0.12)] text-center border border-[#1a2b5e]/5">
+          <div className="w-20 h-20 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <span className="text-red-500 text-3xl">!</span>
+          </div>
+          <h2 className="text-2xl font-bold text-[#1a2b5e] mb-3">Unauthorized</h2>
+          <p className="text-[#4a5568] leading-relaxed mb-8">
+            {error || "You do not have administrator privileges to view this page."}
+          </p>
+          <button
+            onClick={() => router.push("/")}
+            className="w-full py-4 bg-[#1a2b5e] text-white rounded-xl font-bold shadow-lg shadow-[#1a2b5e]/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+          >
+            Return to Dashboard
+          </button>
         </div>
-      </AdminLayout>
+      </div>
     );
   }
 
