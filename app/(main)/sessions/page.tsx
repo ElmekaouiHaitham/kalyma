@@ -23,10 +23,11 @@ export default function SessionsPage() {
   useEffect(() => {
     const fetchUpcomingSessions = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sessions?status=scheduled`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sessions`);
         if (res.ok) {
           const data = await res.json();
-          setUpcomingSessions(data);
+          const upcomingAndLive = data.filter((s: any) => s.status === 'scheduled' || s.status === 'live');
+          setUpcomingSessions(upcomingAndLive);
         }
       } catch (err) {
         console.error("Failed to fetch upcoming sessions", err);
