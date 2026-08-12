@@ -18,6 +18,7 @@ export default function SessionsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [upcomingSessions, setUpcomingSessions] = useState<any[]>([]);
+  const [currentTime, setCurrentTime] = useState(Date.now());
 
   useEffect(() => {
     const fetchUpcomingSessions = async () => {
@@ -35,6 +36,10 @@ export default function SessionsPage() {
     };
     
     fetchUpcomingSessions();
+
+    // Update current time every minute for the countdown
+    const timer = setInterval(() => setCurrentTime(Date.now()), 60000);
+    return () => clearInterval(timer);
   }, []);
 
   if (loading) {
@@ -72,46 +77,75 @@ export default function SessionsPage() {
           {upcomingSessions.length === 0 ? (
             <p className="text-[#45464f] col-span-full">No upcoming sessions found.</p>
           ) : (
-            upcomingSessions.map((session) => (
-              <article key={session.id} className="bg-[#ffffff] rounded-xl p-4 md:p-5 shadow-[0_4px_12px_rgba(26,43,86,0.05)] border-[1.5px] border-[#1a2b56] md:border-transparent md:hover:border-[#1a2b56] transition-all duration-300 flex flex-col gap-4 relative group">
-                <div className="hidden md:inline-flex items-center gap-2 bg-[#dae1ff] text-[#1a2b56] font-semibold text-[12px] leading-[16px] px-3 py-1.5 rounded-full w-fit">
-                  <Clock className="w-4 h-4" />
-                  {new Date(session.scheduled_at).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                </div>
-                <div className="flex justify-between items-start md:hidden">
-                  <div className="flex items-center gap-2 text-[#1a2b56] font-semibold text-[12px] leading-[16px] bg-[#fed65b]/30 px-3 py-1 rounded-full">
-                    <Calendar className="w-4 h-4" />
-                    <span>{new Date(session.scheduled_at).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                </div>
+            upcomingSessions.map((session) => {
+              const sessionTime = new Date(session.scheduled_at).getTime();
+              const timeDiff = sessionTime - currentTime;
+              const isJoinable = timeDiff <= 45 * 60 * 1000;
+              
+              let timeStr = "";
+              if (!isJoinable) {
+                if (timeDiff > 24 * 60 * 60 * 1000) {
+                  const days = Math.floor(timeDiff / (24 * 60 * 60 * 1000));
+                  const hours = Math.floor((timeDiff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+                  timeStr = `${days}d ${hours}h`;
+                } else {
+                  const hours = Math.floor(timeDiff / (60 * 60 * 1000));
+                  const mins = Math.floor((timeDiff % (60 * 60 * 1000)) / (60 * 1000));
+                  timeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+                }
+              }
 
-                <div className="flex items-center gap-3 md:gap-4">
-                  <div>
-                    <h3 className="font-bold text-[16px] leading-[24px] text-[#1a2b56] leading-tight">
-                      {session.title}
-                    </h3>
-                    <p className="font-semibold text-[13px] leading-[18px] text-[#45464f] mt-0.5 capitalize">
-                      {session.topic || 'General Practice'}
-                    </p>
+              return (
+                <article key={session.id} className="bg-[#ffffff] rounded-xl p-4 md:p-5 shadow-[0_4px_12px_rgba(26,43,86,0.05)] border-[1.5px] border-[#1a2b56] md:border-transparent md:hover:border-[#1a2b56] transition-all duration-300 flex flex-col gap-4 relative group">
+                  <div className="hidden md:inline-flex items-center gap-2 bg-[#dae1ff] text-[#1a2b56] font-semibold text-[12px] leading-[16px] px-3 py-1.5 rounded-full w-fit">
+                    <Clock className="w-4 h-4" />
+                    {new Date(session.scheduled_at).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </div>
-                </div>
-                <p className="text-[14px] leading-[20px] text-[#45464f] line-clamp-2">
-                  {session.description || 'Join us for a live practice session!'}
-                </p>
-                <button 
-                  onClick={() => router.push(`/live/${session.id}`)}
-                  className="cursor-pointer hidden md:flex mt-auto w-full bg-[#1a2b56] text-[#ffffff] rounded-lg py-2.5 font-semibold text-[14px] leading-[20px] items-center justify-center gap-2 hover:bg-[#021541] hover:shadow-[0_4px_12px_rgba(26,43,86,0.15)] transition-all group-hover:-translate-y-0.5">
-                  <Video className="w-[18px] h-[18px]" />
-                  Join Session
-                </button>
-                <button 
-                  onClick={() => router.push(`/live/${session.id}`)}
-                  className="cursor-pointer md:hidden mt-auto bg-[#1a2b56] text-[#ffffff] font-semibold text-[14px] leading-[20px] px-4 py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-md w-full flex items-center justify-center gap-2">
-                  <Video className="w-[18px] h-[18px]" />
-                  Join Call
-                </button>
-              </article>
-            ))
+                  <div className="flex justify-between items-start md:hidden">
+                    <div className="flex items-center gap-2 text-[#1a2b56] font-semibold text-[12px] leading-[16px] bg-[#fed65b]/30 px-3 py-1 rounded-full">
+                      <Calendar className="w-4 h-4" />
+                      <span>{new Date(session.scheduled_at).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 md:gap-4">
+                    <div>
+                      <h3 className="font-bold text-[16px] leading-[24px] text-[#1a2b56] leading-tight">
+                        {session.title}
+                      </h3>
+                      <p className="font-semibold text-[13px] leading-[18px] text-[#45464f] mt-0.5 capitalize">
+                        {session.topic || 'General Practice'}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-[14px] leading-[20px] text-[#45464f] line-clamp-2">
+                    {session.description || 'Join us for a live practice session!'}
+                  </p>
+                  <button 
+                    disabled={!isJoinable}
+                    onClick={() => router.push(`/live/${session.id}`)}
+                    className={`mt-auto w-full hidden md:flex rounded-lg py-2.5 font-semibold text-[14px] leading-[20px] items-center justify-center gap-2 transition-all ${
+                      isJoinable 
+                        ? "cursor-pointer bg-[#1a2b56] text-[#ffffff] hover:bg-[#021541] hover:shadow-[0_4px_12px_rgba(26,43,86,0.15)] group-hover:-translate-y-0.5" 
+                        : "bg-[#e3e2e0] text-[#9aa5b1] cursor-not-allowed"
+                    }`}>
+                    <Video className="w-[18px] h-[18px]" />
+                    {isJoinable ? "Join Session" : `${timeStr} until session`}
+                  </button>
+                  <button 
+                    disabled={!isJoinable}
+                    onClick={() => router.push(`/live/${session.id}`)}
+                    className={`mt-auto w-full md:hidden rounded-lg py-2 px-4 font-semibold text-[14px] leading-[20px] flex items-center justify-center gap-2 transition-all ${
+                      isJoinable
+                        ? "cursor-pointer bg-[#1a2b56] text-[#ffffff] hover:opacity-90 active:scale-95 shadow-md"
+                        : "bg-[#e3e2e0] text-[#9aa5b1] cursor-not-allowed"
+                    }`}>
+                    <Video className="w-[18px] h-[18px]" />
+                    {isJoinable ? "Join Call" : `${timeStr} until session`}
+                  </button>
+                </article>
+              );
+            })
           )}
         </div>
       </section>
@@ -142,7 +176,7 @@ export default function SessionsPage() {
             </div>
 
             <div className="flex items-center gap-3 md:gap-4 opacity-75 md:opacity-100">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden grayscale-[20%] opacity-90 shrink-0 border border-[#c5c6d0] md:border-none">
+              <div className="w-10 h-10 md:w-12 h-12 rounded-full overflow-hidden grayscale-[20%] opacity-90 shrink-0 border border-[#c5c6d0] md:border-none">
                 <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvmzmRCREmh5UpJwIQmKVjqmxXlmLa-Hm7mxb7MN3Z6oUQIkJ4usxNsMsMDi-3xVxjGYxjjiM1L0M58hXIPl5AU9ZOBH4RzVO9tlROkvU15XjsmQQyjd7-Zd0rOHEhn1DZHkB5rKRX63FWQoJFQ9o1OaLcErjSNM08gENdd3820i2j8AOXaNFnbwGPS-1ZYBGZK6wSv2ic2s988UOIHfjq5oc-2k-InKdUTrKmn4M2cyZ2DIQ6kZt7" alt="Marc Dubois" className="w-full h-full object-cover hidden md:block" />
                 <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWCtezPNhVfm7Eh8USH1jAjZAciT8hfJ7ApnsAlx-vJf_szOX3W1IaAc8PhCp7Gi8RerD0zMOEEyG8T0_Ab1dQdYebf02tDNoUMVf83yE56gWLibh7eL-aMWUZTJ2zvuUDZsXPLPAesieRO-lGAUWols-J-U5CbEIJpOI4hXSVUSNB5lYeKtNmfnGvapQrb4oH123W-tWuHdTaSO4TefvBMN08cmiMC1fJqIMYULQ6yghiPJmhz_H-" alt="Dr. Elena Rostova" className="w-full h-full object-cover block md:hidden" />
               </div>
@@ -178,7 +212,7 @@ export default function SessionsPage() {
               Oct 05, 2:15 PM
             </div>
             <div className="flex items-center gap-3 md:gap-4">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden grayscale-[20%] opacity-90 shrink-0">
+              <div className="w-10 h-10 md:w-12 h-12 rounded-full overflow-hidden grayscale-[20%] opacity-90 shrink-0">
                 <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIUn11YROkMr7Y0t9_zG8Sbbag67gGI-pRg3bEiLwmh5iKfqDAhCk2FNT8gUOQk7mi95UUC3Xm4tFTjaYDAYCKlRXtoRddOwb7IUKpeUwoW7BQ8PBbE091walN1MIvax-rrjmcHWyXEaJ028MMI34vOD-lLjJw8vMPMet9mFugXOC0ShQ_XQrelLu5Xk0QKfvNlbXNtj100mswqdHpEjOT-chEWlQFTBfXRk_IizDFmWLuMVQf8FRZ" alt="Yuki Tanaka" className="w-full h-full object-cover" />
               </div>
               <div className="flex-1">
