@@ -43,6 +43,7 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRated, setIsRated] = useState(false);
+  const [isTeacher, setIsTeacher] = useState(false);
 
   useEffect(() => {
     if (!authSession?.access_token) return;
@@ -58,12 +59,26 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
         const data = await res.json();
         setSession(data);
 
-        // 2. If Live and Pro, Fetch Token
-        if (data.status === 'live' || (data.status === 'scheduled' && new Date(data.scheduled_at).getTime() - Date.now() < 300000)) {
-           if (user?.plan !== 'pro') {
+        // 2. Check if Teacher
+        let userIsTeacher = false;
+        try {
+           const tRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sessions/teacher/me`, { headers });
+           if (tRes.ok) {
+              const tData = await tRes.json();
+              if (tData.teacher.id === data.teacher_id) {
+                 userIsTeacher = true;
+                 setIsTeacher(true);
+              }
+           }
+        } catch (e) {}
+
+        // 3. Fetch Token
+        if (data.status === 'live' || userIsTeacher || (data.status === 'scheduled' && new Date(data.scheduled_at).getTime() - Date.now() < 300000)) {
+           if (!userIsTeacher && user?.plan !== 'pro') {
               setError("PRO_REQUIRED");
            } else {
-              const tokenRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sessions/${id}/token/student`, { 
+              const endpoint = userIsTeacher ? 'token/teacher' : 'token/student';
+              const tokenRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sessions/${id}/${endpoint}`, { 
                 method: 'POST',
                 headers 
               });
@@ -107,6 +122,30 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleStartSession = async () => {
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sessions/${id}/start`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${authSession?.access_token}` },
+      });
+      setSession(prev => prev ? { ...prev, status: 'live' } : null);
+    } catch (e) {}
+  };
+
+  const handleEndSession = async () => {
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sessions/${id}/end`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authSession?.access_token}`,
+        },
+        body: JSON.stringify({ summary: "Session ended by teacher." })
+      });
+      setSession(prev => prev ? { ...prev, status: 'completed' } : null);
+    } catch (e) {}
   };
 
   if (isLoading) {
@@ -175,12 +214,27 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
                  <span className="text-[10px] font-bold text-[#ef4444] uppercase tracking-wider">Live</span>
               </div>
            )}
-           <button 
-            onClick={() => setShowRating(true)}
-            className="hidden md:flex items-center gap-2 px-4 py-2 bg-[#f7f2ea] text-[#1a2b5e] text-xs font-bold rounded-xl border border-[#1a2b5e]/10 hover:bg-[#1a2b5e] hover:text-white transition-all"
-           >
-             <Star size={14} /> Rate Session
-           </button>
+           {isTeacher ? (
+             <div className="flex items-center gap-2">
+                {session?.status === 'scheduled' && (
+                  <button onClick={handleStartSession} className="px-4 py-2 bg-[#34d399] text-[#1a2b5e] text-xs font-bold rounded-xl hover:bg-[#10b981] transition-all">
+                    Start Session
+                  </button>
+                )}
+                {session?.status === 'live' && (
+                  <button onClick={handleEndSession} className="px-4 py-2 bg-[#ef4444] text-white text-xs font-bold rounded-xl hover:bg-[#dc2626] transition-all">
+                    End Session
+                  </button>
+                )}
+             </div>
+           ) : (
+             <button 
+              onClick={() => setShowRating(true)}
+              className="hidden md:flex items-center gap-2 px-4 py-2 bg-[#f7f2ea] text-[#1a2b5e] text-xs font-bold rounded-xl border border-[#1a2b5e]/10 hover:bg-[#1a2b5e] hover:text-white transition-all"
+             >
+               <Star size={14} /> Rate Session
+             </button>
+           )}
         </div>
       </header>
 
