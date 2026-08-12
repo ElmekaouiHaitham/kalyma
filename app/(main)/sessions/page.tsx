@@ -123,7 +123,7 @@ export default function SessionsPage() {
                   </p>
                   <button 
                     disabled={!isJoinable}
-                    onClick={() => router.push(`/live/${session.id}`)}
+                    onClick={() => router.push(`/sessions/${session.id}`)}
                     className={`mt-auto w-full hidden md:flex rounded-lg py-2.5 font-semibold text-[14px] leading-[20px] items-center justify-center gap-2 transition-all ${
                       isJoinable 
                         ? "cursor-pointer bg-[#1a2b56] text-[#ffffff] hover:bg-[#021541] hover:shadow-[0_4px_12px_rgba(26,43,86,0.15)] group-hover:-translate-y-0.5" 
@@ -134,7 +134,7 @@ export default function SessionsPage() {
                   </button>
                   <button 
                     disabled={!isJoinable}
-                    onClick={() => router.push(`/live/${session.id}`)}
+                    onClick={() => router.push(`/sessions/${session.id}`)}
                     className={`mt-auto w-full md:hidden rounded-lg py-2 px-4 font-semibold text-[14px] leading-[20px] flex items-center justify-center gap-2 transition-all ${
                       isJoinable
                         ? "cursor-pointer bg-[#1a2b56] text-[#ffffff] hover:opacity-90 active:scale-95 shadow-md"
