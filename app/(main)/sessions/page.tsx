@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { 
   Loader2,
@@ -14,11 +15,26 @@ import {
 } from "lucide-react";
 
 export default function SessionsPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [upcomingSessions, setUpcomingSessions] = useState<any[]>([]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2000);
-    return () => clearTimeout(timer);
+    const fetchUpcomingSessions = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sessions?status=scheduled`);
+        if (res.ok) {
+          const data = await res.json();
+          setUpcomingSessions(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch upcoming sessions", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchUpcomingSessions();
   }, []);
 
   if (loading) {
@@ -52,90 +68,52 @@ export default function SessionsPage() {
           Upcoming Sessions
         </h2>
 
-        {/* Empty State */}
-        <div className="bg-[#ffffff] rounded-2xl p-8 md:p-12 border-[1.5px] border-dashed border-[#c5c6d0] flex flex-col items-center justify-center text-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-[#f4f3f1] flex items-center justify-center mb-1">
-            <CalendarDays className="w-6 h-6 text-[#757680]" />
-          </div>
-          <p className="font-semibold text-[16px] md:text-[18px] text-[#1a2b56]">No sessions coming yet.</p>
-          <p className="text-[14px] text-[#757680] max-w-md">When you book a new mentoring session or debate match, it will appear here.</p>
-        </div>
-
-        {/* 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          <article className="bg-[#ffffff] rounded-xl p-4 md:p-5 shadow-[0_4px_12px_rgba(26,43,86,0.05)] border-[1.5px] border-[#1a2b56] md:border-transparent md:hover:border-[#1a2b56] transition-all duration-300 flex flex-col gap-4 relative group">
-            <div className="hidden md:inline-flex items-center gap-2 bg-[#dae1ff] text-[#1a2b56] font-semibold text-[12px] leading-[16px] px-3 py-1.5 rounded-full w-fit">
-              <Clock className="w-4 h-4" />
-              Today, 4:00 PM
-            </div>
-            <div className="flex justify-between items-start md:hidden">
-              <div className="flex items-center gap-2 text-[#1a2b56] font-semibold text-[12px] leading-[16px] bg-[#fed65b]/30 px-3 py-1 rounded-full">
-                <Calendar className="w-4 h-4" />
-                <span>Today, 3:00 PM - 4:00 PM</span>
-              </div>
-              <button className="cursor-pointer bg-[#1a2b56] text-[#ffffff] font-semibold text-[14px] leading-[20px] px-4 py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-md">
-                Join Call
-              </button>
-            </div>
+          {upcomingSessions.length === 0 ? (
+            <p className="text-[#45464f] col-span-full">No upcoming sessions found.</p>
+          ) : (
+            upcomingSessions.map((session) => (
+              <article key={session.id} className="bg-[#ffffff] rounded-xl p-4 md:p-5 shadow-[0_4px_12px_rgba(26,43,86,0.05)] border-[1.5px] border-[#1a2b56] md:border-transparent md:hover:border-[#1a2b56] transition-all duration-300 flex flex-col gap-4 relative group">
+                <div className="hidden md:inline-flex items-center gap-2 bg-[#dae1ff] text-[#1a2b56] font-semibold text-[12px] leading-[16px] px-3 py-1.5 rounded-full w-fit">
+                  <Clock className="w-4 h-4" />
+                  {new Date(session.scheduled_at).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </div>
+                <div className="flex justify-between items-start md:hidden">
+                  <div className="flex items-center gap-2 text-[#1a2b56] font-semibold text-[12px] leading-[16px] bg-[#fed65b]/30 px-3 py-1 rounded-full">
+                    <Calendar className="w-4 h-4" />
+                    <span>{new Date(session.scheduled_at).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                </div>
 
-            <div className="flex items-center gap-3 md:gap-4">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-[1.5px] border-[#dae1ff] shrink-0">
-                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBsbIRC2-IMrmf_BmRliPvas1-oMzNxEW6fyzdkARijLxuBNBNZMPaFn3tTZq4S4zBp6oNtzY8yATQ-ElmFBBo7owtPB3HoJkhMV1B7De9BDNAcmQDUi0z7RQptIE1xlSiXnErY-QrUfEi3LbWRcU2oaG0vXuH_YYWg7LgLhTfszwasiu1iNjjXXk__ypDZDtNsh8hJoYdsZnz0ukjMRSanyH_m1qqAdIobWRJ4P52mKW-3q_Ybyk1B" alt="Elena Rodriguez" className="w-full h-full object-cover hidden md:block" />
-                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuC20h4wa2BISU8Kxl_bsOziNyQ-TNYr56IZC-int13jfj8Y5pcjgphkulgSumXNgQxxGBW-8w16ocOJ03tYYcBukzxTDwnxFSOKmJZHg2-Z5KLS65aSCeMQEU1mD2umLSBJqhif4C65RrsvvYT6YDR8xIu1N49F4b7odng60MaXAMEUwnLx82GkV-L4kpRjZCkVyIncm8sENbcp75-3TbUCcDGjCPq1gJ2xvmzMfAMAt8kMpERwWt3P" alt="Dr. Elena Rostova" className="w-full h-full object-cover block md:hidden" />
-              </div>
-              <div>
-                <h3 className="font-bold text-[16px] leading-[24px] text-[#1a2b56] leading-tight">
-                  <span className="hidden md:inline">Elena Rodriguez</span>
-                  <span className="md:hidden">Dr. Elena Rostova</span>
-                </h3>
-                <p className="font-semibold text-[13px] leading-[18px] text-[#45464f] mt-0.5">
-                  <span className="hidden md:inline">Spanish • Conversational</span>
-                  <span className="md:hidden">UX Research Methodologies</span>
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div>
+                    <h3 className="font-bold text-[16px] leading-[24px] text-[#1a2b56] leading-tight">
+                      {session.title}
+                    </h3>
+                    <p className="font-semibold text-[13px] leading-[18px] text-[#45464f] mt-0.5 capitalize">
+                      {session.topic || 'General Practice'}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-[14px] leading-[20px] text-[#45464f] line-clamp-2">
+                  {session.description || 'Join us for a live practice session!'}
                 </p>
-              </div>
-            </div>
-            <p className="text-[14px] leading-[20px] text-[#45464f] line-clamp-2">
-              <span className="hidden md:inline">Expert in conversational Spanish and regional dialects with over 10 years of experience teaching dynamic, immersive lessons...</span>
-              <span className="md:hidden">We will be diving into qualitative synthesis techniques and how to structure your affinity mapping sessions for better insights...</span>
-            </p>
-            <button className="cursor-pointer hidden md:flex mt-auto w-full bg-[#1a2b56] text-[#ffffff] rounded-lg py-2.5 font-semibold text-[14px] leading-[20px] items-center justify-center gap-2 hover:bg-[#021541] hover:shadow-[0_4px_12px_rgba(26,43,86,0.15)] transition-all group-hover:-translate-y-0.5">
-              <Video className="w-[18px] h-[18px]" />
-              Join Session
-            </button>
-          </article>
-
-          <article className="bg-[#ffffff] rounded-xl p-4 md:p-5 shadow-[0_4px_12px_rgba(26,43,86,0.05)] border-[1.5px] border-[#c5c6d0] md:border-transparent md:hover:border-[#1a2b56] transition-all duration-300 flex flex-col gap-4 relative group">
-            <div className="inline-flex items-center gap-2 md:bg-[#e3e2e0] text-[#45464f] font-semibold text-[12px] leading-[16px] px-0 md:px-3 py-0 md:py-1.5 rounded-full w-fit">
-              <CalendarDays className="w-4 h-4" />
-              Tomorrow, 10:00 AM
-            </div>
-            <div className="flex items-center gap-3 md:gap-4">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-[1.5px] border-[#c5c6d0] md:border-[#dae1ff] shrink-0">
-                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIlP2bgDMNSl_Fk0led9vnJb_PjlReesRurUNRjrXHudgQ7qx-4xSsvvaEWvfFn2yvdiIkJb7LDMrSphef6VILMViyQNNBjLa9Np-oIu32CkfifhT8_4K-vVqRqBw5PM3GuBx-THj6qa2LPpD5zTmpa7vmsHTcU3wkiPWZcVpwoBh2zbpzKhK0K3feWIoaL7Mnz2bJBFwkaWdqgij6ITg4mQzdb2m_ZSq2lfKOVNVFlIgMHfLSwXxg" alt="David Kim" className="w-full h-full object-cover hidden md:block" />
-                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuABnNdmFSrDlU2nombzTQVI3pxb21a2kEGTnRVVNkYZ6FPMt_G7zWusXacDb8S-TTEY_17Cmy9Dit_qpuLfNphQOvDfaWP3ZhK4JKMJWlA0nnfxiEjHOMqSCPobhAf7ju8f9o42Me0V_mvHOeEx_zMedgtr1nItu-xTYWSnvPbHfi9jf-Q4DxIhTChX1_J4MRLeza6GEZcj5WrLT6uqn9U--uTtllCkp3ehBhjW7T8iGk0_RfI_VaOe" alt="Marcus Chen" className="w-full h-full object-cover block md:hidden" />
-              </div>
-              <div>
-                <h3 className="font-bold text-[16px] leading-[24px] text-[#1a2b56] leading-tight">
-                  <span className="hidden md:inline">David Kim</span>
-                  <span className="md:hidden">Marcus Chen</span>
-                </h3>
-                <p className="font-semibold text-[13px] leading-[18px] text-[#45464f] mt-0.5">
-                  <span className="hidden md:inline">Korean • Beginner</span>
-                  <span className="md:hidden">Advanced Prototyping</span>
-                </p>
-              </div>
-            </div>
-            <p className="text-[14px] leading-[20px] text-[#1a1c1a] md:text-[#45464f] line-clamp-2">
-              <span className="hidden md:inline">Patient and supportive tutor specializing in foundational grammar and everyday vocabulary for absolute beginners...</span>
-              <span className="md:hidden">Reviewing your latest Framer prototypes and discussing motion design principles for micro-interactions...</span>
-            </p>
-            <button className="cursor-pointer hidden md:flex mt-auto w-full bg-[#1a2b56] text-[#ffffff] rounded-lg py-2.5 font-semibold text-[14px] leading-[20px] items-center justify-center gap-2 hover:bg-[#021541] hover:shadow-[0_4px_12px_rgba(26,43,86,0.15)] transition-all group-hover:-translate-y-0.5">
-              <Video className="w-[18px] h-[18px]" />
-              Join Session
-            </button>
-          </article>
+                <button 
+                  onClick={() => router.push(`/live/${session.id}`)}
+                  className="cursor-pointer hidden md:flex mt-auto w-full bg-[#1a2b56] text-[#ffffff] rounded-lg py-2.5 font-semibold text-[14px] leading-[20px] items-center justify-center gap-2 hover:bg-[#021541] hover:shadow-[0_4px_12px_rgba(26,43,86,0.15)] transition-all group-hover:-translate-y-0.5">
+                  <Video className="w-[18px] h-[18px]" />
+                  Join Session
+                </button>
+                <button 
+                  onClick={() => router.push(`/live/${session.id}`)}
+                  className="cursor-pointer md:hidden mt-auto bg-[#1a2b56] text-[#ffffff] font-semibold text-[14px] leading-[20px] px-4 py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-md w-full flex items-center justify-center gap-2">
+                  <Video className="w-[18px] h-[18px]" />
+                  Join Call
+                </button>
+              </article>
+            ))
+          )}
         </div>
-        */}
       </section>
 
       {/* Previous Sessions */}
@@ -148,16 +126,6 @@ export default function SessionsPage() {
           Previous Sessions
         </h2>
 
-        {/* Empty State */}
-        <div className="bg-[#f4f3f1] rounded-2xl p-8 md:p-12 border-[1.5px] border-dashed border-[#c5c6d0] flex flex-col items-center justify-center text-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-[#ffffff] flex items-center justify-center mb-1">
-            <History className="w-6 h-6 text-[#757680]" />
-          </div>
-          <p className="font-semibold text-[16px] md:text-[18px] text-[#1a2b56]">No previous sessions.</p>
-          <p className="text-[14px] text-[#757680] max-w-md">Your completed sessions and transcripts will appear here.</p>
-        </div>
-
-        {/*
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           <article className="bg-[#f4f3f1] md:bg-[#efeeeb] rounded-xl p-4 md:p-5 border-none md:border-[1.5px] border-[#e3e2e0] flex flex-col gap-4">
             <div className="flex justify-between items-start md:opacity-100 opacity-75">
@@ -233,7 +201,6 @@ export default function SessionsPage() {
             </button>
           </article>
         </div>
-        */}
       </section>
     </main>
   );
