@@ -149,9 +149,14 @@ export default function TeacherSessionsPage() {
 
                 <button 
                   onClick={() => router.push(`/sessions/${session.id}`)}
-                  className="mt-auto w-full rounded-lg py-2.5 font-bold text-[14px] leading-[20px] flex items-center justify-center gap-2 transition-all bg-[#c9a84c] text-white hover:bg-[#b0913f] hover:shadow-lg shadow-[#c9a84c]/20">
+                  disabled={session.status === 'completed'}
+                  className={`mt-auto w-full rounded-lg py-2.5 font-bold text-[14px] leading-[20px] flex items-center justify-center gap-2 transition-all ${
+                    session.status === 'completed' 
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-[#c9a84c] text-white hover:bg-[#b0913f] hover:shadow-lg shadow-[#c9a84c]/20'
+                  }`}>
                   <Video className="w-[18px] h-[18px]" />
-                  Enter Session as Host
+                  {session.status === 'completed' ? 'Session Completed' : 'Enter Session as Host'}
                 </button>
               </article>
             ))

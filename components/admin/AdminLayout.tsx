@@ -8,12 +8,12 @@ interface AdminLayoutProps {
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   return (
-    <div className="flex h-screen bg-[#0a0f1c] text-white font-sans overflow-hidden">
+    <div className="flex h-screen bg-[#f7f2ea] text-[#1a2b5e] font-sans overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 flex-shrink-0 bg-white/5 border-r border-white/10 flex flex-col backdrop-blur-xl">
+      <aside className="w-64 flex-shrink-0 bg-white border-r border-[#1a2b5e]/10 flex flex-col shadow-lg">
         <div className="p-6">
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-bold">
+            <div className="w-8 h-8 rounded bg-[#1a2b5e] text-[#c9842f] flex items-center justify-center font-bold">
               K
             </div>
             <span className="text-xl font-bold tracking-tight">Kalyma Admin</span>
@@ -28,8 +28,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           <NavItem href="/admin/settings" icon={<Settings size={20} />} label="Settings" />
         </nav>
         
-        <div className="p-4 border-t border-white/10">
-          <button className="flex items-center w-full px-4 py-2 space-x-3 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+        <div className="p-4 border-t border-[#1a2b5e]/10">
+          <button className="flex items-center w-full px-4 py-2 space-x-3 text-[#4a5568] hover:text-[#1a2b5e] hover:bg-[#1a2b5e]/5 rounded-lg transition-colors">
             <LogOut size={20} />
             <span>Sign Out</span>
           </button>
@@ -38,10 +38,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
-        <header className="sticky top-0 z-10 bg-[#0a0f1c]/80 backdrop-blur-md border-b border-white/10 px-8 py-5 flex justify-between items-center">
+        <header className="sticky top-0 z-10 bg-[#f7f2ea]/80 backdrop-blur-md border-b border-[#1a2b5e]/10 px-8 py-5 flex justify-between items-center">
           <h1 className="text-2xl font-bold tracking-tight">Overview</h1>
           <div className="flex items-center space-x-4">
-            <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center font-bold shadow-lg shadow-blue-900/50">
+            <div className="w-9 h-9 rounded-full bg-[#1a2b5e] text-[#f7f2ea] flex items-center justify-center font-bold shadow-[0_4px_14px_rgba(26,43,94,0.3)]">
               A
             </div>
           </div>
@@ -60,8 +60,8 @@ const NavItem = ({ href, icon, label, active = false }: { href: string, icon: Re
       href={href} 
       className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${
         active 
-          ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30 shadow-[0_0_15px_rgba(37,99,235,0.1)]' 
-          : 'text-gray-400 hover:text-white hover:bg-white/5'
+          ? 'bg-[#fffaf2] text-[#c9842f] border border-[#c9842f]/30 shadow-[0_0_15px_rgba(201,132,47,0.1)]' 
+          : 'text-[#4a5568] hover:text-[#1a2b5e] hover:bg-[#1a2b5e]/5'
       }`}
     >
       {icon}

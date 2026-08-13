@@ -63,7 +63,7 @@ export default function AdminDashboardPage() {
     return (
       <AdminLayout>
         <div className="flex h-[60vh] items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#c9842f]" />
         </div>
       </AdminLayout>
     );
@@ -104,7 +104,7 @@ export default function AdminDashboardPage() {
         className="space-y-10"
       >
         {/* ─── USERS OVERVIEW ─────────────────────────────────── */}
-        <Section icon={<Users size={20} />} title="Users Overview" color="text-blue-400">
+        <Section icon={<Users size={20} />} title="Users Overview" color="text-[#c9842f]">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             <MetricCard
               title="Total Users"
@@ -134,7 +134,7 @@ export default function AdminDashboardPage() {
         </Section>
 
         {/* ─── RETENTION ─────────────────────────────────────── */}
-        <Section icon={<Clock size={20} />} title="User Retention" color="text-purple-400">
+        <Section icon={<Clock size={20} />} title="User Retention" color="text-[#c9842f]">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             <MetricCard
               title="Active (7d)"
@@ -164,7 +164,7 @@ export default function AdminDashboardPage() {
         </Section>
 
         {/* ─── STREAKS & XP ──────────────────────────────────── */}
-        <Section icon={<Flame size={20} />} title="Streaks, XP & Achievements" color="text-orange-400">
+        <Section icon={<Flame size={20} />} title="Streaks, XP & Achievements" color="text-[#c9842f]">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             <MetricCard
               title="Active Streaks"
@@ -202,7 +202,7 @@ export default function AdminDashboardPage() {
         </Section>
 
         {/* ─── AI / ATLAS ────────────────────────────────────── */}
-        <Section icon={<Brain size={20} />} title="Atlas AI Usage" color="text-cyan-400">
+        <Section icon={<Brain size={20} />} title="Atlas AI Usage" color="text-[#c9842f]">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             <MetricCard
               title="AI Conversations"
@@ -233,7 +233,7 @@ export default function AdminDashboardPage() {
         </Section>
 
         {/* ─── SPACED REPETITION ─────────────────────────────── */}
-        <Section icon={<BookOpen size={20} />} title="Spaced Repetition" color="text-emerald-400">
+        <Section icon={<BookOpen size={20} />} title="Spaced Repetition" color="text-[#c9842f]">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             <MetricCard
               title="Saved Items"
@@ -257,7 +257,7 @@ export default function AdminDashboardPage() {
         </Section>
 
         {/* ─── FINANCIALS ────────────────────────────────────── */}
-        <Section icon={<DollarSign size={20} />} title="Revenue & Subscriptions" color="text-yellow-400">
+        <Section icon={<DollarSign size={20} />} title="Revenue & Subscriptions" color="text-[#c9842f]">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             <MetricCard
               title="Total Revenue"
@@ -303,7 +303,7 @@ function Section({
 }) {
   return (
     <div>
-      <h2 className={`text-lg font-semibold text-white/90 mb-4 flex items-center`}>
+      <h2 className={`text-lg font-semibold text-[#1a2b5e] mb-4 flex items-center`}>
         <span className={color}>{icon}</span>
         <span className="ml-2">{title}</span>
       </h2>
