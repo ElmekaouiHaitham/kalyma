@@ -268,63 +268,6 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
             </div>
           )}
         </div>
-
-        {/* Sidebar (Info & Summary) */}
-        <aside className="w-full md:w-80 border-l bg-white flex flex-col overflow-y-auto">
-          <div className="p-5 space-y-6">
-             {/* Stats */}
-             <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-[#f7f2ea] rounded-2xl border border-[#e6d9c9]">
-                   <p className="text-[10px] font-bold text-[#94a3b8] uppercase mb-1">Duration</p>
-                   <div className="flex items-center gap-2">
-                      <Clock size={16} className="text-[#1a2b5e]" />
-                      <span className="text-sm font-bold text-[#1a2b5e]">{session?.duration_mins}m</span>
-                   </div>
-                </div>
-                <div className="p-3 bg-[#f7f2ea] rounded-2xl border border-[#e6d9c9]">
-                   <p className="text-[10px] font-bold text-[#94a3b8] uppercase mb-1">Participants</p>
-                   <div className="flex items-center gap-2">
-                      <Users size={16} className="text-[#1a2b5e]" />
-                      <span className="text-sm font-bold text-[#1a2b5e]">{session?.max_attendees || '∞'}</span>
-                   </div>
-                </div>
-             </div>
-
-             {/* Description */}
-             <div>
-                <h4 className="flex items-center gap-2 text-xs font-bold text-[#1a2b5e] mb-2 uppercase tracking-wider">
-                  <Info size={14} className="text-[#c9a84c]" /> Session Description
-                </h4>
-                <p className="text-sm text-[#4a5568] leading-relaxed">
-                  {session?.description || "In this session, you'll practice real-world conversations with an experienced tutor and other learners."}
-                </p>
-             </div>
-
-             {/* AI Summary (if completed) */}
-             {session?.ai_summary && (
-                <div className="p-4 bg-[#f7f2ea] rounded-2xl border border-[#1a2b5e]/5">
-                   <h4 className="flex items-center gap-2 text-xs font-bold text-[#1a2b5e] mb-3 uppercase">
-                     <CheckCircle2 size={14} className="text-[#34d399]" /> Learning Summary
-                   </h4>
-                   <p className="text-xs text-[#4a5568] leading-relaxed italic">
-                      &quot;{session.ai_summary}&quot;
-                   </p>
-                </div>
-             )}
-
-             {/* Tips Notice */}
-             {!session?.ai_summary && (
-                <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
-                   <div className="flex gap-3">
-                      <AlertCircle className="text-orange-400 shrink-0" size={16} />
-                      <p className="text-[11px] text-orange-700 leading-snug">
-                         Stay active! Participating in the chat and speaking out loud helps you learn 3x faster.
-                      </p>
-                   </div>
-                </div>
-             )}
-          </div>
-        </aside>
       </main>
 
       {/* Rating Modal Content Overlay */}
