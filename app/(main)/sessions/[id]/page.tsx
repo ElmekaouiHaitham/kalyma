@@ -12,7 +12,9 @@ import {
   AlertCircle,
   X,
   CheckCircle2,
-  Loader2
+  Loader2,
+  Maximize,
+  Minimize
 } from "lucide-react";
 import { useAuth } from "@/app/providers";
 
@@ -44,6 +46,23 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRated, setIsRated] = useState(false);
   const [isTeacher, setIsTeacher] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    const container = document.getElementById("video-container");
+    if (!container) return;
+    if (!document.fullscreenElement) {
+      container.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  };
 
   useEffect(() => {
     if (authLoading || !authSession?.access_token) return;
@@ -241,13 +260,22 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
 
       <main className="flex-1 flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden">
         {/* Main Content (Video Area) */}
-        <div className="flex-1 bg-black relative flex flex-col">
+        <div id="video-container" className="flex-1 bg-black relative flex flex-col">
           {token && session?.daily_room_url ? (
-            <iframe
-              src={`${session.daily_room_url}?t=${token}`}
-              className="w-full h-full border-none"
-              allow="camera; microphone; display-capture; autoplay; encrypted-media; fullscreen"
-            />
+            <>
+              <iframe
+                src={`${session.daily_room_url}?t=${token}`}
+                className="w-full h-full border-none"
+                allow="camera; microphone; display-capture; autoplay; encrypted-media; fullscreen"
+              />
+              <button 
+                onClick={toggleFullscreen}
+                className="absolute top-4 right-4 p-2 bg-black/50 text-white rounded-lg hover:bg-black/70 transition-colors z-50 backdrop-blur-sm shadow-lg"
+                title="Toggle Fullscreen"
+              >
+                {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
+              </button>
+            </>
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
                <div className="p-8 bg-white/5 rounded-3xl backdrop-blur-xl border border-white/10 max-w-md">
