@@ -23,22 +23,8 @@ export default function SessionsPage() {
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [recordingLoading, setRecordingLoading] = useState<string | null>(null);
 
-  const handleWatchRecording = async (sessionId: string) => {
-    setRecordingLoading(sessionId);
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sessions/${sessionId}/recording-link`);
-      if (res.status === 409) {
-         alert("The recording is still processing. Please check back in a few minutes.");
-         return;
-      }
-      if (!res.ok) throw new Error("Could not fetch recording");
-      const data = await res.json();
-      window.open(data.url, '_blank');
-    } catch (e) {
-      alert("Recording not available for this session.");
-    } finally {
-      setRecordingLoading(null);
-    }
+  const handleWatchRecording = (sessionId: string) => {
+    router.push(`/sessions/${sessionId}/recording`);
   };
 
   useEffect(() => {
