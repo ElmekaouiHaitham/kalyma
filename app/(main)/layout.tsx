@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -13,6 +14,8 @@ import {
   Trophy,
   Calendar,
   Award,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/app/providers";
@@ -45,6 +48,7 @@ export default function MainLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { user, signOut } = useAuth();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const showMobileNav = pathname === "/home" || pathname.startsWith("/profile");
   const showMobileBack = !showMobileNav && pathname !== "/news";
   const displayName = user?.full_name?.trim() || "Kalyma Learner";
@@ -67,19 +71,38 @@ export default function MainLayout({
       }}
     >
       {/* ── SIDEBAR (md+) ─────────────────────────────── */}
-      <aside className="hidden md:flex flex-col shrink-0 h-screen border-r border-[rgba(26,43,94,0.08)] bg-white/80 backdrop-blur-xl z-30" style={{ width: '230px', padding: '19px 16px' }}>
-        <div className="px-1 mb-5 shrink-0">
-          <Image
-            src="/logo with word.webp"
-            alt="kalyma"
-            width={262}
-            height={102}
-            className="h-16 w-auto object-contain"
-            priority
-          />
+      <aside 
+        className={cn(
+          "hidden md:flex flex-col shrink-0 h-screen border-r border-[rgba(26,43,94,0.08)] bg-white/80 backdrop-blur-xl z-30 transition-all duration-300 relative",
+          isSidebarOpen ? "w-[230px] px-4" : "w-[76px] px-2"
+        )} 
+        style={{ paddingTop: '19px', paddingBottom: '19px' }}
+      >
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="absolute -right-3 top-8 bg-white border border-[#aeb5c9] text-[#1a2b5e] rounded-full p-1 z-40 hover:bg-[#f4efe7] transition-all shadow-sm"
+        >
+          {isSidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+        </button>
+
+        <div className={cn("mb-5 shrink-0 transition-all overflow-hidden flex items-center justify-center", isSidebarOpen ? "px-1" : "")}>
+          {isSidebarOpen ? (
+            <Image
+              src="/logo with word.webp"
+              alt="kalyma"
+              width={262}
+              height={102}
+              className="h-16 w-auto object-contain"
+              priority
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-xl bg-[#f4efe7] text-[#1a2b5e] border border-[#aeb5c9]/50 flex items-center justify-center font-extrabold text-lg">
+              K
+            </div>
+          )}
         </div>
 
-        <nav className="flex-1 overflow-y-auto">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden">
           <ul className="space-y-1">
             {NAV_ITEMS.map(({ href, label, icon: Icon, profile }) => {
               const isActive = active(href);
@@ -87,23 +110,25 @@ export default function MainLayout({
                 <li key={href}>
                   <button
                     onClick={() => nav(href)}
+                    title={!isSidebarOpen ? label : undefined}
                     className={cn(
-                      "cursor-pointer w-full flex items-center gap-2.5 px-3 py-2.5 rounded-[11px] border-2 text-[12px] font-medium transition-all duration-200 active:scale-[0.98]",
+                      "cursor-pointer flex items-center gap-2.5 rounded-[11px] border-2 text-[12px] font-medium transition-all duration-200 active:scale-[0.98]",
                       isActive
                         ? "border-[#aeb5c9] bg-[#f4efe7] text-[#1a2b5e]"
-                      : "border-transparent text-[#667084] hover:border-[#aeb5c9] hover:bg-[#f4efe7] hover:text-[#1a2b5e]",
+                        : "border-transparent text-[#667084] hover:border-[#aeb5c9] hover:bg-[#f4efe7] hover:text-[#1a2b5e]",
+                      isSidebarOpen ? "px-3 py-2.5 w-full" : "w-11 h-11 justify-center mx-auto"
                     )}
                   >
                     {profile ? (
                       <UserAvatar
                         avatarUrl={user?.avatar_url}
                         name={displayName}
-                        size={16}
+                        size={isSidebarOpen ? 16 : 20}
                       />
                     ) : (
-                      <Icon className="h-[16px] w-[16px]" />
+                      <Icon className={cn("shrink-0", isSidebarOpen ? "h-[16px] w-[16px]" : "h-[20px] w-[20px]")} />
                     )}
-                    <span>{label}</span>
+                    {isSidebarOpen && <span className="whitespace-nowrap">{label}</span>}
                   </button>
                 </li>
               );
@@ -113,10 +138,14 @@ export default function MainLayout({
 
         <button
           onClick={signOut}
-          className="cursor-pointer mt-3 flex items-center gap-2.5 px-3 py-2.5 rounded-[11px] border-2 border-transparent text-[12px] font-medium text-[#667084] hover:border-[#aeb5c9] hover:bg-[#f4efe7] hover:text-[#1a2b5e] active:scale-[0.98] transition-all duration-200 shrink-0"
+          title={!isSidebarOpen ? "Sign out" : undefined}
+          className={cn(
+            "cursor-pointer mt-3 flex items-center gap-2.5 rounded-[11px] border-2 border-transparent text-[12px] font-medium text-[#667084] hover:border-[#aeb5c9] hover:bg-[#f4efe7] hover:text-[#1a2b5e] active:scale-[0.98] transition-all duration-200 shrink-0",
+            isSidebarOpen ? "px-3 py-2.5 w-full" : "w-11 h-11 justify-center mx-auto"
+          )}
         >
-          <LogOut className="h-[16px] w-[16px]" />
-          <span>Sign out</span>
+          <LogOut className={cn("shrink-0", isSidebarOpen ? "h-[16px] w-[16px]" : "h-[20px] w-[20px]")} />
+          {isSidebarOpen && <span className="whitespace-nowrap">Sign out</span>}
         </button>
       </aside>
 
