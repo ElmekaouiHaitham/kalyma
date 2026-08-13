@@ -11,7 +11,8 @@ import {
   CalendarDays, 
   History, 
   Star,
-  Inbox
+  Inbox,
+  PlayCircle
 } from "lucide-react";
 
 export default function SessionsPage() {
@@ -20,6 +21,25 @@ export default function SessionsPage() {
   const [upcomingSessions, setUpcomingSessions] = useState<any[]>([]);
   const [completedSessions, setCompletedSessions] = useState<any[]>([]);
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const [recordingLoading, setRecordingLoading] = useState<string | null>(null);
+
+  const handleWatchRecording = async (sessionId: string) => {
+    setRecordingLoading(sessionId);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/sessions/${sessionId}/recording-link`);
+      if (res.status === 409) {
+         alert("The recording is still processing. Please check back in a few minutes.");
+         return;
+      }
+      if (!res.ok) throw new Error("Could not fetch recording");
+      const data = await res.json();
+      window.open(data.url, '_blank');
+    } catch (e) {
+      alert("Recording not available for this session.");
+    } finally {
+      setRecordingLoading(null);
+    }
+  };
 
   useEffect(() => {
     const fetchUpcomingSessions = async () => {
@@ -199,12 +219,19 @@ export default function SessionsPage() {
                 <p className="text-[14px] leading-[20px] text-[#1a1c1a] md:text-[#45464f] opacity-75 md:opacity-80 line-clamp-2">
                   {session.ai_summary || session.description || "No summary available."}
                 </p>
-                <button className="cursor-pointer hidden md:flex mt-auto w-full border-[1.5px] border-[#1a2b56] text-[#1a2b56] rounded-lg py-2.5 font-semibold text-[14px] leading-[20px] items-center justify-center gap-2 hover:bg-[#e9e8e5] transition-colors">
-                  View Details
+                <button 
+                  onClick={() => handleWatchRecording(session.id)}
+                  disabled={recordingLoading === session.id}
+                  className="cursor-pointer hidden md:flex mt-auto w-full border-[1.5px] border-[#1a2b56] text-[#1a2b56] rounded-lg py-2.5 font-semibold text-[14px] leading-[20px] items-center justify-center gap-2 hover:bg-[#e9e8e5] transition-colors disabled:opacity-70 disabled:cursor-wait"
+                >
+                  {recordingLoading === session.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlayCircle className="w-4 h-4" />}
+                  Watch Recording
                 </button>
                 <div className="md:hidden mt-2 border-t border-[#c5c6d0]/30 pt-3 flex justify-between items-center">
-                  <span className="font-semibold text-[14px] leading-[20px] text-[#1a2b56]">Notes available</span>
-                  <button className="cursor-pointer text-[#1a2b56] font-semibold text-[14px] leading-[20px] hover:underline">View Summary</button>
+                  <span className="font-semibold text-[14px] leading-[20px] text-[#1a2b56]">Recording</span>
+                  <button onClick={() => handleWatchRecording(session.id)} disabled={recordingLoading === session.id} className="cursor-pointer text-[#1a2b56] font-semibold text-[14px] leading-[20px] hover:underline disabled:opacity-50">
+                    {recordingLoading === session.id ? "Loading..." : "Watch Recording"}
+                  </button>
                 </div>
               </article>
             ))
