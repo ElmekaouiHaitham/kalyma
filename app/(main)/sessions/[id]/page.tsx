@@ -32,7 +32,7 @@ interface SessionDetails {
 export default function SessionRoomPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const { user, session: authSession } = useAuth();
+  const { user, session: authSession, isLoading: authLoading } = useAuth();
 
   const [session, setSession] = useState<SessionDetails | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -46,10 +46,11 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
   const [isTeacher, setIsTeacher] = useState(false);
 
   useEffect(() => {
-    if (!authSession?.access_token) return;
+    if (authLoading || !authSession?.access_token) return;
 
     const fetchDetails = async () => {
       setIsLoading(true);
+      setError(null);
       try {
         const headers = { Authorization: `Bearer ${authSession.access_token}` };
         
@@ -99,7 +100,7 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
     };
 
     fetchDetails();
-  }, [id, authSession, user?.plan]);
+  }, [id, authSession, user?.plan, authLoading]);
 
   const handleRate = async () => {
     if (rating === 0) return;
