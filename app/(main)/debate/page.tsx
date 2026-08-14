@@ -11,16 +11,37 @@ import {
   Gavel, 
   History, 
   Star, 
-  ArrowRight 
+  ArrowRight,
+  Clock,
+  CheckCircle2
 } from "lucide-react";
 
 export default function DebatePage() {
   const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<"needs_onboarding" | "processing" | "active">("active"); // default to active for now
+  const [availability, setAvailability] = useState({ sunday: [], monday: [] });
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2000);
-    return () => clearTimeout(timer);
+    // In a real app, this would fetch from /api/v1/debate/status
+    const fetchStatus = async () => {
+      // Mock API call
+      setTimeout(() => {
+        // Change this to test different states (e.g., "needs_onboarding", "processing", "active")
+        setStatus("needs_onboarding"); 
+        setLoading(false);
+      }, 1000);
+    };
+    fetchStatus();
   }, []);
+
+  const handleRegister = () => {
+    setLoading(true);
+    // Mock registration API call
+    setTimeout(() => {
+      setStatus("processing");
+      setLoading(false);
+    }, 1500);
+  };
 
   if (loading) {
     return (
@@ -28,6 +49,68 @@ export default function DebatePage() {
         <Loader2 className="w-10 h-10 text-[#021541] animate-spin" />
         <p className="font-medium text-[#45464f] animate-pulse">Loading...</p>
       </div>
+    );
+  }
+
+  if (status === "needs_onboarding") {
+    return (
+      <main className="max-w-3xl mx-auto px-5 md:px-10 pt-20 pb-8 md:py-12 flex flex-col gap-6 text-[#1a1c1a] min-h-[80vh] justify-center">
+        <div className="bg-[#ffffff] border-[1.5px] border-[#021541] rounded-2xl p-8 md:p-12 shadow-[0_4px_12px_rgba(2,21,65,0.08)] flex flex-col items-center text-center">
+          <div className="bg-[#fed65b] text-[#745c00] p-4 rounded-full mb-6 border-2 border-[#735c00]">
+            <Gavel className="w-10 h-10 fill-current" />
+          </div>
+          <h1 className="text-[28px] md:text-[32px] font-extrabold text-[#021541] tracking-tight mb-4">
+            Join the Debate League
+          </h1>
+          <p className="text-[16px] text-[#45464f] mb-8 max-w-lg">
+            Compete with top students, refine your arguments, and climb the leaderboard. Matches happen every Sunday and Monday (Morocco Time).
+          </p>
+          
+          <div className="w-full text-left bg-[#f4f3f1] p-6 rounded-xl border border-[#c5c6d0] mb-8">
+            <h3 className="font-bold text-[#021541] mb-4">Select Your Availability (Morocco Time)</h3>
+            <div className="flex flex-col gap-4">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" className="w-5 h-5 accent-[#021541]" />
+                <span className="font-medium">Sundays (Afternoon / Evening)</span>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" className="w-5 h-5 accent-[#021541]" />
+                <span className="font-medium">Mondays (Evening)</span>
+              </label>
+            </div>
+          </div>
+
+          <button 
+            onClick={handleRegister}
+            className="w-full md:w-auto px-10 bg-[#021541] text-[#ffffff] font-semibold text-[16px] py-3 md:py-4 rounded-xl shadow-[0_4px_12px_rgba(2,21,65,0.08)] hover:bg-[#1a2b56] transition-colors"
+          >
+            Register for Next League
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  if (status === "processing") {
+    return (
+      <main className="max-w-3xl mx-auto px-5 md:px-10 pt-20 pb-8 md:py-12 flex flex-col gap-6 text-[#1a1c1a] min-h-[80vh] justify-center">
+        <div className="bg-[#ffffff] border-[1.5px] border-[#021541] rounded-2xl p-8 md:p-12 shadow-[0_4px_12px_rgba(2,21,65,0.08)] flex flex-col items-center text-center">
+          <div className="bg-[#e3e2e0] text-[#021541] p-4 rounded-full mb-6 border-[1.5px] border-[#021541] relative">
+            <Clock className="w-10 h-10" />
+            <div className="absolute top-0 right-0 w-4 h-4 bg-[#fed65b] rounded-full animate-ping border border-[#735c00]"></div>
+          </div>
+          <h1 className="text-[28px] md:text-[32px] font-extrabold text-[#021541] tracking-tight mb-4">
+            You're in the Pool!
+          </h1>
+          <p className="text-[16px] text-[#45464f] mb-8 max-w-lg">
+            We are currently matching you with opponents based on your availability and shared interests. You'll be assigned to a league shortly!
+          </p>
+          <div className="bg-[#f4f3f1] px-6 py-4 rounded-xl border border-[#c5c6d0] flex items-center gap-3 w-full md:w-auto">
+            <Loader2 className="w-5 h-5 text-[#021541] animate-spin" />
+            <span className="font-semibold text-[#021541]">Waiting for Admin to launch matches...</span>
+          </div>
+        </div>
+      </main>
     );
   }
 

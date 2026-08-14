@@ -16,6 +16,7 @@ import {
   CreditCard,
   BookOpen,
   Target,
+  Gavel,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -282,6 +283,59 @@ export default function AdminDashboardPage() {
               icon={<CreditCard size={22} />}
               description={`${data.financials.subscriptions.trialing} trialing · ${data.financials.subscriptions.cancelled} cancelled`}
             />
+          </div>
+        </Section>
+
+        {/* ─── DEBATE LEAGUE CONTROL PANEL ────────────────────── */}
+        <Section icon={<Gavel size={20} />} title="Debate League Control Panel" color="text-[#c9842f]">
+          <div className="bg-white rounded-2xl p-6 md:p-8 shadow-[0_4px_12px_rgba(2,21,65,0.08)] border border-[#1a2b5e]/10">
+            <div className="flex flex-col md:flex-row gap-8 justify-between items-start">
+              
+              <div className="flex-1 space-y-4">
+                <h3 className="text-xl font-bold text-[#1a2b5e]">Manage Active Pool</h3>
+                <p className="text-[#4a5568]">
+                  Currently, there are <strong className="text-[#c9842f] text-lg">24</strong> students waiting in the pool for the next league assignment.
+                </p>
+                <div className="bg-[#f7f2ea] p-4 rounded-xl border border-[#c9842f]/30 inline-block">
+                  <span className="font-semibold text-[#1a2b5e] flex items-center gap-2">
+                    <Users className="w-5 h-5 text-[#c9842f]" /> 24 Users Ready
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex-1 w-full bg-[#f8f9fa] rounded-xl p-5 border border-[#e2e8f0]">
+                <h4 className="font-semibold text-[#1a2b5e] mb-3">Launch New League</h4>
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[#4a5568] mb-1">League Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. League 1" 
+                      defaultValue="League 1"
+                      className="w-full px-4 py-2 rounded-lg border border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#c9842f]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#4a5568] mb-1">Number of Students</label>
+                    <input 
+                      type="number" 
+                      placeholder="e.g. 30" 
+                      defaultValue={30}
+                      className="w-full px-4 py-2 rounded-lg border border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#c9842f]"
+                    />
+                  </div>
+                  <div className="flex gap-3 mt-2">
+                    <button className="flex-1 bg-white text-[#1a2b5e] border-[1.5px] border-[#1a2b5e] font-semibold py-2.5 rounded-lg hover:bg-[#f7f2ea] transition-colors">
+                      Create League
+                    </button>
+                    <button className="flex-1 bg-[#1a2b5e] text-white font-semibold py-2.5 rounded-lg hover:bg-[#253d82] shadow-md transition-all">
+                      Launch Matching
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+            </div>
           </div>
         </Section>
       </motion.div>
