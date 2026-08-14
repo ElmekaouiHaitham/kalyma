@@ -31,6 +31,12 @@ export default function AdminDashboardPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Debate pool state
+  const [debatePool, setDebatePool] = useState<any[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [leagueName, setLeagueName] = useState("League 1");
+  const [launching, setLaunching] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -58,7 +64,57 @@ export default function AdminDashboardPage() {
         setError(err.message);
       })
       .finally(() => setLoading(false));
+
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/debate/pool`, { headers })
+      .then(res => res.json())
+      .then(d => {
+        if (d.pool) {
+          setDebatePool(d.pool);
+          // auto-select all initially, or leave empty. Let's leave empty so admin explicitly selects
+        }
+      })
+      .catch(console.error);
+
   }, [session, authLoading, router]);
+
+  const handleLaunchMatching = async () => {
+    if (selectedUsers.length < 2) {
+      alert("Please select at least 2 users.");
+      return;
+    }
+    if (!leagueName.trim()) {
+      alert("Please enter a league name.");
+      return;
+    }
+    if (!session) return;
+
+    setLaunching(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/debate/launch-matching`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          league_name: leagueName,
+          selected_user_ids: selectedUsers
+        })
+      });
+      const result = await res.json();
+      if (!res.ok || result.error) {
+        throw new Error(result.error || "Failed to launch matching");
+      }
+      alert("League successfully launched!");
+      // Reset selected users and pool
+      setSelectedUsers([]);
+      setDebatePool(debatePool.filter(u => !selectedUsers.includes(u.user_id)));
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setLaunching(false);
+    }
+  };
 
   if (authLoading || loading) {
     return (
@@ -294,16 +350,53 @@ export default function AdminDashboardPage() {
               <div className="flex-1 space-y-4">
                 <h3 className="text-xl font-bold text-[#1a2b5e]">Manage Active Pool</h3>
                 <p className="text-[#4a5568]">
-                  Currently, there are <strong className="text-[#c9842f] text-lg">24</strong> students waiting in the pool for the next league assignment.
+                  Currently, there are <strong className="text-[#c9842f] text-lg">{debatePool.length}</strong> students waiting in the pool for the next league assignment.
                 </p>
-                <div className="bg-[#f7f2ea] p-4 rounded-xl border border-[#c9842f]/30 inline-block">
+                <div className="bg-[#f7f2ea] p-4 rounded-xl border border-[#c9842f]/30 inline-block mb-4">
                   <span className="font-semibold text-[#1a2b5e] flex items-center gap-2">
-                    <Users className="w-5 h-5 text-[#c9842f]" /> 24 Users Ready
+                    <Users className="w-5 h-5 text-[#c9842f]" /> {debatePool.length} Users Ready
                   </span>
+                </div>
+                
+                <div className="max-h-60 overflow-y-auto border border-[#e2e8f0] rounded-lg p-3 bg-[#f8f9fa] flex flex-col gap-2">
+                  <div className="flex items-center justify-between px-2 pb-2 mb-2 border-b border-[#e2e8f0]">
+                    <span className="text-xs font-semibold text-[#718096] uppercase tracking-wider">Select Participants</span>
+                    <button 
+                      onClick={() => setSelectedUsers(debatePool.map(u => u.user_id))}
+                      className="text-xs font-medium text-[#c9842f] hover:underline"
+                    >
+                      Select All
+                    </button>
+                  </div>
+                  {debatePool.length === 0 ? (
+                    <p className="text-sm text-[#4a5568] p-2">No users in the pool.</p>
+                  ) : (
+                    debatePool.map(user => (
+                      <label key={user.user_id} className="flex items-center gap-3 cursor-pointer hover:bg-white p-2 rounded-md transition-colors border border-transparent hover:border-[#e2e8f0]">
+                        <input 
+                          type="checkbox" 
+                          className="w-4 h-4 accent-[#1a2b5e] rounded"
+                          checked={selectedUsers.includes(user.user_id)}
+                          onChange={(e) => {
+                            if (e.target.checked) setSelectedUsers([...selectedUsers, user.user_id]);
+                            else setSelectedUsers(selectedUsers.filter(id => id !== user.user_id));
+                          }}
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-sm text-[#1a2b5e] font-medium">{user.full_name || user.email || "Unknown User"}</span>
+                          {user.availability && (
+                            <span className="text-xs text-[#718096]">
+                              Available: {Object.keys(user.availability).filter(k => user.availability[k]?.length).join(', ') || "No times"}
+                            </span>
+                          )}
+                        </div>
+                      </label>
+                    ))
+                  )}
                 </div>
               </div>
 
-              <div className="flex-1 w-full bg-[#f8f9fa] rounded-xl p-5 border border-[#e2e8f0]">
+              <div className="flex-1 w-full bg-[#f8f9fa] rounded-xl p-5 border border-[#e2e8f0] sticky top-10">
                 <h4 className="font-semibold text-[#1a2b5e] mb-3">Launch New League</h4>
                 <div className="flex flex-col gap-4">
                   <div>
@@ -311,25 +404,31 @@ export default function AdminDashboardPage() {
                     <input 
                       type="text" 
                       placeholder="e.g. League 1" 
-                      defaultValue="League 1"
+                      value={leagueName}
+                      onChange={(e) => setLeagueName(e.target.value)}
                       className="w-full px-4 py-2 rounded-lg border border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#c9842f]"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#4a5568] mb-1">Number of Students</label>
-                    <input 
-                      type="number" 
-                      placeholder="e.g. 30" 
-                      defaultValue={30}
-                      className="w-full px-4 py-2 rounded-lg border border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#c9842f]"
-                    />
+                    <label className="block text-sm font-medium text-[#4a5568] mb-1">Number of Students Selected</label>
+                    <div className="w-full px-4 py-2 rounded-lg border border-[#cbd5e1] bg-white text-[#1a2b5e] font-medium">
+                      {selectedUsers.length} Students
+                    </div>
                   </div>
-                  <div className="flex gap-3 mt-2">
-                    <button className="flex-1 bg-white text-[#1a2b5e] border-[1.5px] border-[#1a2b5e] font-semibold py-2.5 rounded-lg hover:bg-[#f7f2ea] transition-colors">
-                      Create League
-                    </button>
-                    <button className="flex-1 bg-[#1a2b5e] text-white font-semibold py-2.5 rounded-lg hover:bg-[#253d82] shadow-md transition-all">
-                      Launch Matching
+                  <div className="flex gap-3 mt-4">
+                    <button 
+                      onClick={handleLaunchMatching}
+                      disabled={launching || selectedUsers.length < 2}
+                      className="flex-1 bg-[#1a2b5e] text-white font-semibold py-3 rounded-lg hover:bg-[#253d82] shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {launching ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        "Launch Matching"
+                      )}
                     </button>
                   </div>
                 </div>
