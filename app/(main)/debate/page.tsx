@@ -19,7 +19,8 @@ import {
 export default function DebatePage() {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<"needs_onboarding" | "processing" | "active">("active"); // default to active for now
-  const [availability, setAvailability] = useState({ sunday: [], monday: [] });
+  type Day = "saturday" | "sunday";
+  const [availability, setAvailability] = useState<Record<Day, string[]>>({ saturday: [], sunday: [] });
 
   useEffect(() => {
     // In a real app, this would fetch from /api/v1/debate/status
