@@ -15,36 +15,73 @@ import {
   Clock,
   CheckCircle2
 } from "lucide-react";
+import { useAuth } from "@/app/providers";
 
 export default function DebatePage() {
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState<"needs_onboarding" | "processing" | "active">("active"); // default to active for now
+  const [status, setStatus] = useState<"needs_onboarding" | "processing" | "active">("needs_onboarding");
   type Day = "saturday" | "sunday";
   const [availability, setAvailability] = useState<Record<Day, string[]>>({ saturday: [], sunday: [] });
+  
+  const { session, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
-    // In a real app, this would fetch from /api/v1/debate/status
+    if (authLoading) return;
+    if (!session) {
+      setLoading(false);
+      return;
+    }
+
     const fetchStatus = async () => {
-      // Mock API call
-      setTimeout(() => {
-        // Change this to test different states (e.g., "needs_onboarding", "processing", "active")
-        setStatus("needs_onboarding"); 
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/debate/status`, {
+          headers: { Authorization: `Bearer ${session.access_token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setStatus(data.status);
+        }
+      } catch (err) {
+        console.error("Failed to fetch debate status", err);
+      } finally {
         setLoading(false);
-      }, 1000);
+      }
     };
     fetchStatus();
-  }, []);
+  }, [session, authLoading]);
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
+    if (!session) return;
     setLoading(true);
-    // Mock registration API call
-    setTimeout(() => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/debate/register`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ availability })
+      });
+      
+      if (!res.ok) {
+        if (res.status === 403) {
+          alert("Debate league is only available for Pro users.");
+        } else {
+          alert("Failed to register for the debate league.");
+        }
+        return;
+      }
+      
       setStatus("processing");
+    } catch (err) {
+      console.error("Registration error", err);
+      alert("An error occurred during registration.");
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] gap-3 mt-20">
         <Loader2 className="w-10 h-10 text-[#021541] animate-spin" />
