@@ -52,39 +52,92 @@ export default function DebatePage() {
     );
   }
 
+  const HOURS = [
+    "09:00", "10:00", "11:00", "12:00", 
+    "13:00", "14:00", "15:00", "16:00", 
+    "17:00", "18:00", "19:00", "20:00"
+  ];
+  const DAYS = ["Saturday", "Sunday"];
+
+  const toggleHour = (day: string, hour: string) => {
+    const d = day.toLowerCase() as "saturday" | "sunday";
+    setAvailability(prev => {
+      const current = prev[d] || [];
+      if (current.includes(hour)) {
+        return { ...prev, [d]: current.filter(h => h !== hour) };
+      } else {
+        return { ...prev, [d]: [...current, hour].sort() };
+      }
+    });
+  };
+
   if (status === "needs_onboarding") {
     return (
-      <main className="max-w-3xl mx-auto px-5 md:px-10 pt-20 pb-8 md:py-12 flex flex-col gap-6 text-[#1a1c1a] min-h-[80vh] justify-center">
-        <div className="bg-[#ffffff] border-[1.5px] border-[#021541] rounded-2xl p-8 md:p-12 shadow-[0_4px_12px_rgba(2,21,65,0.08)] flex flex-col items-center text-center">
-          <div className="bg-[#fed65b] text-[#745c00] p-4 rounded-full mb-6 border-2 border-[#735c00]">
-            <Gavel className="w-10 h-10 fill-current" />
+      <main className="max-w-4xl mx-auto px-5 md:px-10 pt-20 pb-8 md:py-12 flex flex-col gap-6 text-[#1a1c1a] min-h-[80vh] justify-center">
+        <div className="bg-[#ffffff] border-[1.5px] border-[#021541] rounded-2xl p-6 md:p-10 shadow-[0_4px_12px_rgba(2,21,65,0.08)] flex flex-col items-center text-center">
+          <div className="bg-[#fed65b] text-[#745c00] p-4 rounded-full mb-4 border-2 border-[#735c00]">
+            <Gavel className="w-8 h-8 fill-current" />
           </div>
-          <h1 className="text-[28px] md:text-[32px] font-extrabold text-[#021541] tracking-tight mb-4">
+          <h1 className="text-[26px] md:text-[32px] font-extrabold text-[#021541] tracking-tight mb-3">
             Join the Debate League
           </h1>
-          <p className="text-[16px] text-[#45464f] mb-8 max-w-lg">
-            Compete with top students, refine your arguments, and climb the leaderboard. Matches happen every Sunday and Monday (Morocco Time).
+          <p className="text-[15px] md:text-[16px] text-[#45464f] mb-8 max-w-xl">
+            Compete with top students, refine your arguments, and climb the leaderboard. Select all the hours you are available on the weekend (Morocco Time).
           </p>
           
-          <div className="w-full text-left bg-[#f4f3f1] p-6 rounded-xl border border-[#c5c6d0] mb-8">
-            <h3 className="font-bold text-[#021541] mb-4">Select Your Availability (Morocco Time)</h3>
-            <div className="flex flex-col gap-4">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" className="w-5 h-5 accent-[#021541]" />
-                <span className="font-medium">Sundays (Afternoon / Evening)</span>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" className="w-5 h-5 accent-[#021541]" />
-                <span className="font-medium">Mondays (Evening)</span>
-              </label>
+          <div className="w-full text-left bg-[#f4f3f1] p-4 md:p-6 rounded-xl border border-[#c5c6d0] mb-8 overflow-x-auto">
+            <h3 className="font-bold text-[#021541] mb-4 flex items-center gap-2">
+              <CalendarDays className="w-5 h-5 text-[#c9842f]" /> 
+              Weekend Availability
+            </h3>
+            
+            <div className="min-w-[400px]">
+              <div className="grid grid-cols-3 gap-2 mb-2">
+                <div></div>
+                {DAYS.map(day => (
+                  <div key={day} className="text-center font-bold text-[#1a2b5e] bg-white border border-[#cbd5e1] rounded-lg py-2">
+                    {day}
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex flex-col gap-2">
+                {HOURS.map(hour => (
+                  <div key={hour} className="grid grid-cols-3 gap-2 items-center">
+                    <div className="text-right pr-4 font-semibold text-[#4a5568] text-sm">
+                      {hour}
+                    </div>
+                    {DAYS.map(day => {
+                      const d = day.toLowerCase() as "saturday" | "sunday";
+                      const isSelected = (availability[d] || []).includes(hour);
+                      return (
+                        <button
+                          key={`${day}-${hour}`}
+                          onClick={() => toggleHour(day, hour)}
+                          className={`
+                            py-2 rounded-lg border text-sm font-medium transition-all
+                            ${isSelected 
+                              ? "bg-[#1a2b5e] border-[#1a2b5e] text-white shadow-inner" 
+                              : "bg-white border-[#cbd5e1] text-[#4a5568] hover:border-[#1a2b5e] hover:bg-[#f0f4ff]"
+                            }
+                          `}
+                        >
+                          {isSelected ? "Available" : "-"}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
           <button 
             onClick={handleRegister}
-            className="w-full md:w-auto px-10 bg-[#021541] text-[#ffffff] font-semibold text-[16px] py-3 md:py-4 rounded-xl shadow-[0_4px_12px_rgba(2,21,65,0.08)] hover:bg-[#1a2b56] transition-colors"
+            className="w-full md:w-auto px-10 bg-[#021541] text-[#ffffff] font-semibold text-[16px] py-3 md:py-4 rounded-xl shadow-[0_4px_12px_rgba(2,21,65,0.08)] hover:bg-[#1a2b56] transition-colors disabled:opacity-50"
+            disabled={loading || (availability.saturday.length === 0 && availability.sunday.length === 0)}
           >
-            Register for Next League
+            {loading ? "Registering..." : "Register for Next League"}
           </button>
         </div>
       </main>
