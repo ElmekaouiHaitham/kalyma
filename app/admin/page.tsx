@@ -37,6 +37,10 @@ export default function AdminDashboardPage() {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [leagueName, setLeagueName] = useState("League 1");
   const [launching, setLaunching] = useState(false);
+  
+  // User Management state
+  const [usersList, setUsersList] = useState<any[]>([]);
+  const [updatingPlanId, setUpdatingPlanId] = useState<string | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -75,7 +79,36 @@ export default function AdminDashboardPage() {
       })
       .catch(console.error);
 
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users`, { headers })
+      .then(res => res.json())
+      .then(d => {
+        if (d.users) setUsersList(d.users);
+      })
+      .catch(console.error);
+
   }, [session, authLoading, router]);
+
+  const handleUpdatePlan = async (userId: string, newPlan: string) => {
+    if (!session) return;
+    setUpdatingPlanId(userId);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users/${userId}/plan`, {
+        method: "PATCH",
+        headers: {
+          "Authorization": `Bearer ${session.access_token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ plan: newPlan })
+      });
+      if (!res.ok) throw new Error("Failed to update plan");
+      
+      setUsersList(prev => prev.map(u => u.id === userId ? { ...u, plan: newPlan } : u));
+    } catch (err) {
+      alert("Failed to update plan");
+    } finally {
+      setUpdatingPlanId(null);
+    }
+  };
 
   const handleLaunchMatching = async () => {
     if (selectedUsers.length < 2) {
@@ -434,6 +467,61 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
               
+            </div>
+          </div>
+        </Section>
+
+        {/* ─── USER MANAGEMENT CONTROL PANEL ────────────────────── */}
+        <Section icon={<Users size={20} />} title="User Management" color="text-[#c9842f]">
+          <div className="bg-white rounded-2xl p-6 md:p-8 shadow-[0_4px_12px_rgba(2,21,65,0.08)] border border-[#1a2b5e]/10">
+            <h3 className="text-xl font-bold text-[#1a2b5e] mb-4">All Users</h3>
+            <div className="overflow-x-auto border border-[#e2e8f0] rounded-lg">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-[#f8f9fa] border-b border-[#e2e8f0]">
+                  <tr>
+                    <th className="p-3 text-sm font-semibold text-[#4a5568]">Name</th>
+                    <th className="p-3 text-sm font-semibold text-[#4a5568]">Email</th>
+                    <th className="p-3 text-sm font-semibold text-[#4a5568]">Joined</th>
+                    <th className="p-3 text-sm font-semibold text-[#4a5568]">Plan</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#e2e8f0]">
+                  {usersList.map((user) => (
+                    <tr key={user.id} className="hover:bg-[#f8f9fa] transition-colors">
+                      <td className="p-3 text-sm text-[#1a2b5e] font-medium">{user.full_name || "Unknown"}</td>
+                      <td className="p-3 text-sm text-[#4a5568]">{user.email}</td>
+                      <td className="p-3 text-sm text-[#718096]">
+                        {new Date(user.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="p-3">
+                        <select
+                          value={user.plan}
+                          disabled={updatingPlanId === user.id}
+                          onChange={(e) => handleUpdatePlan(user.id, e.target.value)}
+                          className={`text-sm px-3 py-1.5 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#c9842f] ${
+                            user.plan === "pro" 
+                              ? "bg-amber-50 border-[#c9842f]/30 text-[#c9842f] font-semibold" 
+                              : "bg-gray-50 border-[#cbd5e1] text-[#4a5568]"
+                          }`}
+                        >
+                          <option value="free">Free</option>
+                          <option value="pro">Pro</option>
+                        </select>
+                        {updatingPlanId === user.id && (
+                          <span className="ml-2 inline-block w-4 h-4 border-2 border-[#c9842f]/30 border-t-[#c9842f] rounded-full animate-spin" />
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {usersList.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="p-6 text-center text-[#718096]">
+                        No users found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </Section>
