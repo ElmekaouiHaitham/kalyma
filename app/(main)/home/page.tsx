@@ -10,7 +10,6 @@ import {
   ChevronRight,
   Flame,
   Radio,
-  Newspaper,
   Repeat2,
   Trophy,
 } from "lucide-react";
@@ -185,9 +184,6 @@ export default function HomePage() {
   const hasReviewToday = xpHistory.some(
     (h) => h.reason === "review_session" && isToday(h.created_at),
   );
-  const hasNewsToday = xpHistory.some(
-    (h) => h.reason === "news_read" && isToday(h.created_at),
-  );
 
   const TASKS = [
     {
@@ -205,14 +201,6 @@ export default function HomePage() {
       xp: 15,
       route: "/practice",
       done: hasReviewToday,
-    },
-    {
-      id: "news",
-      label: "Read News",
-      icon: <Newspaper className="h-3 w-3" />,
-      xp: 10,
-      route: "/news",
-      done: hasNewsToday,
     },
   ];
 
@@ -353,7 +341,7 @@ export default function HomePage() {
               subtitle="Practice saved words and Learn My notes"
             />
             <SimpleCard
-              onClick={() => router.push("/live")}
+              onClick={() => router.push("/sessions")}
               icon={<Radio className="h-5 w-5" style={{ color: "#C2410C" }} />}
               iconColor="#C2410C"
               title="Live Session"
@@ -373,15 +361,6 @@ export default function HomePage() {
               iconColor="#15803D"
               title="Articles"
               subtitle="Read level-matched articles"
-            />
-            <SimpleCard
-              onClick={() => router.push("/news")}
-              icon={
-                <Newspaper className="h-5 w-5" style={{ color: "#0369A1" }} />
-              }
-              iconColor="#0369A1"
-              title="News"
-              subtitle="Learn from current events"
             />
           </div>
         </section>
