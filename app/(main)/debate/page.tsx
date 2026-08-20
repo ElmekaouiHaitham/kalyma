@@ -22,6 +22,7 @@ export default function DebatePage() {
   const [status, setStatus] = useState<"needs_onboarding" | "processing" | "active">("needs_onboarding");
   type Day = "saturday" | "sunday";
   const [availability, setAvailability] = useState<Record<Day, string[]>>({ saturday: [], sunday: [] });
+  const [matches, setMatches] = useState<any[]>([]);
   
   const { session, isLoading: authLoading } = useAuth();
 
@@ -40,6 +41,15 @@ export default function DebatePage() {
         if (res.ok) {
           const data = await res.json();
           setStatus(data.status);
+          
+          if (data.status === "active") {
+            const matchesRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/debate/my-matches`, {
+              headers: { Authorization: `Bearer ${session.access_token}` }
+            });
+            if (matchesRes.ok) {
+              setMatches(await matchesRes.json());
+            }
+          }
         }
       } catch (err) {
         console.error("Failed to fetch debate status", err);
@@ -389,42 +399,50 @@ export default function DebatePage() {
               Upcoming
             </h3>
 
-            <div className="bg-[#ffffff] border-[1.5px] border-[#021541] rounded-2xl p-5 md:p-6 shadow-[0_4px_12px_rgba(2,21,65,0.08)] flex flex-col gap-4 relative overflow-hidden">
-              <div className="md:hidden absolute -right-4 -top-4 w-24 h-24 bg-[#b5c5f9] rounded-full opacity-20 blur-xl"></div>
-              <div className="flex justify-between items-start z-10">
-                <div className="flex flex-col">
-                  <span className="text-[12px] font-bold text-[#735c00] tracking-wider uppercase mb-1">Tomorrow, 2:00 PM</span>
-                  <h4 className="font-bold text-[18px] leading-tight text-[#021541] md:text-[#1a1c1a]">AI in Healthcare: Boon or Bane?</h4>
+            {matches.length > 0 ? (
+              <div className="bg-[#ffffff] border-[1.5px] border-[#021541] rounded-2xl p-5 md:p-6 shadow-[0_4px_12px_rgba(2,21,65,0.08)] flex flex-col gap-4 relative overflow-hidden">
+                <div className="md:hidden absolute -right-4 -top-4 w-24 h-24 bg-[#b5c5f9] rounded-full opacity-20 blur-xl"></div>
+                <div className="flex justify-between items-start z-10">
+                  <div className="flex flex-col">
+                    <span className="text-[12px] font-bold text-[#735c00] tracking-wider uppercase mb-1">
+                      {matches[0].scheduled_time 
+                        ? new Date(matches[0].scheduled_time).toLocaleString()
+                        : "TBD"}
+                    </span>
+                    <h4 className="font-bold text-[18px] leading-tight text-[#021541] md:text-[#1a1c1a]">Assigned Topic</h4>
+                  </div>
+                  {/* Mobile Gavel Icon */}
+                  <span className="md:hidden bg-[#efeeeb] text-[#1a2b56] p-2 rounded-full">
+                    <Gavel className="w-5 h-5" />
+                  </span>
+                  {/* Desktop Ranked Badge */}
+                  <div className="hidden md:flex bg-[#f4f3f1] border border-[#c5c6d0] rounded-full px-3 py-1 items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#4ade80]"></span>
+                    <span className="font-semibold text-[12px] capitalize">{matches[0].status}</span>
+                  </div>
                 </div>
-                {/* Mobile Gavel Icon */}
-                <span className="md:hidden bg-[#efeeeb] text-[#1a2b56] p-2 rounded-full">
-                  <Gavel className="w-5 h-5" />
-                </span>
-                {/* Desktop Ranked Badge */}
-                <div className="hidden md:flex bg-[#f4f3f1] border border-[#c5c6d0] rounded-full px-3 py-1 items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#4ade80]"></span>
-                  <span className="font-semibold text-[12px]">Ranked</span>
-                </div>
-              </div>
 
-              <div className="flex items-center gap-3 z-10 mt-1 md:mt-0 bg-transparent md:bg-[#f4f3f1] p-0 md:p-3 rounded-xl">
-                <img 
-                  className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-[#021541] object-cover" 
-                  src="/profile_haitham.jpg" 
-                  alt="Opponent" 
-                />
-                <div>
-                  <p className="font-semibold text-[12px] text-[#757680]">Opponent</p>
-                  <p className="font-bold text-[14px] text-[#021541] md:text-[#1a1c1a]">Haitham Elmekaoui</p>
+                <div className="flex items-center gap-3 z-10 mt-1 md:mt-0 bg-transparent md:bg-[#f4f3f1] p-0 md:p-3 rounded-xl">
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-[#021541] bg-[#e2e8f0] flex items-center justify-center">
+                    <User className="w-4 h-4 text-[#4a5568]" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-[12px] text-[#757680]">Opponent</p>
+                    <p className="font-bold text-[14px] text-[#021541] md:text-[#1a1c1a]">{matches[0].opponent?.full_name}</p>
+                  </div>
                 </div>
+                
+                <Link href={matches[0].room_url || "#"} className="block w-full mt-1 md:mt-2">
+                  <button className="cursor-pointer w-full bg-[#021541] text-[#ffffff] font-semibold text-[14px] py-2.5 md:py-3 rounded-xl shadow-[0_4px_12px_rgba(2,21,65,0.08)] hover:bg-[#1a2b56] active:translate-y-1 active:shadow-none transition-all" disabled={!matches[0].room_url}>
+                    {matches[0].room_url ? "Join Room" : "Pending Room"}
+                  </button>
+                </Link>
               </div>
-              
-              <Link href="/debate/details" className="block w-full mt-1 md:mt-2">
-                <button className="cursor-pointer w-full bg-[#021541] text-[#ffffff] font-semibold text-[14px] py-2.5 md:py-3 rounded-xl shadow-[0_4px_12px_rgba(2,21,65,0.08)] active:translate-y-1 active:shadow-none transition-all">
-                  View Details
-                </button>
-              </Link>
-            </div>
+            ) : (
+              <div className="bg-[#f4f3f1] border-[1.5px] border-[#c5c6d0] rounded-2xl p-6 text-center text-[#757680]">
+                No upcoming matches.
+              </div>
+            )}
           </section>
 
           {/* Previous Debates */}
