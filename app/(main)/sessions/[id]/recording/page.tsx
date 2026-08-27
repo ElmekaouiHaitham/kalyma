@@ -3,8 +3,6 @@ import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Loader2 } from "lucide-react";
 
-import ReactPlayer from "react-player";
-
 export default function RecordingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
@@ -29,6 +27,16 @@ export default function RecordingPage({ params }: { params: Promise<{ id: string
     fetchLink();
   }, [id]);
 
+  const isYouTube = url ? (url.includes("youtube.com") || url.includes("youtu.be")) : false;
+  
+  const getYouTubeId = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+  
+  const ytId = isYouTube && url ? getYouTubeId(url) : null;
+
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] md:h-screen bg-[#f7f2ea]">
       <header className="h-16 border-b bg-white/80 backdrop-blur-md sticky top-0 z-50 px-4 flex items-center gap-4 shrink-0">
@@ -48,16 +56,21 @@ export default function RecordingPage({ params }: { params: Promise<{ id: string
             <Loader2 className="w-10 h-10 animate-spin mb-4 text-[#c9a84c]" />
             <p className="font-semibold text-slate-300">Loading secure video player...</p>
           </div>
+        ) : isYouTube && ytId ? (
+          <iframe 
+            src={`https://www.youtube.com/embed/${ytId}?autoplay=1`}
+            className="w-full h-full max-h-[85vh] rounded-2xl shadow-2xl bg-black"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
         ) : (
-          <div className="w-full h-full max-h-[85vh] rounded-2xl overflow-hidden shadow-2xl relative bg-black">
-            <ReactPlayer 
-              url={url} 
-              controls 
-              width="100%" 
-              height="100%" 
-              style={{ position: 'absolute', top: 0, left: 0 }}
-            />
-          </div>
+          <video 
+            src={url} 
+            controls 
+            preload="metadata"
+            playsInline
+            className="w-full h-full max-h-[85vh] rounded-2xl shadow-2xl object-contain bg-black"
+          />
         )}
       </main>
     </div>
