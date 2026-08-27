@@ -58,7 +58,7 @@ export default function RecordingPage({ params }: { params: Promise<{ id: string
           </div>
         ) : isYouTube && ytId ? (
           <iframe 
-            src={`https://www.youtube.com/embed/${ytId}?autoplay=1`}
+            src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1`}
             className="w-full h-full max-h-[85vh] rounded-2xl shadow-2xl bg-black"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
