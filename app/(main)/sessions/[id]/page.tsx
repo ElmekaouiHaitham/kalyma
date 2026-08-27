@@ -14,7 +14,9 @@ import {
   CheckCircle2,
   Loader2,
   Maximize,
-  Minimize
+  Minimize,
+  ExternalLink,
+  MonitorUp
 } from "lucide-react";
 import { useAuth } from "@/app/providers";
 
@@ -47,6 +49,7 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
   const [isRated, setIsRated] = useState(false);
   const [isTeacher, setIsTeacher] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isPoppedOut, setIsPoppedOut] = useState(false);
 
   useEffect(() => {
     const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
@@ -61,6 +64,17 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
       container.requestFullscreen().catch(() => {});
     } else {
       document.exitFullscreen().catch(() => {});
+    }
+  };
+
+  const popOutSession = () => {
+    if (session?.daily_room_url && token) {
+      window.open(
+        `${session.daily_room_url}?t=${token}`,
+        'LiveSessionWindow',
+        'width=400,height=600,menubar=no,toolbar=no,location=no,status=no,titlebar=no'
+      );
+      setIsPoppedOut(true);
     }
   };
 
@@ -262,20 +276,49 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
         {/* Main Content (Video Area) */}
         <div id="video-container" className="flex-1 bg-black relative flex flex-col">
           {token && session?.daily_room_url ? (
-            <>
-              <iframe
-                src={`${session.daily_room_url}?t=${token}`}
-                className="w-full h-full border-none"
-                allow="camera; microphone; display-capture; autoplay; encrypted-media; fullscreen"
-              />
-              <button 
-                onClick={toggleFullscreen}
-                className="absolute top-4 right-4 p-2 bg-black/50 text-white rounded-lg hover:bg-black/70 transition-colors z-50 backdrop-blur-sm shadow-lg"
-                title="Toggle Fullscreen"
-              >
-                {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
-              </button>
-            </>
+            isPoppedOut ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
+                 <div className="p-8 bg-white/5 rounded-3xl backdrop-blur-xl border border-white/10 max-w-md">
+                    <div className="w-16 h-16 bg-[#c9a84c]/20 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                      <MonitorUp className="text-[#c9a84c]" size={32} />
+                    </div>
+                    <h2 className="text-xl font-bold text-white mb-2">Session Popped Out</h2>
+                    <p className="text-white/60 text-sm mb-6">
+                      The live video is playing in a separate popup window. This allows you to easily share your slides on this screen while keeping the video visible.
+                    </p>
+                    <button onClick={() => setIsPoppedOut(false)} className="w-full py-3 bg-[#c9a84c] text-white rounded-xl text-sm font-bold hover:bg-[#b0903a] transition-all">
+                      Restore Video Here
+                    </button>
+                 </div>
+              </div>
+            ) : (
+              <>
+                <iframe
+                  src={`${session.daily_room_url}?t=${token}`}
+                  className="w-full h-full border-none"
+                  allow="camera; microphone; display-capture; autoplay; encrypted-media; fullscreen"
+                />
+                <div className="absolute top-4 right-4 flex items-center gap-2 z-50">
+                  {isTeacher && (
+                    <button 
+                      onClick={popOutSession}
+                      className="p-2 bg-black/50 text-white rounded-lg hover:bg-[#c9a84c] hover:text-white transition-colors backdrop-blur-sm shadow-lg flex items-center gap-2 text-sm font-medium pr-3"
+                      title="Pop out video window (Picture-in-Picture mode)"
+                    >
+                      <ExternalLink size={18} />
+                      Pop Out
+                    </button>
+                  )}
+                  <button 
+                    onClick={toggleFullscreen}
+                    className="p-2 bg-black/50 text-white rounded-lg hover:bg-black/70 transition-colors backdrop-blur-sm shadow-lg"
+                    title="Toggle Fullscreen"
+                  >
+                    {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
+                  </button>
+                </div>
+              </>
+            )
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
                <div className="p-8 bg-white/5 rounded-3xl backdrop-blur-xl border border-white/10 max-w-md">
