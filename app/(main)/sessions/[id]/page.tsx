@@ -286,9 +286,6 @@ export default function SessionRoomPage({ params }: { params: Promise<{ id: stri
                     <p className="text-white/60 text-sm mb-6">
                       The live video is playing in a separate popup window. This allows you to easily share your slides on this screen while keeping the video visible.
                     </p>
-                    <button onClick={() => setIsPoppedOut(false)} className="w-full py-3 bg-[#c9a84c] text-white rounded-xl text-sm font-bold hover:bg-[#b0903a] transition-all">
-                      Restore Video Here
-                    </button>
                  </div>
               </div>
             ) : (
