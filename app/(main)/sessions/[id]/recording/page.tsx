@@ -3,6 +3,8 @@ import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Loader2 } from "lucide-react";
 
+import ReactPlayer from "react-player";
+
 export default function RecordingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
@@ -47,13 +49,15 @@ export default function RecordingPage({ params }: { params: Promise<{ id: string
             <p className="font-semibold text-slate-300">Loading secure video player...</p>
           </div>
         ) : (
-          <video 
-            src={url} 
-            controls 
-            preload="metadata"
-            playsInline
-            className="w-full h-full max-h-[85vh] rounded-2xl shadow-2xl object-contain bg-black"
-          />
+          <div className="w-full h-full max-h-[85vh] rounded-2xl overflow-hidden shadow-2xl relative bg-black">
+            <ReactPlayer 
+              url={url} 
+              controls 
+              width="100%" 
+              height="100%" 
+              style={{ position: 'absolute', top: 0, left: 0 }}
+            />
+          </div>
         )}
       </main>
     </div>
