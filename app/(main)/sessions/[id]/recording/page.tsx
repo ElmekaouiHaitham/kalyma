@@ -50,7 +50,8 @@ export default function RecordingPage({ params }: { params: Promise<{ id: string
           <video 
             src={url} 
             controls 
-            autoPlay 
+            preload="metadata"
+            playsInline
             className="w-full h-full max-h-[85vh] rounded-2xl shadow-2xl object-contain bg-black"
           />
         )}
