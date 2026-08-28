@@ -69,12 +69,11 @@ export default function AdminDashboardPage() {
       })
       .finally(() => setLoading(false));
 
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/debate/pool`, { headers })
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/debate/slots`, { headers })
       .then(res => res.json())
       .then(d => {
-        if (d.pool) {
-          setDebatePool(d.pool);
-          // auto-select all initially, or leave empty. Let's leave empty so admin explicitly selects
+        if (d.slots) {
+          setDebatePool(d.slots);
         }
       })
       .catch(console.error);
@@ -375,98 +374,72 @@ export default function AdminDashboardPage() {
           </div>
         </Section>
 
-        {/* ─── DEBATE LEAGUE CONTROL PANEL ────────────────────── */}
-        <Section icon={<Gavel size={20} />} title="Debate League Control Panel" color="text-[#c9842f]">
+        {/* ─── DEBATE SLOTS CONTROL PANEL ────────────────────── */}
+        <Section icon={<Gavel size={20} />} title="Debate Slots Control Panel" color="text-[#c9842f]">
           <div className="bg-white rounded-2xl p-6 md:p-8 shadow-[0_4px_12px_rgba(2,21,65,0.08)] border border-[#1a2b5e]/10">
-            <div className="flex flex-col md:flex-row gap-8 justify-between items-start">
+            <div className="flex flex-col gap-4">
+              <h3 className="text-xl font-bold text-[#1a2b5e]">Manage Debate Slots</h3>
+              <p className="text-[#4a5568] mb-4">
+                View all generated time slots and their booking status. Slots with two participants are marked as "Booked".
+              </p>
               
-              <div className="flex-1 space-y-4">
-                <h3 className="text-xl font-bold text-[#1a2b5e]">Manage Active Pool</h3>
-                <p className="text-[#4a5568]">
-                  Currently, there are <strong className="text-[#c9842f] text-lg">{debatePool.length}</strong> students waiting in the pool for the next league assignment.
-                </p>
-                <div className="bg-[#f7f2ea] p-4 rounded-xl border border-[#c9842f]/30 inline-block mb-4">
-                  <span className="font-semibold text-[#1a2b5e] flex items-center gap-2">
-                    <Users className="w-5 h-5 text-[#c9842f]" /> {debatePool.length} Users Ready
-                  </span>
-                </div>
-                
-                <div className="max-h-60 overflow-y-auto border border-[#e2e8f0] rounded-lg p-3 bg-[#f8f9fa] flex flex-col gap-2">
-                  <div className="flex items-center justify-between px-2 pb-2 mb-2 border-b border-[#e2e8f0]">
-                    <span className="text-xs font-semibold text-[#718096] uppercase tracking-wider">Select Participants</span>
-                    <button 
-                      onClick={() => setSelectedUsers(debatePool.map(u => u.user_id))}
-                      className="text-xs font-medium text-[#c9842f] hover:underline"
-                    >
-                      Select All
-                    </button>
-                  </div>
-                  {debatePool.length === 0 ? (
-                    <p className="text-sm text-[#4a5568] p-2">No users in the pool.</p>
-                  ) : (
-                    debatePool.map(user => (
-                      <label key={user.user_id} className="flex items-center gap-3 cursor-pointer hover:bg-white p-2 rounded-md transition-colors border border-transparent hover:border-[#e2e8f0]">
-                        <input 
-                          type="checkbox" 
-                          className="w-4 h-4 accent-[#1a2b5e] rounded"
-                          checked={selectedUsers.includes(user.user_id)}
-                          onChange={(e) => {
-                            if (e.target.checked) setSelectedUsers([...selectedUsers, user.user_id]);
-                            else setSelectedUsers(selectedUsers.filter(id => id !== user.user_id));
-                          }}
-                        />
-                        <div className="flex flex-col">
-                          <span className="text-sm text-[#1a2b5e] font-medium">{user.full_name || user.email || "Unknown User"}</span>
-                          {user.availability && (
-                            <span className="text-xs text-[#718096]">
-                              Available: {Object.keys(user.availability).filter(k => user.availability[k]?.length).join(', ') || "No times"}
+              <div className="overflow-x-auto border border-[#e2e8f0] rounded-lg">
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-[#f8f9fa] border-b border-[#e2e8f0]">
+                    <tr>
+                      <th className="p-3 text-sm font-semibold text-[#4a5568]">Date & Time</th>
+                      <th className="p-3 text-sm font-semibold text-[#4a5568]">Status</th>
+                      <th className="p-3 text-sm font-semibold text-[#4a5568]">Participant 1</th>
+                      <th className="p-3 text-sm font-semibold text-[#4a5568]">Participant 2</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#e2e8f0]">
+                    {debatePool.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="p-6 text-center text-[#718096]">
+                          No slots available.
+                        </td>
+                      </tr>
+                    ) : (
+                      debatePool.map(slot => (
+                        <tr key={slot.id} className="hover:bg-[#f8f9fa] transition-colors">
+                          <td className="p-3">
+                            <span className="font-semibold text-[#1a2b5e]">
+                              {new Date(slot.start_time).toLocaleDateString()}
                             </span>
-                          )}
-                        </div>
-                      </label>
-                    ))
-                  )}
-                </div>
+                            <br />
+                            <span className="text-sm text-[#718096]">
+                              {new Date(slot.start_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - 
+                              {new Date(slot.end_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            {slot.is_booked ? (
+                              <span className="px-2 py-1 bg-red-50 text-red-600 rounded-full text-xs font-bold border border-red-200">
+                                Booked
+                              </span>
+                            ) : slot.user1 || slot.user2 ? (
+                              <span className="px-2 py-1 bg-amber-50 text-amber-600 rounded-full text-xs font-bold border border-amber-200">
+                                1 Spot Left
+                              </span>
+                            ) : (
+                              <span className="px-2 py-1 bg-green-50 text-green-600 rounded-full text-xs font-bold border border-green-200">
+                                Open
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-3 text-sm font-medium text-[#1a2b5e]">
+                            {slot.user1 ? slot.user1.name : <span className="text-[#a0aec0] italic">Empty</span>}
+                          </td>
+                          <td className="p-3 text-sm font-medium text-[#1a2b5e]">
+                            {slot.user2 ? slot.user2.name : <span className="text-[#a0aec0] italic">Empty</span>}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
-
-              <div className="flex-1 w-full bg-[#f8f9fa] rounded-xl p-5 border border-[#e2e8f0] sticky top-10">
-                <h4 className="font-semibold text-[#1a2b5e] mb-3">Launch New League</h4>
-                <div className="flex flex-col gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-[#4a5568] mb-1">League Name</label>
-                    <input 
-                      type="text" 
-                      placeholder="e.g. League 1" 
-                      value={leagueName}
-                      onChange={(e) => setLeagueName(e.target.value)}
-                      className="w-full px-4 py-2 rounded-lg border border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#c9842f]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-[#4a5568] mb-1">Number of Students Selected</label>
-                    <div className="w-full px-4 py-2 rounded-lg border border-[#cbd5e1] bg-white text-[#1a2b5e] font-medium">
-                      {selectedUsers.length} Students
-                    </div>
-                  </div>
-                  <div className="flex gap-3 mt-4">
-                    <button 
-                      onClick={handleLaunchMatching}
-                      disabled={launching || selectedUsers.length < 2}
-                      className="flex-1 bg-[#1a2b5e] text-white font-semibold py-3 rounded-lg hover:bg-[#253d82] shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                      {launching ? (
-                        <>
-                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          Processing...
-                        </>
-                      ) : (
-                        "Launch Matching"
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-              
             </div>
           </div>
         </Section>

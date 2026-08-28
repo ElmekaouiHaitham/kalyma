@@ -21,10 +21,7 @@ export default function DebatePage() {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<"needs_onboarding" | "processing" | "active">("needs_onboarding");
   type Day = "saturday" | "sunday";
-  const [availability, setAvailability] = useState<Record<Day, string[]>>({ saturday: [], sunday: [] });
-  const [matches, setMatches] = useState<any[]>([]);
-  
-  const { session, isLoading: authLoading } = useAuth();
+  const [slots, setSlots] = useState<any[]>([]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -50,6 +47,15 @@ export default function DebatePage() {
               setMatches(await matchesRes.json());
             }
           }
+          
+          if (data.status === "needs_onboarding") {
+            const slotsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/debate/slots`, {
+              headers: { Authorization: `Bearer ${session.access_token}` }
+            });
+            if (slotsRes.ok) {
+              setSlots(await slotsRes.json());
+            }
+          }
         }
       } catch (err) {
         console.error("Failed to fetch debate status", err);
@@ -60,33 +66,28 @@ export default function DebatePage() {
     fetchStatus();
   }, [session, authLoading]);
 
-  const handleRegister = async () => {
+  const handleBookSlot = async (slotId: string) => {
     if (!session) return;
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/debate/register`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/debate/slots/${slotId}/book`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${session.access_token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ availability })
+          "Authorization": `Bearer ${session.access_token}`
+        }
       });
       
       if (!res.ok) {
-        if (res.status === 403) {
-          alert("Debate league is only available for Pro users.");
-        } else {
-          alert("Failed to register for the debate league.");
-        }
+        const errData = await res.json();
+        alert(errData.detail || "Failed to book slot");
+        setLoading(false);
         return;
       }
       
       setStatus("processing");
     } catch (err) {
-      console.error("Registration error", err);
-      alert("An error occurred during registration.");
-    } finally {
+      console.error("Booking error", err);
+      alert("An error occurred during booking.");
       setLoading(false);
     }
   };
@@ -100,25 +101,6 @@ export default function DebatePage() {
     );
   }
 
-  const HOURS = [
-    "09:00", "10:00", "11:00", "12:00", 
-    "13:00", "14:00", "15:00", "16:00", 
-    "17:00", "18:00", "19:00", "20:00"
-  ];
-  const DAYS = ["Saturday", "Sunday"];
-
-  const toggleHour = (day: string, hour: string) => {
-    const d = day.toLowerCase() as "saturday" | "sunday";
-    setAvailability(prev => {
-      const current = prev[d] || [];
-      if (current.includes(hour)) {
-        return { ...prev, [d]: current.filter(h => h !== hour) };
-      } else {
-        return { ...prev, [d]: [...current, hour].sort() };
-      }
-    });
-  };
-
   if (status === "needs_onboarding") {
     return (
       <main className="max-w-4xl mx-auto px-5 md:px-10 pt-20 pb-8 md:py-12 flex flex-col gap-6 text-[#1a1c1a] min-h-[80vh] justify-center">
@@ -127,66 +109,49 @@ export default function DebatePage() {
             <Gavel className="w-8 h-8 fill-current" />
           </div>
           <h1 className="text-[26px] md:text-[32px] font-extrabold text-[#021541] tracking-tight mb-3">
-            Join the Debate League
+            Book a Debate Session
           </h1>
           <p className="text-[15px] md:text-[16px] text-[#45464f] mb-8 max-w-xl">
-            Compete with top students, refine your arguments, and climb the leaderboard. Select all the hours you are available on the weekend (Morocco Time).
+            Select an available time slot below to lock in your next debate. Slots take two students and close automatically when full.
           </p>
           
-          <div className="w-full text-left bg-[#f4f3f1] p-4 md:p-6 rounded-xl border border-[#c5c6d0] mb-8 overflow-x-auto">
-            <h3 className="font-bold text-[#021541] mb-4 flex items-center gap-2">
+          <div className="w-full text-left bg-[#f4f3f1] p-4 md:p-6 rounded-xl border border-[#c5c6d0] mb-8 overflow-y-auto max-h-[400px]">
+            <h3 className="font-bold text-[#021541] mb-4 flex items-center gap-2 sticky top-0 bg-[#f4f3f1] pb-2 z-10">
               <CalendarDays className="w-5 h-5 text-[#c9842f]" /> 
-              Weekend Availability
+              Upcoming Available Slots
             </h3>
             
-            <div className="min-w-[400px]">
-              <div className="grid grid-cols-3 gap-2 mb-2">
-                <div></div>
-                {DAYS.map(day => (
-                  <div key={day} className="text-center font-bold text-[#1a2b5e] bg-white border border-[#cbd5e1] rounded-lg py-2">
-                    {day}
-                  </div>
-                ))}
-              </div>
-              
-              <div className="flex flex-col gap-2">
-                {HOURS.map(hour => (
-                  <div key={hour} className="grid grid-cols-3 gap-2 items-center">
-                    <div className="text-right pr-4 font-semibold text-[#4a5568] text-sm">
-                      {hour}
+            <div className="flex flex-col gap-3">
+              {slots.filter(s => !s.is_booked).map(slot => {
+                const startTime = new Date(slot.start_time);
+                const isHalfBooked = slot.user1_id || slot.user2_id;
+                return (
+                  <div key={slot.id} className="flex justify-between items-center bg-white border border-[#cbd5e1] p-4 rounded-xl shadow-sm hover:border-[#1a2b5e] transition-all">
+                    <div>
+                      <p className="font-bold text-[#1a2b5e] text-lg">{startTime.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</p>
+                      <p className="text-[#4a5568]">{startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                     </div>
-                    {DAYS.map(day => {
-                      const d = day.toLowerCase() as "saturday" | "sunday";
-                      const isSelected = (availability[d] || []).includes(hour);
-                      return (
-                        <button
-                          key={`${day}-${hour}`}
-                          onClick={() => toggleHour(day, hour)}
-                          className={`
-                            py-2 rounded-lg border text-sm font-medium transition-all
-                            ${isSelected 
-                              ? "bg-[#1a2b5e] border-[#1a2b5e] text-white shadow-inner" 
-                              : "bg-white border-[#cbd5e1] text-[#4a5568] hover:border-[#1a2b5e] hover:bg-[#f0f4ff]"
-                            }
-                          `}
-                        >
-                          {isSelected ? "Available" : "-"}
-                        </button>
-                      );
-                    })}
+                    <div className="flex items-center gap-4">
+                      {isHalfBooked && (
+                        <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-1 rounded-full border border-amber-200">
+                          1 spot left
+                        </span>
+                      )}
+                      <button 
+                        onClick={() => handleBookSlot(slot.id)}
+                        className="px-6 py-2 bg-[#021541] text-white rounded-lg font-semibold hover:bg-[#1a2b56] transition-colors"
+                      >
+                        Book Slot
+                      </button>
+                    </div>
                   </div>
-                ))}
-              </div>
+                );
+              })}
+              {slots.filter(s => !s.is_booked).length === 0 && (
+                <p className="text-center text-[#718096] py-4">No available slots at the moment.</p>
+              )}
             </div>
           </div>
-
-          <button 
-            onClick={handleRegister}
-            className="w-full md:w-auto px-10 bg-[#021541] text-[#ffffff] font-semibold text-[16px] py-3 md:py-4 rounded-xl shadow-[0_4px_12px_rgba(2,21,65,0.08)] hover:bg-[#1a2b56] transition-colors disabled:opacity-50"
-            disabled={loading || (availability.saturday.length === 0 && availability.sunday.length === 0)}
-          >
-            {loading ? "Registering..." : "Register for Next League"}
-          </button>
         </div>
       </main>
     );
