@@ -22,6 +22,8 @@ export default function DebatePage() {
   const [status, setStatus] = useState<"needs_onboarding" | "processing" | "active">("needs_onboarding");
   type Day = "saturday" | "sunday";
   const [slots, setSlots] = useState<any[]>([]);
+  const [matches, setMatches] = useState<any[]>([]);
+  const { session, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
     if (authLoading) return;
@@ -84,7 +86,7 @@ export default function DebatePage() {
         return;
       }
       
-      setStatus("processing");
+      window.location.reload();
     } catch (err) {
       console.error("Booking error", err);
       alert("An error occurred during booking.");
