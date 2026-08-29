@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { 
   Loader2,
-  CheckCircle2,
   Trophy, 
   User, 
   CalendarDays, 
